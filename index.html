@@ -8634,7 +8634,11 @@ const DEALER_ITEMS=[
   {id:'pseudoephedrin', price:50, n:1},
   {id:'red_phosphor', price:80, n:1},
   {id:'iodine', price:30, n:1},
-  {id:'acetone', price:20, n:1}
+  {id:'acetone', price:20, n:1},
+  // Waffen-Update: die vollautomatischen (illegalen) Waffen gibt's nur hier, nicht im Armor Shop —
+  // Nutzer-Vorgabe: "heiße" Ware kommt vom Dealer. Owned-Sperre wie im Armor Shop, siehe renderDealershop().
+  {id:'fully_draco', price:30000, n:1},
+  {id:'fully_glock', price:22000, n:1}
 ];
 let dealershopOpen=false;
 function openDealershopUI(){
@@ -8655,6 +8659,8 @@ function renderDealershop(){
   for(const g of DEALER_ITEMS){
     const row=document.createElement('div');
     row.className='shop-row';
+    // Waffen-Update: Vollautomaten sind Toggle-Equip-Items wie im Armor Shop — Zweitkauf wäre sinnlos
+    const owned=ITEMS[g.id].cat==='weapon'&&invCount(g.id)>0;
     const img=document.createElement('img');
     img.src=ITEM_ICONS[ITEMS[g.id].icon];
     img.alt='';
@@ -8665,8 +8671,8 @@ function renderDealershop(){
     price.className='shop-row-price';
     price.textContent=g.price+'$';
     const btn=document.createElement('button');
-    btn.textContent='+';
-    btn.disabled=player.money<g.price;
+    btn.textContent=owned?t('armor.alreadyOwned'):'+';
+    btn.disabled=owned||player.money<g.price;
     btn.addEventListener('click',()=>buyDealershopItem(g));
     row.appendChild(img); row.appendChild(name); row.appendChild(price); row.appendChild(btn);
     box.appendChild(row);
@@ -8880,11 +8886,11 @@ const ARMOR_ITEMS=[
   {id:'knife', price:80, n:1},
   {id:'machete', price:250, n:1},
   {id:'axe', price:400, n:1},
-  // Waffen-Update: Preise deutlich angehoben (Nutzer-Vorgabe) + 2 neue Vollautomaten dazu.
+  // Waffen-Update: Preise deutlich angehoben (Nutzer-Vorgabe). Nur die halbautomatischen (legalen)
+  // Schusswaffen bleiben hier — die vollautomatischen (illegalen) Varianten gibt's nur beim Dealer
+  // in der Gasse, siehe DEALER_ITEMS.
   {id:'mini_draco', price:10000, n:1},
-  {id:'fully_draco', price:30000, n:1},
-  {id:'semi_glock', price:6000, n:1},
-  {id:'fully_glock', price:22000, n:1}
+  {id:'semi_glock', price:6000, n:1}
 ];
 let armorOpen=false;
 function openArmorUI(){
