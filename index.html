@@ -520,7 +520,7 @@ canvas#game{
 #roll-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
 
 /* ---------- Grow-Shop-UI + Pack-UI: gleiche Panel-Familie wie Roll-UI ---------- */
-#growshop-box, #pack-box, #kiosk-box, #chemshop-box, #dripshop-box, #armor-box, #casino-box, #dealershop-box{
+#growshop-box, #pack-box, #kiosk-box, #chemshop-box, #dripshop-box, #armor-box, #casino-box, #blackjack-box, #dealershop-box, #police-station-box{
   position: fixed;
   left: 50%;
   top: 50%;
@@ -535,7 +535,9 @@ canvas#game{
   z-index: 47;
   box-shadow: 0 6px 0 rgba(0,0,0,.55);
 }
-#growshop-title, #pack-title, #kiosk-title, #chemshop-title, #dripshop-title, #armor-title, #dealershop-title{ font-size: 11px; margin-bottom: 10px; text-shadow: 1px 1px 0 #000; }
+#growshop-title, #pack-title, #kiosk-title, #chemshop-title, #dripshop-title, #armor-title, #blackjack-title, #dealershop-title, #police-station-title{ font-size: 11px; margin-bottom: 10px; text-shadow: 1px 1px 0 #000; }
+#police-station-content{ font-size: 9px; line-height: 1.7; }
+#police-station-content .roll-btn{ display: block; width: 100%; margin-top: 10px; text-align: center; }
 .shop-row{
   display: flex;
   align-items: center;
@@ -559,10 +561,13 @@ canvas#game{
   cursor: pointer;
 }
 .shop-row button:disabled{ opacity: .35; cursor: default; }
-#growshop-hint, #pack-hint, #kiosk-hint, #chemshop-hint, #dripshop-hint, #armor-hint, #casino-hint, #dealershop-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
+#growshop-hint, #pack-hint, #kiosk-hint, #chemshop-hint, #dripshop-hint, #armor-hint, #casino-hint, #blackjack-hint, #dealershop-hint, #police-station-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
 #casino-reels{ display: block; margin: 0 auto 10px; border: 1px solid rgba(255,255,255,.2); image-rendering: pixelated; }
 #casino-paytable{ margin-bottom: 10px; }
 .casino-pay-row{ display: flex; justify-content: space-between; font-size: 8px; color: #cfcdc6; padding: 3px 2px; border-bottom: 1px solid rgba(255,255,255,.06); }
+#blackjack-table{ display: block; margin: 0 auto 10px; border: 1px solid rgba(255,255,255,.2); }
+#blackjack-box .roll-step{ display: flex; gap: 6px; }
+#blackjack-box .roll-step .roll-btn{ flex: 1; }
 
 /* ---------- Panel-Schließen (mobile): sichtbarer X-Button + Klick-daneben-Backdrop ---------- */
 #panel-backdrop{
@@ -919,6 +924,14 @@ canvas#game{
   <div id="armor-hint"></div>
 </div>
 
+<!-- Polizeiwache (Felony-Erweiterung): Sich stellen / Freikaufen, nur wenn Vorstrafenregister nicht leer -->
+<div id="police-station-box" class="hidden">
+  <button id="police-station-close" class="panel-close-btn" title="Schließen">✕</button>
+  <div id="police-station-title">POLIZEIWACHE</div>
+  <div id="police-station-content"></div>
+  <div id="police-station-hint"></div>
+</div>
+
 <!-- DRIP-Shop-UI: Outfit-Kauf an der Theke (Paket 8) -->
 <div id="dripshop-box" class="hidden">
   <button id="dripshop-close" class="panel-close-btn" title="Schließen">✕</button>
@@ -935,6 +948,19 @@ canvas#game{
   <div id="casino-paytable"></div>
   <div class="roll-step"><button id="casino-spin" class="roll-btn roll-main"></button></div>
   <div id="casino-hint"></div>
+</div>
+
+<!-- Blackjack-UI: zweiter Tisch in der "EL DORADO SPIELHALLE", eigenes Panel neben dem Spielautomaten -->
+<div id="blackjack-box" class="hidden">
+  <button id="blackjack-close" class="panel-close-btn" title="Schließen">✕</button>
+  <div id="blackjack-title">BLACKJACK</div>
+  <canvas id="blackjack-table" width="260" height="140"></canvas>
+  <div class="roll-step">
+    <button id="blackjack-deal" class="roll-btn roll-main"></button>
+    <button id="blackjack-hit" class="roll-btn hidden"></button>
+    <button id="blackjack-stand" class="roll-btn hidden"></button>
+  </div>
+  <div id="blackjack-hint"></div>
 </div>
 
 <!-- Pack-UI: Gras in Baggies abwiegen -->
@@ -1148,6 +1174,13 @@ const I18N = {
       win: '+{amount}$ gewonnen!', jackpot: 'JACKPOT! +{amount}$!!', lose: 'Verloren — nächstes Mal.',
       sym: { cherry: 'Kirsche', lemon: 'Zitrone', bell: 'Glocke', bar: 'BAR', seven: 'Sieben' }
     },
+    blackjack: {
+      title: 'BLACKJACK', hint: 'Einsatz {bet}$ · Dealer zieht bis 17.',
+      deal: 'GEBEN — {bet}$', hit: 'KARTE', stand: 'HALTEN',
+      dealer: 'DEALER', you: 'DU', total: '{n}',
+      win: '+{amount}$ gewonnen!', natural: 'BLACKJACK! +{amount}$!!',
+      push: 'Unentschieden — Einsatz zurück.', lose: 'Verloren — nächstes Mal.'
+    },
     methlab: {
       alreadyOwned: 'Läuft schon — kein zweites Labor nötig.',
       unlockOffer: 'Eigenes Meth-Labor einrichten? Kostet {price}$.',
@@ -1204,7 +1237,7 @@ const I18N = {
       foundMinor: 'Was haben wir denn da… weg damit. {fine}$ Owi. Und jetzt ab mit dir.',
       foundHard: 'Das reicht. Du kommst mit.',
       custodyTitle: 'IN GEWAHRSAM',
-      custodyWait: 'Noch {sec}s…',
+      custodyWait: 'Noch {time}',
       released: 'Entlassen. {fine}$ Strafe, Ware weg. Lass dich nicht nochmal blicken.',
       raidWarning: 'Vor deiner Trap tut sich was…',
       raidResult: 'Durchsucht. Dein Safe ist leer.'
@@ -1253,7 +1286,31 @@ const I18N = {
       title: 'FELONY',
       clean: 'Sauber. Keine offene Fahndung.',
       wanted: 'Fahndungslevel: {stars}/5 Sterne.',
-      arrests: 'Bisher {n}x verhaftet.'
+      arrests: 'Bisher {n}x verhaftet.',
+      noRecord: 'Keine offenen Straftaten.',
+      agoMin: 'vor {n} Min',
+      resolveHint: '→ Sich stellen oder freikaufen an der Polizeiwache',
+      logged: '⚠ {crime} — bei Verhaftung: {time}',
+      entry: {
+        publicDrinking: 'Öffentlicher Alkoholkonsum',
+        weaponCarry: 'Öffentliches Führen einer Schusswaffe',
+        fraud: 'Betrug',
+        assault: 'Körperverletzung',
+        dealing: 'Handel mit BTM',
+        methExplosion: 'Unerlaubtes Betreiben eines Drogenlabors',
+        killGang: 'Totschlag',
+        killCivilian: 'Mord',
+        killCop: 'Mord an einem Polizeibeamten'
+      }
+    },
+    policeStation: {
+      title: 'POLIZEIWACHE',
+      clean: 'Nichts zu melden. Verschwinde.',
+      recordCount: '{n} offene Straftat(en) auf deinem Register.',
+      surrender: 'SICH STELLEN (halbe Strafe)',
+      payBail: 'KAUTION ZAHLEN — {amount}$',
+      bailed: 'Kaution bezahlt: {amount}$. Register gelöscht.',
+      hint: 'Stellen = Zwangsaufenthalt mit Rabatt · Kaution = kein Zwangsaufenthalt, aber voller Preis'
     },
     dialog: { hint: '▼ E', prompt: '[E]' },
     zone: { neutral: 'Neutral-Zone', war: 'Kriegszone — STB vs NTL' },
@@ -1272,6 +1329,7 @@ const I18N = {
       growshop: ['Grow-Bedarf für Einsteiger und Profis.', 'Dünger, Lampen, Töpfe — alles fürs eigene Zelt.', 'Samen? Gibt\'s nur beim Dealer in der Gasse.', 'Kauf läuft über die Theke drinnen.'],
       drip: ['Neue Kollektion im Schaufenster.', 'Bässe wummern durch die Scheibe.', 'Drinnen läuft der Umkleide-Spiegel heiß.'],
       casino: ['Neonlicht flackert bis auf die Straße.', 'Drinnen blinkt und piept ein Automat vor sich hin.', 'Direkt neben dem Bahnhof, ganz wie im echten Leben.'],
+      police: ['Nichts zu melden. Weiterziehen.'],
       default: ['Alles dunkel. Niemand öffnet.', 'Niemand öffnet die Tür.']
     },
     tutorial: {
@@ -1436,6 +1494,13 @@ const I18N = {
       win: '+${amount} won!', jackpot: 'JACKPOT! +${amount}!!', lose: 'No luck — try again.',
       sym: { cherry: 'Cherry', lemon: 'Lemon', bell: 'Bell', bar: 'BAR', seven: 'Seven' }
     },
+    blackjack: {
+      title: 'BLACKJACK', hint: 'Bet ${bet} · Dealer draws to 17.',
+      deal: 'DEAL — ${bet}', hit: 'HIT', stand: 'STAND',
+      dealer: 'DEALER', you: 'YOU', total: '{n}',
+      win: '+${amount} won!', natural: 'BLACKJACK! +${amount}!!',
+      push: 'Push — bet returned.', lose: 'No luck — try again.'
+    },
     methlab: {
       alreadyOwned: 'Already running — no need for a second lab.',
       unlockOffer: 'Set up your own meth lab? Costs ${price}.',
@@ -1458,7 +1523,7 @@ const I18N = {
       foundMinor: 'What do we have here… confiscated. ${fine} fine. Now get out of here.',
       foundHard: 'That is enough. You are coming with us.',
       custodyTitle: 'IN CUSTODY',
-      custodyWait: '{sec}s left…',
+      custodyWait: '{time} left',
       released: 'Released. ${fine} fine, goods gone. Do not let us see you again.',
       raidWarning: 'Something is going on outside your trap…',
       raidResult: 'Searched. Your stash is empty.'
@@ -1518,7 +1583,31 @@ const I18N = {
       title: 'FELONY',
       clean: 'Clean. No active warrant.',
       wanted: 'Wanted level: {stars}/5 stars.',
-      arrests: 'Arrested {n}x so far.'
+      arrests: 'Arrested {n}x so far.',
+      noRecord: 'No open offenses.',
+      agoMin: '{n} min ago',
+      resolveHint: '→ Turn yourself in or pay bail at the police station',
+      logged: '⚠ {crime} — if caught: {time}',
+      entry: {
+        publicDrinking: 'Public Intoxication',
+        weaponCarry: 'Illegal Weapon Possession',
+        fraud: 'Fraud',
+        assault: 'Assault',
+        dealing: 'Drug Dealing',
+        methExplosion: 'Illegal Drug Lab Operation',
+        killGang: 'Manslaughter',
+        killCivilian: 'Murder',
+        killCop: 'Murder of a Police Officer'
+      }
+    },
+    policeStation: {
+      title: 'POLICE STATION',
+      clean: 'Nothing to report. Move along.',
+      recordCount: '{n} open offense(s) on your record.',
+      surrender: 'TURN YOURSELF IN (half sentence)',
+      payBail: 'PAY BAIL — ${amount}',
+      bailed: 'Bail paid: ${amount}. Record cleared.',
+      hint: 'Turning yourself in = custody at a discount · Bail = no custody, but full price'
     },
     dialog: { hint: '▼ E', prompt: '[E]' },
     zone: { neutral: 'Neutral Zone', war: 'War zone — STB vs NTL' },
@@ -1537,6 +1626,7 @@ const I18N = {
       growshop: ['Grow supplies for beginners and pros alike.', 'Nutrients, lights, pots — everything for your own tent.', 'Seeds? Only from the dealer in the alley.', 'Buying goes through the counter inside.'],
       drip: ['New collection in the window.', 'Bass thumping through the glass.', 'The fitting-room mirror is working overtime in there.'],
       casino: ['Neon light flickers all the way to the street.', 'A machine inside is blinking and beeping away.', 'Right next to the station, just like the real thing.'],
+      police: ['Nothing to report. Move along.'],
       default: ['Everything is dark. Nobody opens.', 'Nobody opens the door.']
     },
     tutorial: {
@@ -3011,6 +3101,9 @@ function makeInterior(type){
         {k:'slotmachine',x:6,y:3,w:2,h:2,c:'#2a1220',interactive:'casino_slot',
          label:{de:'Spielautomat',en:'Slot machine'},dialog:{de:'Spielen?',en:'Play?'},
          glow:true,glowColor:'rgba(255,215,0,0.35)',glowR:70},
+        {k:'blackjacktable',x:9,y:4,w:2,h:2,c:'#0d3d1f',interactive:'casino_blackjack',
+         label:{de:'Blackjack-Tisch',en:'Blackjack table'},dialog:{de:'Mitspielen?',en:'Join the game?'},
+         glow:true,glowColor:'rgba(46,163,74,0.35)',glowR:70},
         // Bar-Ecke links, rein dekorativ
         {k:'bar',x:1,y:2,w:1,h:4,c:'#3a2030'},
         {k:'barstool',x:2.2,y:2,w:1,h:1,c:'#4a2a3a'},
@@ -5352,6 +5445,10 @@ function interactInterior(){
     interactSlotMachine();
     return;
   }
+  if(f.interactive==='casino_blackjack'){
+    interactBlackjack();
+    return;
+  }
   if(f.interactive==='stairs'&&f.goto){
     // Sofortiger, robuster Wechsel zwischen verknüpften Interiors (kein fragiles Fade).
     // Spawn-Punkt kommt aus STAIRS_SPAWN (Muster verallgemeinert, ursprünglich nur für die
@@ -6018,8 +6115,31 @@ function npcPoliceChase(n,dt){
   n.animT+=dt;
   if(n.animT>0.16){ n.animT=0; n.frame^=1; }
 }
+// Spot direkt am Rand eines Gang-Reviers (Streife läuft um das Gebiet herum, nicht mittendrin) —
+// eigene, eng begrenzte Suche statt der citywide neutralSpot(), sonst verlieren sich die Cops auf der
+// riesigen 1000x1000-Karte und tauchen praktisch nie in Spielernähe auf (Nutzer-Feedback: "0 Cops sichtbar").
+function zonePerimeterSpot(rect,margin){
+  for(let i=0;i<40;i++){
+    const s=freeSpot(rect.x0-margin,rect.x1+margin,rect.y0-margin,rect.y1+margin,1);
+    if(s && !zoneAt(s.tx,s.ty)) return s;
+  }
+  return null;
+}
 function spawnPolicePatrols(){
-  for(let i=0;i<3;i++){
+  // 2 Streifen pro echtem Gang-Revier (dort spielt sich das eigentliche Verbrechen ab, also auch die
+  // Polizeipräsenz) + 2 citywide zur Abwechslung. warLook-Zone (NTL-Norden) ausgenommen — sieht schon
+  // wie Kriegsgebiet aus, keine Cops, die sich da freiwillig reinstellen.
+  const beats=[GANGS.YBC.zone,GANGS.BTK.zone,GANGS.STB.zone,
+    ...(Array.isArray(GANGS.NTL.zone)?GANGS.NTL.zone:[GANGS.NTL.zone])].filter(z=>!z.warLook);
+  for(const rect of beats){
+    for(let i=0;i<2;i++){
+      const s=zonePerimeterSpot(rect,60)||neutralSpot(150,850,150,850);
+      if(!s) continue;
+      const p=makeNpc('police','npc_police',s.px,s.py,{hp:30,speed:1.5,wanderR:rand(260,360)});
+      p.weapon='mini_draco';
+    }
+  }
+  for(let i=0;i<2;i++){
     const s=neutralSpot(150,850,150,850);
     if(!s) continue;
     const p=makeNpc('police','npc_police',s.px,s.py,{hp:30,speed:1.5,wanderR:rand(300,420)});
@@ -6963,10 +7083,17 @@ const player={
   tutorialsSeen:{},
   // Polizei (Stufe 3): Verdachtslevel 0-100, sitzungsbasiert wie NPCs/Combat-Aggro — siehe addHeat()/updateHeat()
   heat:0, heatCoolT:0,
-  // Verhaftung (Stufe 3): blockiert Input analog player.dead, siehe startArrest()/updateArrestFade()
-  arrested:false, custodyT:0,
-  // Lifetime-Stat, einziges Polizei-Feld das gespeichert wird (siehe saveGame()/startGame())
-  timesArrested:0
+  // Verhaftung (Stufe 3): blockiert Input analog player.dead, siehe startArrest()/updateArrestFade().
+  // Felony-Erweiterung: Strafen können jetzt Stunden dauern (custodyReleaseAt statt custodyT-Countdown) —
+  // arrested/custodyReleaseAt/arrestVoluntary sind daher (anders als heat) PERSISTIERT, sonst wäre ein
+  // Tab-Reload ein Freifahrtschein aus jeder Haftstrafe.
+  arrested:false, custodyReleaseAt:0, arrestVoluntary:false,
+  // Lifetime-Stat, wird wie criminalRecord gespeichert (siehe saveGame()/startGame())
+  timesArrested:0,
+  // Felony-Erweiterung: offene Straftaten [{key,time}] bis Verhaftung/Sich-stellen/Freikauf — bewusst
+  // PERSISTIERT (im Gegensatz zu heat/arrested), sonst wäre ein Tab-Reload ein Freifahrtschein.
+  criminalRecord:[],
+  weaponCarryLogged:false   // Dedup-Flag fürs Waffe-offen-tragen-Logging, siehe updateHeat()
 };
 const SPEED_BOOST_MULT=1.4;
 /* Waffen-Werte: Schaden + Reichweite (px). Faust greift, wenn kein weapon equippt ist.
@@ -7022,13 +7149,62 @@ const POLICE_CFG={
   custodyPerStar: 6,
   raidCheckMin: 60,            // Hausdurchsuchung: Prüf-Rhythmus in Spielminuten (~1x pro Spielstunde)
   raidWarnT: 6,                // Vorwarnzeit in Echtzeit-Sekunden vor einer Hausdurchsuchung
-  stopD2: 90*90                // Personenkontrolle: Begegnungs-Radius für den Ambient-Stop-Roll
+  stopD2: 90*90,               // Personenkontrolle: Begegnungs-Radius für den Ambient-Stop-Roll
+  heatPerDrinkPublic: 6,       // Felony-Erweiterung: öffentlicher Alkoholkonsum, deutlich unter heatDeal (12)
+  heatPerFraud: 10             // Für den (noch geplanten) Scammer-Job reserviert — heatPerDeal(12) > heatPerFraud > heatPerGunOut
 };
 let arrestFade=0, arrestFadeDir=0;
 function wantedStars(){
   let s=0;
   for(const th of POLICE_CFG.starThresholds) if(player.heat>=th) s++;
   return s;
+}
+
+/* ---------------- Felony-Erweiterung: Straftaten-Katalog ----------------
+   Drei-Stufen-Logik bei Tötungen (vereinfacht aus dem deutschen Strafrecht): ein wehrloser Zivilist
+   ohne Gegenwehr = Mord (niedrige Beweggründe), ein bewaffnetes Gang-Mitglied im Gegenkampf = Totschlag
+   (keine Mordmerkmale), ein getöteter Polizist = eigene Schwerst-Kategorie. Jeder Eintrag bleibt offen
+   (siehe player.criminalRecord) bis Verhaftung/Sich-stellen/Freikauf — siehe releaseFromCustody() etc. */
+const CRIME_CATALOG={
+  publicDrinking:{severity:1},
+  weaponCarry:   {severity:2},
+  fraud:         {severity:2},
+  assault:       {severity:3},
+  dealing:       {severity:3},
+  methExplosion: {severity:4},
+  killGang:      {severity:6},
+  killCivilian:  {severity:8},
+  killCop:       {severity:12}
+};
+// Zwangsaufenthalt-Basiszeit (Sekunden) pro Schwere-Stufe — 1=5 Min, 12=8 Std, dazwischen ×2/×3 gestaffelt.
+const CUSTODY_TIME_BY_SEVERITY={1:300, 2:600, 3:1200, 4:2400, 6:7200, 8:14400, 12:28800};
+function logCrime(key){
+  if(!CRIME_CATALOG[key]) return;
+  player.criminalRecord.push({key, time:Math.round(gameMin)});
+  if(player.criminalRecord.length>40) player.criminalRecord.shift();   // Deckelung gegen unbegrenztes Wachstum
+  // Sofort sichtbares Feedback statt nur eines kurz auftauchenden/wieder wegdecayenden Sterns —
+  // zeigt konkret WAS geloggt wurde und wie viel Zwangsaufenthalt das bei einer Verhaftung jetzt bedeuten würde.
+  toast(t('felony.logged',{crime:t('felony.entry.'+key),time:formatCustodyRemaining(custodyDurationMs())}));
+}
+function maxRecordSeverity(){
+  let m=0;
+  for(const e of player.criminalRecord){ const s=(CRIME_CATALOG[e.key]||{}).severity||0; if(s>m) m=s; }
+  return m;
+}
+// Zeit + Kaution skalieren mit der schwersten offenen Tat UND der Anzahl offener Taten zusammen —
+// wer viel anhäuft, kann beides spürbar in die Höhe treiben (Nutzer-Vorgabe: Kaution darf auch mal
+// pleite machen). accumFactor gedeckelt bei ×3, sonst würde ein langer Zettel absurd eskalieren.
+function custodyDurationMs(){
+  const sev=maxRecordSeverity();
+  if(sev<=0) return POLICE_CFG.custodyBaseT*1000;   // Fallback: kein offener Eintrag, alte Sterne-Formel
+  const base=CUSTODY_TIME_BY_SEVERITY[sev]||POLICE_CFG.custodyBaseT;
+  const accumFactor=Math.min(3, 1+0.25*(player.criminalRecord.length-1));
+  return Math.round(base*accumFactor*1000);
+}
+function bailCost(){
+  const sev=maxRecordSeverity();
+  const finePercent=Math.min(0.95, 0.15+0.05*sev+0.05*player.criminalRecord.length);
+  return Math.round(player.money*finePercent);
 }
 
 function collides(px,py){
@@ -7192,7 +7368,11 @@ function applyDamageToNpc(n,dmg){
     {vy:-rand(10,30),vx:rand(-20,20),life:rand(.25,.45),size:2,color:i<3?'#b32020':'#7a1414'});
   spawnBloodDecal(n.px+rand(-6,6),n.py+rand(-2,4));
   // Polizei (Stufe 3), Auslöser "Waffengewalt": Treffer zählt nur, wenn ein Zivilist es mitbekommt
-  if(civWitnessNearby(n.px,n.py,POLICE_CFG.witnessD2)) addHeat(POLICE_CFG.heatPerHit);
+  if(civWitnessNearby(n.px,n.py,POLICE_CFG.witnessD2)){
+    addHeat(POLICE_CFG.heatPerHit);
+    // Felony-Erweiterung: "Körperverletzung" nur einmal pro Ziel/Begegnung loggen, nicht pro Treffer
+    if(!n.assaultLogged){ n.assaultLogged=true; logCrime('assault'); }
+  }
   if(n.hp<=0){ killNpc(n); return; }
   n.combatAggro=true;                               // getroffen = kämpft zurück, unabhängig von der Gang-Zone
   if(n.state!=='chase') enterChase(n);              // sofortiger Gegenschlag, unabhängig vom 15s-Zonen-Timer
@@ -7208,6 +7388,8 @@ function killNpc(n){
   for(const other of NPCS) if(other.leader===n) other.leader=null;   // Patrol-Follower nicht auf einer Leiche festfrieren lassen
   // Polizei (Stufe 3): eine Leiche fällt unabhängig von Zeugen auf — ein toter Cop eskaliert deutlich härter
   addHeat(n.kind==='police'?POLICE_CFG.heatPerCopKilled:POLICE_CFG.heatPerKill);
+  // Felony-Erweiterung: Mord (Zivilist, wehrlos) / Totschlag (Gang im Gegenkampf) / Mord an Polizeibeamten
+  logCrime(n.kind==='police'?'killCop':n.kind==='civ'?'killCivilian':'killGang');
   n.state='dead';
   n.deadT=0.45;
   n.hp=0;
@@ -7272,13 +7454,17 @@ function updateDeathFade(dt){
    Analog zu startPlayerDeath()/respawnPlayer()/updateDeathFade() — eigener Fade-State (arrestFade/
    arrestFadeDir), damit Tod und Verhaftung sich nie gegenseitig überschreiben. Zwischen Fade-out und
    Fade-in liegt hier zusätzlich ein Zwangsaufenthalt (Custody-Overlay + Countdown statt Sofort-Teleport). */
-function startArrest(){
+function startArrest(voluntary){
   if(player.arrested||player.dead) return;
   player.arrested=true;
+  player.arrestVoluntary=!!voluntary;
   arrestFadeDir=1;
 }
+// Felony-Erweiterung: fester Freilassungs-Zeitpunkt (Date.now()+ms) statt In-Memory-Countdown — läuft
+// dadurch auch weiter, während das Spiel geschlossen ist, und übersteht Speichern/Neuladen (siehe Save/Load).
 function beginCustody(){
-  player.custodyT=POLICE_CFG.custodyBaseT+POLICE_CFG.custodyPerStar*wantedStars();
+  const ms=custodyDurationMs()*(player.arrestVoluntary?0.5:1);   // Sich-stellen halbiert die Zeit
+  player.custodyReleaseAt=Date.now()+ms;
   el('custody-title').textContent=t('police.custodyTitle');
   el('custody-overlay').classList.remove('hidden');
 }
@@ -7294,14 +7480,20 @@ function updateArrestFade(dt){
     player.arrested=false;
   }
 }
+/* Formatiert die Rest-Haftzeit als m:ss bzw. h:mm:ss (Strafen können jetzt Stunden dauern). */
+function formatCustodyRemaining(ms){
+  const totalSec=Math.max(0,Math.ceil(ms/1000));
+  const h=Math.floor(totalSec/3600), m=Math.floor((totalSec%3600)/60), s=totalSec%60;
+  return h>0 ? h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0') : m+':'+String(s).padStart(2,'0');
+}
 // Tickt nur, solange das Custody-Overlay tatsächlich offen ist (zwischen beginCustody() und releaseFromCustody()) —
 // die DOM-Sichtbarkeit ist hier bewusst das einzige Zustandssignal, statt zusätzliche Flags synchron zu halten.
 function updateCustody(dt){
   const ov=el('custody-overlay');
   if(ov.classList.contains('hidden')) return;
-  player.custodyT=Math.max(0,player.custodyT-dt);
-  el('custody-countdown').textContent=t('police.custodyWait',{sec:Math.ceil(player.custodyT)});
-  if(player.custodyT<=0) releaseFromCustody();
+  const remain=player.custodyReleaseAt-Date.now();
+  el('custody-countdown').textContent=t('police.custodyWait',{time:formatCustodyRemaining(remain)});
+  if(remain<=0) releaseFromCustody();
 }
 /* Entfernt Drogen + Waffen aus dem Inventar (scope 'all' zusätzlich aus Safe + laufendem Meth-Kochvorgang) —
    gemeinsam genutzt von Verhaftung, Personenkontrolle und Hausdurchsuchung. Fixtures (hasMethLab/hasGrowTent/
@@ -7324,12 +7516,15 @@ function confiscateContraband(scope){
   return {n,hard};
 }
 function releaseFromCustody(){
+  // Felony-Erweiterung: Strafe skaliert mit Schwere UND Anzahl offener Taten (kann auch mal pleite machen) —
+  // vor confiscateContraband()/Register-Reset berechnen, da bailCost() das noch volle Register braucht.
+  const fine=Math.round(bailCost()*(player.arrestVoluntary?0.5:1));   // Sich-stellen halbiert auch die Strafe
   confiscateContraband('all');
-  const stars=wantedStars();
-  const fine=Math.min(player.money,Math.round(player.money*Math.min(0.8,0.3+0.1*stars)));
-  player.money-=fine;
+  player.money=Math.max(0,player.money-fine);
   player.heat=0;
+  player.criminalRecord=[];
   player.timesArrested++;
+  player.arrestVoluntary=false;
   const rp=policeStationB||trapHouse;
   player.px=rp.door.x; player.py=rp.baseY+40;
   player.dir=0;
@@ -7428,9 +7623,12 @@ function addHeat(amount){
 function updateHeat(dt){
   if(player.heatCoolT>0) player.heatCoolT=Math.max(0,player.heatCoolT-dt);
   else if(player.heat>0) player.heat=Math.max(0,player.heat-POLICE_CFG.decayPerSec*dt);
-  // Waffe offen tragen: langsamer Verdachts-Trickle, solange die Schusswaffe in Zivilistensicht equippt bleibt
-  if(player.weapon==='mini_draco'&&!player.dead&&!player.arrested&&civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)){
+  // Waffe offen tragen: langsamer Verdachts-Trickle, solange irgendeine Schusswaffe (nicht nur Mini Draco —
+  // gilt jetzt für alle 4 Feuerwaffen) in Zivilistensicht equippt bleibt. "weaponCarry" wird nur einmal
+  // pro Trage-Session geloggt (Dedup-Flag, zurückgesetzt beim Ab-/Umrüsten, siehe equipWeapon()).
+  if(WEAPON_STATS[player.weapon||'fist'].ranged&&!player.dead&&!player.arrested&&civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)){
     addHeat(POLICE_CFG.heatPerGunOutPerSec*dt);
+    if(!player.weaponCarryLogged){ player.weaponCarryLogged=true; logCrime('weaponCarry'); }
   }
 }
 
@@ -7614,6 +7812,11 @@ function doorDialog(b){
       break;}
     case 'station':
       openDialog(t('speakers.station'),[t('door.station.0'),t('door.station.1')]);
+      break;
+    case 'shop_police':
+      // Felony-Erweiterung: nur mit offenem Register lohnt sich das Panel — sonst kurze Flavor-Zeile
+      if(player.criminalRecord.length>0) openPoliceStationUI();
+      else openDialog(t('speakers.police'),[t('door.police.0')]);
       break;
     default:
       openDialog(t('speakers.unknown'),[night ? t('door.default.0') : t('door.default.1')]);
@@ -7946,6 +8149,7 @@ function explodeMethCook(){
   player.methCook=null;
   // Polizei (Stufe 3), Auslöser "Meth-Labor-Explosion": hörbar, kein Sichtweiten-Check nötig
   addHeat(POLICE_CFG.heatPerExplosion);
+  logCrime('methExplosion');
   saveGame();
 }
 function updateMethCook(dt){
@@ -8415,6 +8619,7 @@ function itemName(id){ return t('items.'+id+'.name'); }
    Zweiter Klick auf die bereits ausgerüstete Waffe legt sie wieder ab. */
 function equipWeapon(id){
   player.weapon = (player.weapon===id) ? null : id;
+  player.weaponCarryLogged=false;   // Felony-Erweiterung: neue Trage-Session bei jedem Um-/Abrüsten
   toast(player.weapon ? t('inv.equipped',{name:itemName(id)}) : t('inv.unequipped',{name:itemName(id)}));
   renderInv();
   saveGame();
@@ -8941,6 +9146,65 @@ window.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&!el('armor-box').classList.contains('hidden')) closeArmorUI();
 });
 
+/* ---------------- Polizeiwache (Felony-Erweiterung): Sich stellen / Freikaufen ----------------
+   Kein bestehendes Ja/Nein-Dialogsystem vorhanden (gangjoin.* ist nur unbenutztes i18n-Scaffold) —
+   daher eigenes kleines Panel im selben Baukasten-Muster wie Armor/Dealer/Kiosk statt eines neuen
+   Dialog-Verzweigungssystems. Nur relevant, wenn player.criminalRecord offene Einträge hat. */
+let policeStationOpen=false;
+function openPoliceStationUI(){
+  if(dialog.active) return;
+  closeInventory(); closePhone();
+  renderPoliceStationUI();
+  el('police-station-box').classList.remove('hidden');
+  policeStationOpen=true;
+  showPanelBackdrop(closePoliceStationUI);
+}
+function closePoliceStationUI(){ el('police-station-box').classList.add('hidden'); policeStationOpen=false; hidePanelBackdrop(); }
+el('police-station-close').addEventListener('click', closePoliceStationUI);
+function renderPoliceStationUI(){
+  el('police-station-title').textContent=t('policeStation.title');
+  const box=el('police-station-content');
+  box.innerHTML='';
+  if(player.criminalRecord.length===0){
+    const clean=document.createElement('div');
+    clean.textContent=t('policeStation.clean');
+    box.appendChild(clean);
+    el('police-station-hint').textContent='';
+    return;
+  }
+  const status=document.createElement('div');
+  status.textContent=t('policeStation.recordCount',{n:player.criminalRecord.length});
+  box.appendChild(status);
+
+  const bail=bailCost();
+  const surrenderBtn=document.createElement('button');
+  surrenderBtn.className='roll-btn';
+  surrenderBtn.textContent=t('policeStation.surrender');
+  surrenderBtn.addEventListener('click',()=>{
+    closePoliceStationUI();
+    startArrest(true);
+  });
+  box.appendChild(surrenderBtn);
+
+  const bailBtn=document.createElement('button');
+  bailBtn.className='roll-btn';
+  bailBtn.textContent=t('policeStation.payBail',{amount:bail});
+  bailBtn.disabled=player.money<bail;
+  bailBtn.addEventListener('click',()=>{
+    player.money=Math.max(0,player.money-bail);
+    player.criminalRecord=[];
+    player.heat=0;
+    closePoliceStationUI();
+    toast(t('policeStation.bailed',{amount:bail}));
+    saveGame();
+  });
+  box.appendChild(bailBtn);
+  el('police-station-hint').textContent=t('policeStation.hint');
+}
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!el('police-station-box').classList.contains('hidden')) closePoliceStationUI();
+});
+
 /* ---------------- DRIP-Outfit-System (Paket 8) ----------------
    8 Paletten-Presets für phChar (Hoodie/Body/Pants), Skin bleibt immer gleich. Kauf regeneriert
    IMAGES.player sofort neu — bewusst einfach gehalten: kein "Besitz"-Tracking, jeder Kauf kostet
@@ -9077,13 +9341,20 @@ function spinSlotMachine(){
   if(player.money<SLOT_BET){ toast(t('casino.noMoney')); return; }
   player.money-=SLOT_BET;
   const result=[rollSlotSymbol(),rollSlotSymbol(),rollSlotSymbol()];
-  player.slotSpin={phase:'spinning', phaseT:0, result, bet:SLOT_BET, payout:0};
+  player.slotSpin={phase:'spinning', phaseT:0, result, bet:SLOT_BET, payout:0, reelOffset:[0,0,0]};
   saveGame();
 }
 function updateSlotSpin(dt){
   if(!player.slotSpin) return;
   const s=player.slotSpin;
   s.phaseT+=dt;
+  // Walzen-Scroll: pro Reel ein laufender Offset (in px), treibt die Scroll-Animation in
+  // renderCasinoReels() — deterministisch über dt statt performance.now(), damit die Landung
+  // beim Stop sauber auf das Endergebnis snappt statt mitten in der Bewegung einzufrieren.
+  if(!s.reelOffset) s.reelOffset=[0,0,0];
+  for(let i=0;i<3;i++){
+    if(s.phase==='spinning'&&s.phaseT<SLOT_REEL_STOPS[i]) s.reelOffset[i]+=dt*(520-i*30);
+  }
   if(s.phase==='spinning'&&s.phaseT>=SLOT_REEL_STOPS[2]){
     s.payout=slotPayout(s.result,s.bet);
     if(s.payout>0){
@@ -9147,16 +9418,209 @@ function renderCasinoReels(){
   ctx.fillStyle='#0a0a0a';
   ctx.fillRect(0,0,cv.width,cv.height);
   const s=player.slotSpin;
-  const cellW=cv.width/3, cy=cv.height/2, size=Math.min(cellW,cv.height)*0.8;
+  const cellW=cv.width/3, ch=cv.height, cy=ch/2, size=Math.min(cellW,ch)*0.8;
   for(let i=0;i<3;i++){
     const cx=cellW*i+cellW/2;
-    let sym;
-    if(s&&s.phase==='spinning'&&s.phaseT<SLOT_REEL_STOPS[i]) sym=SLOT_SYMBOLS[Math.floor(performance.now()/70)%SLOT_SYMBOLS.length];
-    else if(s) sym=s.result[i];
-    else sym='seven';
-    drawSlotSymbol(ctx,sym,cx,cy,size);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(cellW*i,0,cellW,ch); ctx.clip();
+    if(s&&s.phase==='spinning'&&s.phaseT<SLOT_REEL_STOPS[i]){
+      // Echtes Scrollen statt reinem Symbol-Flackern: 3 gestapelte Symbole laufen durch den
+      // geclippten Zellbereich, bis das Reel seine Stop-Zeit erreicht und auf s.result[i] snappt.
+      const off=(s.reelOffset&&s.reelOffset[i])||0;
+      const scrollY=off%ch;
+      const baseIdx=Math.floor(off/ch);
+      for(let k=-1;k<=1;k++){
+        const sym=SLOT_SYMBOLS[(baseIdx+k+SLOT_SYMBOLS.length*1000)%SLOT_SYMBOLS.length];
+        drawSlotSymbol(ctx,sym,cx,cy-scrollY+k*ch,size);
+      }
+    } else {
+      drawSlotSymbol(ctx,s?s.result[i]:'seven',cx,cy,size);
+    }
+    ctx.restore();
   }
+  ctx.strokeStyle='rgba(255,255,255,.15)';
+  for(let i=1;i<3;i++){ ctx.beginPath(); ctx.moveTo(cellW*i,0); ctx.lineTo(cellW*i,ch); ctx.stroke(); }
   if(casinoOpen) casinoRAF=requestAnimationFrame(renderCasinoReels);
+}
+
+/* ---------------- Blackjack-Tisch: zweite Casino-Station neben dem Spielautomaten ----------------
+   Einfache Version mit unendlichem Kartenstapel (Ziehen mit Zurücklegen) statt echtem Deck-Tracking —
+   passt zum bestehenden Slot-Automat-Stil ("Platzhalter-Zahlen", kein Save/Load-Zwischenstand nötig,
+   eine Runde dauert nur ein paar Sekunden). Dealer zieht bei 16 nach, steht ab 17. */
+const BJ_BET=50;
+const BJ_RANKS=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+const BJ_SUITS=[{s:'♠',red:false},{s:'♣',red:false},{s:'♥',red:true},{s:'♦',red:true}];
+function drawCardBJ(){ const su=pick(BJ_SUITS); return {rank:pick(BJ_RANKS),suit:su.s,red:su.red}; }
+function bjCardValue(rank){ return rank==='A'?11:((rank==='J'||rank==='Q'||rank==='K')?10:parseInt(rank,10)); }
+function bjHandTotal(cards){
+  let total=0,aces=0;
+  for(const c of cards){ total+=bjCardValue(c.rank); if(c.rank==='A') aces++; }
+  while(total>21&&aces>0){ total-=10; aces--; }
+  return total;
+}
+let blackjackOpen=false, blackjackRAF=null;
+function interactBlackjack(){
+  if(dialog.active) return;
+  el('blackjack-title').textContent=t('blackjack.title');
+  renderBlackjackButtons();
+  renderBlackjackTable();
+  el('blackjack-box').classList.remove('hidden');
+  blackjackOpen=true;
+  showPanelBackdrop(closeBlackjackUI);
+}
+function closeBlackjackUI(){
+  el('blackjack-box').classList.add('hidden');
+  blackjackOpen=false;
+  hidePanelBackdrop();
+  if(blackjackRAF){ cancelAnimationFrame(blackjackRAF); blackjackRAF=null; }
+}
+function renderBlackjackButtons(){
+  const s=player.blackjack;
+  const dealBtn=el('blackjack-deal'), hitBtn=el('blackjack-hit'), standBtn=el('blackjack-stand');
+  const inPlayerTurn=!!(s&&s.phase==='player');
+  dealBtn.classList.toggle('hidden', !!s);
+  hitBtn.classList.toggle('hidden', !inPlayerTurn);
+  standBtn.classList.toggle('hidden', !inPlayerTurn);
+  dealBtn.textContent=t('blackjack.deal',{bet:BJ_BET});
+  hitBtn.textContent=t('blackjack.hit');
+  standBtn.textContent=t('blackjack.stand');
+  el('blackjack-hint').textContent=s?'':t('blackjack.hint',{bet:BJ_BET});
+}
+function dealBlackjack(){
+  if(player.blackjack) return;
+  if(player.money<BJ_BET){ toast(t('casino.noMoney')); return; }
+  player.money-=BJ_BET;
+  player.blackjack={
+    phase:'dealing', phaseT:0, shown:0, bet:BJ_BET,
+    playerCards:[drawCardBJ(),drawCardBJ()], dealerCards:[drawCardBJ(),drawCardBJ()],
+    revealed:false, dealerDrawT:0, outcome:null, payout:0
+  };
+  saveGame();
+  renderBlackjackButtons();
+}
+function hitBlackjack(){
+  const s=player.blackjack;
+  if(!s||s.phase!=='player') return;
+  s.playerCards.push(drawCardBJ());
+  const pt=bjHandTotal(s.playerCards);
+  if(pt>21) resolveBlackjack('lose');
+  else if(pt===21) standBlackjack();
+}
+function standBlackjack(){
+  const s=player.blackjack;
+  if(!s||s.phase!=='player') return;
+  s.phase='dealerTurn'; s.phaseT=0; s.dealerDrawT=0.7;
+  renderBlackjackButtons();
+}
+function resolveBlackjack(outcome){
+  const s=player.blackjack;
+  s.revealed=true;
+  s.outcome=outcome;
+  let payout=0;
+  if(outcome==='blackjack') payout=Math.round(s.bet*2.5);
+  else if(outcome==='win') payout=s.bet*2;
+  else if(outcome==='push') payout=s.bet;
+  s.payout=payout;
+  if(payout>0) player.money+=payout;
+  toast(
+    outcome==='blackjack'?t('blackjack.natural',{amount:payout}):
+    outcome==='win'?t('blackjack.win',{amount:payout}):
+    outcome==='push'?t('blackjack.push',{amount:payout}):
+    t('blackjack.lose')
+  );
+  s.phase='result'; s.phaseT=0;
+  saveGame();
+  renderBlackjackButtons();
+}
+function updateBlackjack(dt){
+  const s=player.blackjack;
+  if(!s) return;
+  s.phaseT+=dt;
+  if(s.phase==='dealing'){
+    // Gestaffeltes Aufdecken: Spielerkarte 1+2, dann Dealerkarte 1 (offen), dann Dealerkarte 2 (verdeckt)
+    s.shown=Math.min(4,Math.floor(s.phaseT/0.35)+1);
+    if(s.shown>=4&&s.phaseT>=1.5){
+      const pt=bjHandTotal(s.playerCards);
+      if(pt===21){
+        const dtot=bjHandTotal(s.dealerCards);
+        resolveBlackjack(dtot===21?'push':'blackjack');
+      } else {
+        s.phase='player'; s.phaseT=0;
+        renderBlackjackButtons();
+      }
+    }
+  } else if(s.phase==='dealerTurn'){
+    s.revealed=true;
+    s.dealerDrawT-=dt;
+    if(s.dealerDrawT<=0){
+      const dtot=bjHandTotal(s.dealerCards);
+      if(dtot<17){
+        s.dealerCards.push(drawCardBJ());
+        s.dealerDrawT=0.8;
+      } else {
+        const pt=bjHandTotal(s.playerCards);
+        if(dtot>21||pt>dtot) resolveBlackjack('win');
+        else if(pt<dtot) resolveBlackjack('lose');
+        else resolveBlackjack('push');
+      }
+    }
+  } else if(s.phase==='result'&&s.phaseT>=2.4){
+    player.blackjack=null;
+    renderBlackjackButtons();
+  }
+}
+el('blackjack-close').addEventListener('click', closeBlackjackUI);
+el('blackjack-deal').addEventListener('click', dealBlackjack);
+el('blackjack-hit').addEventListener('click', hitBlackjack);
+el('blackjack-stand').addEventListener('click', standBlackjack);
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!el('blackjack-box').classList.contains('hidden')) closeBlackjackUI();
+});
+function drawCardBJVisual(ctx,card,x,y,w,h,faceDown){
+  ctx.save();
+  ctx.fillStyle=faceDown?'#7a1e2e':'#f2f0e8';
+  ctx.strokeStyle='#000'; ctx.lineWidth=1;
+  ctx.beginPath();
+  if(ctx.roundRect) ctx.roundRect(x,y,w,h,3); else ctx.rect(x,y,w,h);
+  ctx.fill(); ctx.stroke();
+  if(!faceDown){
+    ctx.fillStyle=card.red?'#c0303a':'#141414';
+    ctx.font='bold 11px monospace'; ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.fillText(card.rank,x+3,y+3);
+    ctx.font='15px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(card.suit,x+w/2,y+h/2+4);
+  }
+  ctx.restore();
+}
+function renderBlackjackTable(){
+  const cv=el('blackjack-table'); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#0d3d1f';
+  ctx.fillRect(0,0,cv.width,cv.height);
+  const s=player.blackjack;
+  const cw=34,ch=48,gap=6;
+  ctx.font='10px monospace'; ctx.fillStyle='#dcd8c8'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  ctx.fillText(t('blackjack.dealer'),6,12);
+  ctx.fillText(t('blackjack.you'),6,cv.height-6);
+  if(s){
+    const shown=s.phase==='dealing'?s.shown:4;
+    for(let i=0;i<s.dealerCards.length;i++){
+      const visible=i===0?shown>=3:shown>=4;
+      if(!visible) continue;
+      drawCardBJVisual(ctx,s.dealerCards[i],10+i*(cw+gap),18,cw,ch,i===1&&!s.revealed);
+    }
+    for(let i=0;i<s.playerCards.length;i++){
+      const visible=i===0?shown>=1:(i===1?shown>=2:true);
+      if(!visible) continue;
+      drawCardBJVisual(ctx,s.playerCards[i],10+i*(cw+gap),cv.height-ch-16,cw,ch,false);
+    }
+    ctx.font='11px monospace'; ctx.fillStyle='#ffd23a'; ctx.textAlign='right';
+    if(s.revealed) ctx.fillText(t('blackjack.total',{n:bjHandTotal(s.dealerCards)}),cv.width-8,12);
+    if(shown>=1) ctx.fillText(t('blackjack.total',{n:bjHandTotal(s.playerCards)}),cv.width-8,cv.height-6);
+    ctx.textAlign='left';
+  }
+  if(blackjackOpen) blackjackRAF=requestAnimationFrame(renderBlackjackTable);
 }
 
 /* ---------------- Pack-UI: Gras in Baggies abwiegen (Paket 4c) ----------------
@@ -9400,7 +9864,7 @@ function sellToBuyer(n){
   if(navTarget&&navTarget.key==='buyer') navTarget=null;
   if(req.itemId.startsWith('meth_')) JobSystem.addXp('meth',15);   // XP pro Meth-Deal, zusätzlich zur Ernte-XP
   // Polizei (Stufe 3), Auslöser "Dealen in Sichtweite": zählt nur, wenn ein Zivilist zusieht
-  if(civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)) addHeat(POLICE_CFG.heatPerDeal);
+  if(civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)){ addHeat(POLICE_CFG.heatPerDeal); logCrime('dealing'); }
   buyerRequest=null;
   saveGame();
 }
@@ -9455,7 +9919,7 @@ function sellToWalkupNpc(g,req){
   toast(t('walkup.sold',{n:req.grams,product:req.product,pay:req.price}));
   if(req.itemId.startsWith('meth_')) JobSystem.addXp('meth',5);   // kleiner Bonus, deutlich unter einem echten Buyer-Deal (15)
   // Polizei (Stufe 3), Auslöser "Dealen in Sichtweite": zählt nur, wenn ein Zivilist zusieht
-  if(civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)) addHeat(POLICE_CFG.heatPerDeal);
+  if(civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)){ addHeat(POLICE_CFG.heatPerDeal); logCrime('dealing'); }
   g.saleCD=WALKUP_SALE_COOLDOWN;
   saveGame();
 }
@@ -9602,6 +10066,12 @@ function startDrinking(type){
   if(player.smoking){ toast(t('inv.busy')); return false; }   // Kippe und Flasche teilen sich die E/C-Taste
   player.drinking={type, sips:DRINK_CFG[type].sips, sipT:0, sipCD:0};
   toast(t(type==='beer'?'drink.openBeer':'drink.openVodka'));
+  // Felony-Erweiterung, Auslöser "Öffentlicher Alkoholkonsum": beim Öffnen der Flasche, nicht pro Schluck
+  // (sonst 6-10 Log-Einträge pro Bier) — nur wenn ein Zivilist in Sichtweite ist.
+  if(civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)){
+    addHeat(POLICE_CFG.heatPerDrinkPublic);
+    logCrime('publicDrinking');
+  }
   return true;
 }
 function takeSip(){
@@ -9680,8 +10150,10 @@ function renderPhone(){
     appsEl.appendChild(msgIcon);
     const felIcon=document.createElement('div');
     felIcon.className='phone-app-icon';
-    const stars=wantedStars();
-    felIcon.innerHTML=(stars>0?'<div class="phone-app-badge">'+stars+'</div>':'')
+    // Felony-Erweiterung: Badge zeigt jetzt Anzahl offener Straftaten statt Fahndungssterne —
+    // aussagekräftiger, Sterne bleiben als Status-Zeile innerhalb der App sichtbar (siehe oben).
+    const recordCount=player.criminalRecord.length;
+    felIcon.innerHTML=(recordCount>0?'<div class="phone-app-badge">'+recordCount+'</div>':'')
       +'<div class="app-glyph">LAW</div><div>'+t('phone.home.appFelony')+'</div>';
     felIcon.addEventListener('click',()=>{ phoneApp='felony'; renderPhone(); });
     appsEl.appendChild(felIcon);
@@ -9737,7 +10209,8 @@ function renderPhone(){
       listEl.appendChild(row);
     }
   } else if(phoneApp==='felony'){
-    // Polizei (Stufe 3): reine Status-Anzeige, keine Interaktion — Fahndungslevel + Verhaftungs-Historie
+    // Felony-Erweiterung: Status (Sterne) oben + Vorstrafenregister als echte Liste darunter, reine
+    // Anzeige (Auflösen passiert an der Polizeiwache, nicht hier — siehe openPoliceStationUI()).
     el('phone-title').textContent=t('felony.title');
     el('phone-hint').innerHTML=t('phone.home.hintList');
     const stars=wantedStars();
@@ -9749,6 +10222,27 @@ function renderPhone(){
     arrests.className='phone-row';
     arrests.textContent=t('felony.arrests',{n:player.timesArrested});
     listEl.appendChild(arrests);
+    if(player.criminalRecord.length===0){
+      const none=document.createElement('div');
+      none.className='phone-row';
+      none.textContent=t('felony.noRecord');
+      listEl.appendChild(none);
+    } else {
+      // Neueste zuerst — gameMin läuft über Mitternacht (0-1440) im Kreis, daher Differenz normalisieren
+      const entries=player.criminalRecord.slice().reverse();
+      for(const e of entries){
+        const row=document.createElement('div');
+        row.className='phone-row';
+        let diff=Math.round(gameMin)-e.time;
+        if(diff<0) diff+=1440;
+        row.textContent=t('felony.entry.'+e.key)+' — '+t('felony.agoMin',{n:diff});
+        listEl.appendChild(row);
+      }
+      const hint=document.createElement('div');
+      hint.className='phone-row';
+      hint.textContent=t('felony.resolveHint');
+      listEl.appendChild(hint);
+    }
   }
 }
 function openPhone(){
@@ -10095,6 +10589,7 @@ function update(dt){
     updateBuyerCalls(dt);
     updateWalkupCooldowns(dt);
     updateSlotSpin(dt);
+    updateBlackjack(dt);
     JobSystem.update(dt);   // Paket 17: Cashier/Kellner/Drip laufen jetzt drinnen
     if(player.tipsyT>0) player.tipsyT=Math.max(0,player.tipsyT-dt);
     if(player.speedBoostT>0) player.speedBoostT=Math.max(0,player.speedBoostT-dt);
@@ -10883,7 +11378,11 @@ function saveGame(){
       hasMethLab:player.hasMethLab, hasLabCoat:player.hasLabCoat, hasGasmask:player.hasGasmask, methCook:player.methCook,
       outfit:player.outfit,
       hasVest:player.hasVest, tutorialsSeen:player.tutorialsSeen,
-      timesArrested:player.timesArrested   // Polizei (Stufe 3): einziges Feld, das über die Session hinaus zählt
+      timesArrested:player.timesArrested,
+      // Felony-Erweiterung: Register + laufende Verhaftung überleben jetzt einen Reload (Strafen können
+      // Stunden dauern — heat/wantedStars() bleiben bewusst weiter sitzungsbasiert, siehe startGame()).
+      criminalRecord:player.criminalRecord,
+      arrested:player.arrested, custodyReleaseAt:player.custodyReleaseAt, arrestVoluntary:player.arrestVoluntary
     }));
   }catch(e){}
 }
@@ -10996,10 +11495,28 @@ function startGame(fresh){
     player.hp=Math.min(Number.isFinite(s.hp)?s.hp:30,player.maxhp);   // alte Spielstände (100 HP) migrieren
     if(player.hp<=0) player.hp=player.maxhp;   // Tab während der Todes-Blende geschlossen: nicht tot-aber-unsterblich laden
     player.dead=false; deathFade=0; deathFadeDir=0;
-    // Polizei (Stufe 3): Verdacht/Verhaftung sind sitzungsbasiert wie NPCs/Combat-Aggro — nie speichern,
-    // beim Laden analog zum Tod-Edge-Case immer sauber zurücksetzen (kein "verhaftet, aber Overlay weg").
-    player.heat=0; player.heatCoolT=0; player.arrested=false; player.custodyT=0; arrestFade=0; arrestFadeDir=0;
+    // Polizei (Stufe 3): Verdacht bleibt sitzungsbasiert wie NPCs/Combat-Aggro — nie speichern.
+    player.heat=0; player.heatCoolT=0; arrestFade=0; arrestFadeDir=0;
     player.timesArrested=Number.isFinite(s.timesArrested)?s.timesArrested:0;
+    // Felony-Erweiterung: Register + laufende Verhaftung ÜBERLEBEN einen Reload (Strafen können Stunden
+    // dauern — sonst wäre "Tab zumachen" ein Freifahrtschein). Drei Fälle beim Laden: (1) keine Verhaftung
+    // offen, (2) Strafe läuft noch → Custody-Overlay direkt zeigen, (3) Strafe während der Schließzeit
+    // schon abgelaufen → sofort auflösen (releaseFromCustody() reagiert korrekt auf die Zeit-Differenz).
+    player.criminalRecord=Array.isArray(s.criminalRecord)?s.criminalRecord.filter(e=>e&&CRIME_CATALOG[e.key]):[];
+    player.arrestVoluntary=!!s.arrestVoluntary;
+    if(s.arrested&&Number.isFinite(s.custodyReleaseAt)&&s.custodyReleaseAt>Date.now()){
+      player.arrested=true;
+      player.custodyReleaseAt=s.custodyReleaseAt;
+      arrestFade=1; arrestFadeDir=0;
+      el('custody-title').textContent=t('police.custodyTitle');
+      el('custody-overlay').classList.remove('hidden');
+    } else if(s.arrested){
+      player.arrested=true;
+      player.custodyReleaseAt=s.custodyReleaseAt||Date.now();
+      releaseFromCustody();
+    } else {
+      player.arrested=false; player.custodyReleaseAt=0;
+    }
     player.money=s.money;
     player.inv=Array.isArray(s.inv)
       ? s.inv.filter(i=>i&&ITEMS[i.id]&&i.n>0)
