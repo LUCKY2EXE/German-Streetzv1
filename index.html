@@ -1240,7 +1240,8 @@ const I18N = {
       custodyWait: 'Noch {time}',
       released: 'Entlassen. {fine}$ Strafe, Ware weg. Lass dich nicht nochmal blicken.',
       raidWarning: 'Vor deiner Trap tut sich was…',
-      raidResult: 'Durchsucht. Dein Safe ist leer.'
+      raidResult: 'Durchsucht. Dein Safe ist leer.',
+      raidClean: 'Durchsucht — nichts gefunden. Diesmal Glück gehabt.'
     },
     gangjoin: {
       offer: ['Du tauchst hier ständig auf. Respekt — oder Todeswunsch.','NTL sucht Leute, die anpacken. Kein Zurück, wenn du drin bist.','Also: Bist du dabei?'],
@@ -1526,7 +1527,8 @@ const I18N = {
       custodyWait: '{time} left',
       released: 'Released. ${fine} fine, goods gone. Do not let us see you again.',
       raidWarning: 'Something is going on outside your trap…',
-      raidResult: 'Searched. Your stash is empty.'
+      raidResult: 'Searched. Your stash is empty.',
+      raidClean: 'Searched — found nothing. Lucky this time.'
     },
     growcorner: {
       needSeedFert: 'You need a seed and fertilizer.', planted: 'Planted {name}.',
@@ -6115,6 +6117,43 @@ function npcPoliceChase(n,dt){
   n.animT+=dt;
   if(n.animT>0.16){ n.animT=0; n.frame^=1; }
 }
+function countActivePolice(){
+  let n=0;
+  for(const p of NPCS) if(p.kind==='police'&&(p.state==='suspicious'||p.state==='copchase')) n++;
+  return n;
+}
+function countTotalPolice(){
+  let n=0;
+  for(const p of NPCS) if(p.kind==='police') n++;
+  return n;
+}
+// Aktives Dispatch: reine Ambient-Patrouillen sind auf der riesigen Karte zu selten in Spielernähe
+// (siehe NPC_ACTIVE_D2-Deckelung — alles außerhalb ~1500px ist komplett eingefroren, nicht nur unsichtbar).
+// Ab 1 Fahndungsstern wird deshalb aktiv nachgespawnt, statt auf eine zufällige Begegnung zu hoffen.
+let policeDispatchT=0;
+function updatePoliceDispatch(dt){
+  const stars=wantedStars();
+  if(stars<=0||player.dead||player.arrested||dialog.active||interior){ policeDispatchT=0; return; }
+  policeDispatchT-=dt;
+  if(policeDispatchT>0) return;
+  policeDispatchT=POLICE_CFG.dispatchCheckT;
+  const target=POLICE_CFG.dispatchTargetByStars[stars]||stars;
+  if(countActivePolice()>=target) return;
+  if(countTotalPolice()>=POLICE_CFG.maxTotalPolice) return;
+  for(let tries=0;tries<12;tries++){
+    const ang=Math.random()*Math.PI*2;
+    const dist=rand(POLICE_CFG.dispatchRingMin,POLICE_CFG.dispatchRingMax);
+    const px=player.px+Math.cos(ang)*dist, py=player.py+Math.sin(ang)*dist;
+    const tx=Math.floor(px/CFG.TILE), ty=Math.floor(py/CFG.TILE);
+    if(tx<2||ty<2||tx>=CFG.MAP_W-2||ty>=CFG.MAP_H-2) continue;
+    if(collides(px,py)) continue;
+    const p=makeNpc('police','npc_police',px,py,{hp:30,speed:1.7,wanderR:400});
+    p.weapon='mini_draco';
+    p.dispatched=true;   // markiert für Despawn nach der Verfolgung, siehe case 'return' in updateNPCs()
+    enterPoliceChase(p);
+    break;
+  }
+}
 // Spot direkt am Rand eines Gang-Reviers (Streife läuft um das Gebiet herum, nicht mittendrin) —
 // eigene, eng begrenzte Suche statt der citywide neutralSpot(), sonst verlieren sich die Cops auf der
 // riesigen 1000x1000-Karte und tauchen praktisch nie in Spielernähe auf (Nutzer-Feedback: "0 Cops sichtbar").
@@ -6545,6 +6584,12 @@ function updateNPCs(dt){
           n.waitT=rand(1,3);
           n.dir=0;
           n.combatAggro=false;                      // vollständig deeskaliert — Gebietsgrenze gilt beim nächsten Mal wieder
+          // Bugfix (Adversarial-Review): dispatchte Cops (siehe updatePoliceDispatch()) müssen nach der
+          // Verfolgung wieder aus NPCS raus, sonst füllt sich maxTotalPolice über eine lange Session mit
+          // untätigen Cops und das Dispatch-System schaltet sich am Ende selbst wieder ab. Ambient-Patrouillen
+          // (kein n.dispatched-Flag) bleiben unangetastet — nur die aktiv nachgespawnten verschwinden wieder,
+          // und auch die erst, sobald sie unsichtbar weit weg sind (siehe updateTempNpcs()).
+          if(n.dispatched) n.tempT=rand(60,120);
         }
         break;}
     }
@@ -7151,7 +7196,16 @@ const POLICE_CFG={
   raidWarnT: 6,                // Vorwarnzeit in Echtzeit-Sekunden vor einer Hausdurchsuchung
   stopD2: 90*90,               // Personenkontrolle: Begegnungs-Radius für den Ambient-Stop-Roll
   heatPerDrinkPublic: 6,       // Felony-Erweiterung: öffentlicher Alkoholkonsum, deutlich unter heatDeal (12)
-  heatPerFraud: 10             // Für den (noch geplanten) Scammer-Job reserviert — heatPerDeal(12) > heatPerFraud > heatPerGunOut
+  heatPerFraud: 10,            // Für den (noch geplanten) Scammer-Job reserviert — heatPerDeal(12) > heatPerFraud > heatPerGunOut
+  // Aktives Dispatch (Nutzer-Feedback: "5 Sterne, volle Автomatik, nix passiert" — reine Ambient-Patrouillen
+  // finden den Spieler auf der riesigen Karte viel zu selten, siehe NPC_ACTIVE_D2-Deckelung im Haupt-Loop).
+  // Ab 1 Fahndungsstern werden fehlende Verfolger direkt in Spielernähe nachgespawnt statt zu hoffen,
+  // dass zufällig eine Patrouille vorbeikommt — genau das GTA-Modell: Wanted-Level ruft Cops ZU dir.
+  dispatchCheckT: 3,           // Sekunden zwischen zwei Dispatch-Prüfungen
+  dispatchRingMin: 320,        // Spawn-Ring um den Spieler: nah genug für sofortige Präsenz, nicht direkt drauf
+  dispatchRingMax: 520,
+  dispatchTargetByStars: {1:1, 2:2, 3:3, 4:4, 5:5},   // aktive Verfolger, die bei X Sternen unterwegs sein sollen
+  maxTotalPolice: 20           // Deckel gegen unbegrenztes Nachspawnen über eine lange Session hinweg
 };
 let arrestFade=0, arrestFadeDir=0;
 function wantedStars(){
@@ -7255,7 +7309,7 @@ canvas.addEventListener('pointerdown',(e)=>{
   // Interagieren läuft ausschließlich über E/Enter bzw. Klick auf das [E]-Prompt selbst (siehe unten) —
   // sonst würde jeder Kampf-Klick in der Nähe einer Tür/eines NPCs den Angriff schlucken und stattdessen
   // den Interaktions-Text auslösen ("vor dem Haus angegriffen, Klick macht den [E]-Text statt Schlag").
-  if(dialog.active) advanceDialog();
+  if(dialog.active&&!player.arrested) advanceDialog();   // Konsistenz mit interact(): keine Dialog-Eingabe während der Custody-Blende
   else if(e.button===0){ mouseFireDown=true; performAttack('stab'); }       // nur Linksklick — Rechtsklick läuft über 'contextmenu'
 });
 window.addEventListener('pointerup',(e)=>{ if(e.button===0) mouseFireDown=false; });
@@ -7458,7 +7512,18 @@ function startArrest(voluntary){
   if(player.arrested||player.dead) return;
   player.arrested=true;
   player.arrestVoluntary=!!voluntary;
+  // Erst beginCustody() würfelt die echte Freilassungszeit — bis dahin 0, nie ein Altwert aus einer
+  // früheren Verhaftung stehen lassen (sonst könnte ein Save mitten in der Fade-Animation fälschlich
+  // als "Strafe schon abgelaufen" statt als "Strafe noch nicht gewürfelt" gelesen werden, siehe startGame()).
+  player.custodyReleaseAt=0;
   arrestFadeDir=1;
+  // Eine Verhaftung kann jetzt auch drinnen ausgelöst werden (Hausdurchsuchung im eigenen Trap-Haus,
+  // siehe updateRaidCheck() im Interior-Zweig von update()) — sofort nach draußen holen, damit die
+  // bestehende Fade/Custody-Pipeline (die nur im Exterior-Loop rendert) normal weiterlaufen kann.
+  if(interior){
+    interior=null; intFade=0; intFadeDir=0; intTargetBuilding=null;
+    el('minimap-wrap').classList.remove('hidden');
+  }
 }
 // Felony-Erweiterung: fester Freilassungs-Zeitpunkt (Date.now()+ms) statt In-Memory-Countdown — läuft
 // dadurch auch weiter, während das Spiel geschlossen ist, und übersteht Speichern/Neuladen (siehe Save/Load).
@@ -7511,7 +7576,9 @@ function confiscateContraband(scope){
   if(player.weapon&&!player.inv.some(i=>i.id===player.weapon)) player.weapon=null;
   if(scope==='all'){
     player.stash=strip(player.stash);
-    if(player.methCook) player.methCook=null;
+    // Ein laufender Kochvorgang zählt als Fund (Bugfix: vorher inkrementierte das Löschen hier n nicht,
+    // wodurch ein Raid auf ein noch nicht abgeerntetes Labor als "nichts gefunden" durchging).
+    if(player.methCook){ player.methCook=null; n+=1; hard=true; }
   }
   return {n,hard};
 }
@@ -7536,34 +7603,43 @@ function releaseFromCustody(){
 }
 
 /* ---------------- Polizei (Stufe 3): Hausdurchsuchung (Trap-Raid) ----------------
-   Periodischer Check im Stunden-Rhythmus (analog doorSpawns()) — rollt nur, wenn überhaupt etwas zu
-   holen wäre. Die Vorwarnung (raidWarnT) gibt dem Spieler eine reelle Reaktionschance, statt eines
-   Hinterhalts ohne jede Vorwarnung. Trifft die Durchsuchung den Spieler live im Trap-Haus an, gilt das
-   als Verhaftung; ist er nicht da, löst sie sich gegen Safe/Labor auf (siehe confiscateContraband()). */
-let raidState=null, lastRaidHour=-1;
+   War früher an den Spielstunden-Wechsel gekoppelt (max. 1 Versuch pro Spielstunde) — da Heat
+   typischerweise binnen einer Minute nach der letzten Tat wieder auf 0 decayt (siehe updateHeat()),
+   traf "hasContraband UND heat>0" in der Praxis fast nie auf denselben Prüf-Tick, die Durchsuchung
+   feuerte quasi nie (Nutzer-Feedback: "Labor voll, trotzdem keine Verhaftung"). Jetzt: echte
+   Echtzeit-Wiederholung alle 40-70s, solange ein Fahndungsstern aktiv ist — mehrere Versuche pro
+   Rampage/Session statt eines einzigen Losses. Die Vorwarnung (raidWarnT) bleibt als faire Reaktionszeit.
+   Wird etwas gefunden, gilt das als Verhaftung — unabhängig davon, wo der Spieler gerade steckt
+   (Nutzer-Vorgabe: "illegales Item gefunden = gepackt, egal wo er sich befindet"). */
+let raidState=null, raidCheckT=0;
 function updateRaidCheck(dt){
   if(raidState){
     raidState.t-=dt;
     if(raidState.t<=0){ resolveRaid(); raidState=null; }
     return;
   }
-  const hh=Math.floor(hour());
-  if(hh===lastRaidHour) return;
-  lastRaidHour=hh;
   if(player.arrested||player.dead) return;
+  raidCheckT-=dt;
+  if(raidCheckT>0) return;
+  raidCheckT=rand(30,55);
   if(!(player.hasMethLab||player.hasGrowTent||player.stash.length>0)) return;
-  const p=Math.min(0.5,player.heat/150);         // ohne Verdacht (heat 0) nie ausgelöst
+  const stars=wantedStars();
+  if(stars<=0) return;                           // ohne jeden Fahndungsstern nie ausgelöst
+  const p=Math.min(0.85,0.22*stars);              // 1 Stern ≈22%, 5 Sterne ≈85% pro Versuch
   if(Math.random()>=p) return;
   raidState={t:POLICE_CFG.raidWarnT};
   toast(t('police.raidWarning'));
 }
 function resolveRaid(){
-  if(interior&&intTargetBuilding&&intTargetBuilding.type==='house_trap'){
-    startArrest();                               // live angetroffen: das zählt als Verhaftung
-    return;
-  }
   const res=confiscateContraband('all');
-  if(res.n>0) toast(t('police.raidResult'));
+  if(res.n>0){
+    toast(t('police.raidResult'));
+    startArrest();   // Fund = Verhaftung, egal ob der Spieler gerade im Trap steht oder woanders unterwegs ist
+  } else {
+    // Bugfix: vorher blieb eine Vorwarnung ohne jedes Ergebnis, wenn hasMethLab/hasGrowTent zwar gesetzt
+    // war, aber nichts mehr wirklich da war (z.B. Ware längst verkauft) — wirkte wie "nichts passiert".
+    toast(t('police.raidClean'));
+  }
 }
 
 function updatePlayerCombat(dt){
@@ -10594,6 +10670,11 @@ function update(dt){
     if(player.tipsyT>0) player.tipsyT=Math.max(0,player.tipsyT-dt);
     if(player.speedBoostT>0) player.speedBoostT=Math.max(0,player.speedBoostT-dt);
     updateHUD();   // Paket A: sonst friert die Geld-/HP-Anzeige drinnen ein (Käufe unsichtbar)
+    // Bugfix (Nutzer-Feedback: "Meth-Labor voll, trotzdem keine Verhaftung"): die Hausdurchsuchung
+    // muss GERADE im eigenen Trap-Haus auslösen können, wo das Labor tatsächlich steht — vorher lief
+    // dieser ganze Zweig nur draußen (return oben), also konnte sie drinnen nie feuern. startArrest()
+    // holt den Spieler bei Bedarf selbst sofort nach draußen, siehe dort.
+    updateRaidCheck(dt);
     return;
   }
   // Bewegung
@@ -10715,6 +10796,7 @@ function update(dt){
   updateArrestFade(dt);
   updateCustody(dt);
   updateRaidCheck(dt);
+  updatePoliceDispatch(dt);
   updateDeadNpcs(dt);
   updateGrowPots(dt);
   updateMethCook(dt);
@@ -11504,19 +11586,6 @@ function startGame(fresh){
     // schon abgelaufen → sofort auflösen (releaseFromCustody() reagiert korrekt auf die Zeit-Differenz).
     player.criminalRecord=Array.isArray(s.criminalRecord)?s.criminalRecord.filter(e=>e&&CRIME_CATALOG[e.key]):[];
     player.arrestVoluntary=!!s.arrestVoluntary;
-    if(s.arrested&&Number.isFinite(s.custodyReleaseAt)&&s.custodyReleaseAt>Date.now()){
-      player.arrested=true;
-      player.custodyReleaseAt=s.custodyReleaseAt;
-      arrestFade=1; arrestFadeDir=0;
-      el('custody-title').textContent=t('police.custodyTitle');
-      el('custody-overlay').classList.remove('hidden');
-    } else if(s.arrested){
-      player.arrested=true;
-      player.custodyReleaseAt=s.custodyReleaseAt||Date.now();
-      releaseFromCustody();
-    } else {
-      player.arrested=false; player.custodyReleaseAt=0;
-    }
     player.money=s.money;
     player.inv=Array.isArray(s.inv)
       ? s.inv.filter(i=>i&&ITEMS[i.id]&&i.n>0)
@@ -11530,19 +11599,51 @@ function startGame(fresh){
     player.growPots=Number.isFinite(s.growPots)?s.growPots:0;
     player.pots=Array.isArray(s.pots)?s.pots:[];
     player.stash=Array.isArray(s.stash)?s.stash.filter(i=>i&&ITEMS[i.id]&&i.n>0):[];
-    // Paket C: Safe-Ausbau laden — alte Saves haben das Feld nicht (Default 0), Wert auf gültige Stufen begrenzen
+    // Paket C: Safe-Ausbau laden — alte Spielstände haben das Feld nicht (Default 0), Wert auf gültige Stufen begrenzen
     player.safeLevel=Math.max(0,Math.min(SAFE_UPGRADE_PRICES.length,s.safeLevel|0));
     player.hasMethLab=!!s.hasMethLab; player.hasLabCoat=!!s.hasLabCoat; player.hasGasmask=!!s.hasGasmask;
     player.methCook=(s.methCook&&typeof s.methCook==='object')?s.methCook:null;
     player.hasVest=!!s.hasVest;
     player.tutorialsSeen=(s.tutorialsSeen&&typeof s.tutorialsSeen==='object')?s.tutorialsSeen:{};
     applyOutfit(OUTFIT_PALETTES.some(o=>o.id===s.outfit)?s.outfit:'default');
+    // Custody-Resume läuft ERST hier, NACHDEM money/inv/stash/methCook oben geladen sind — releaseFromCustody()
+    // liest/verändert genau diese Felder (Kaution abziehen, Kontraband beschlagnahmen); vorher aufgerufen
+    // würde es gegen die alten Objekt-Default-Werte rechnen und Sekunden später von den Zeilen oben
+    // überschrieben werden (Bugfix nach Adversarial-Review: falsche Strafe, nichts wird wirklich beschlagnahmt).
+    if(s.arrested&&Number.isFinite(s.custodyReleaseAt)&&s.custodyReleaseAt>Date.now()){
+      player.arrested=true;
+      player.custodyReleaseAt=s.custodyReleaseAt;
+      arrestFade=1; arrestFadeDir=0;
+      el('custody-title').textContent=t('police.custodyTitle');
+      el('custody-overlay').classList.remove('hidden');
+    } else if(s.arrested&&!(s.custodyReleaseAt>0)){
+      // Gespeichert mitten in der ~0.2s-Fade-in-Animation, bevor beginCustody() eine echte
+      // Freilassungszeit gewürfelt hat (custodyReleaseAt daher noch 0) — keine "abgelaufene Strafe",
+      // sondern schlicht noch keine gewürfelt. Frisch würfeln statt fälschlich sofort freizulassen.
+      player.arrested=true;
+      arrestFade=1; arrestFadeDir=0;
+      beginCustody();
+    } else if(s.arrested){
+      player.arrested=true;
+      player.custodyReleaseAt=s.custodyReleaseAt;
+      releaseFromCustody();
+      // releaseFromCustody() speichert intern sofort wieder — zu dem Zeitpunkt steht player.arrested
+      // aber noch auf true (das kippt sonst erst asynchron über die Fade-out-Animation im Game-Loop).
+      // Synchron nachkorrigieren + erneut speichern, sonst könnte ein Snapshot mit "arrested:true +
+      // abgelaufener custodyReleaseAt" im localStorage landen und die Freilassung beim nächsten Laden
+      // (falls der Tab direkt wieder zugemacht wird) fälschlich ein zweites Mal auslösen.
+      player.arrested=false; arrestFade=0; arrestFadeDir=0;
+      saveGame();
+    } else {
+      player.arrested=false; player.custodyReleaseAt=0;
+    }
   } else {
     player.px=trapHouse.door.x;
     player.py=trapHouse.baseY+30;
     player.hp=player.maxhp; player.money=50;
     player.dead=false; deathFade=0; deathFadeDir=0;
-    player.heat=0; player.heatCoolT=0; player.arrested=false; player.custodyT=0; arrestFade=0; arrestFadeDir=0;
+    player.heat=0; player.heatCoolT=0; player.arrested=false; player.custodyReleaseAt=0;
+    player.arrestVoluntary=false; player.criminalRecord=[]; arrestFade=0; arrestFadeDir=0;
     player.timesArrested=0;
     player.inv=STARTER_INV();
     player.weapon=null;
@@ -11565,10 +11666,12 @@ function startGame(fresh){
   closeChemshopUI();
   closeDripshopUI();
   closeCasinoUI();
-  el('custody-overlay').classList.add('hidden');   // Polizei (Stufe 3): nie im Custody-Zustand laden
+  // Nur verstecken, wenn KEINE noch laufende Verhaftung übernommen wurde (siehe Resume-Logik oben) —
+  // sonst würde diese Zeile das gerade erst wieder eingeblendete Custody-Overlay sofort zunichtemachen.
+  if(!player.arrested) el('custody-overlay').classList.add('hidden');
   navTarget=null;
   lastSpawnHour=Math.floor(hour());       // kein Tür-Spawn direkt beim Laden (Kamera steht noch nicht)
-  lastRaidHour=Math.floor(hour()); raidState=null;   // Polizei (Stufe 3): keine Hausdurchsuchung direkt beim Laden
+  raidCheckT=rand(20,40); raidState=null;   // Polizei (Stufe 3): keine Hausdurchsuchung direkt beim Laden
   const mute=el('btn-mute'); if(mute) mute.innerHTML=`&#9835; ${Music.muted ? t('hud.muteOff') : t('hud.muteOn')}`;
   el('start-screen').classList.add('hidden');
   el('hud').classList.remove('hidden');
