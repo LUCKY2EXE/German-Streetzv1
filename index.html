@@ -5409,7 +5409,9 @@ function isNight(){ const h=hour(); return h>=20||h<6; }
    Nachts: nur Gang-Member, Bosse und Wächter — sichtbar bewaffnet. */
 function npcOut(n){
   return isNight()
-    ? (n.kind==='gang'||n.kind==='boss'||n.kind==='guard'||n.kind==='police'||n.isBuyer)   // Käufer + Polizei unabhängig von Tag/Nacht
+    // Käufer + Polizei unabhängig von Tag/Nacht; Dealer/Scammer laut Nutzer-Vorgabe ebenfalls 24/7 verfügbar
+    // (Junkie/Obdachloser bewusst unverändert — dazu gab es keine Vorgabe)
+    ? (n.kind==='gang'||n.kind==='boss'||n.kind==='guard'||n.kind==='police'||n.isBuyer||n.act==='dealer'||n.act==='scammer')
     : n.kind!=='guard';
 }
 
@@ -10138,7 +10140,8 @@ function update(dt){
     }
   }
   for(const g of ACT_GROUPS){
-    if(isNight()&&!g.gang) continue;                 // nachts nur Gang-Gruppen ansprechbar
+    // Dealer/Scammer laut Nutzer-Vorgabe 24/7 ansprechbar, sonst nachts nur Gang-Gruppen
+    if(isNight()&&!g.gang&&g.type!=='dealer'&&g.type!=='scammer') continue;
     const ddx=g.x-player.px, ddy=g.y-player.py;
     const d=ddx*ddx+ddy*ddy;
     if(d<best){ best=d; bestRef=g; bestKind='group'; }
