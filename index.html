@@ -1042,7 +1042,7 @@ const I18N = {
       stageNote: 'KAMPF &middot; JOBS &middot; GROW-ECKE &middot; METH-LABOR &middot; KIOSK &amp; DRIP-SHOP &middot; GANGS &amp; TERRITORIEN &middot; POLIZEI &amp; VERHAFTUNG<br>INNENRÄUME FOLGEN NACH DER BETA &middot; SPRITES ERSETZBAR (ASSETS.MD)'
     },
     hud: { muteTitle: 'Musik an/aus', muteOn: 'AN', muteOff: 'AUS', map: 'KARTE', mapTitle: 'STADTPLAN — DIE VIER TERRITORIEN', mapHint: 'K / ESC — SCHLIESSEN', invTitle: 'Inventar (I)' },
-    inv: { title: 'INVENTAR', hint: 'I / ESC — SCHLIESSEN • KLICK — BENUTZEN', empty: 'Leer.', smokeCig: 'Du zündest eine Marlboro an. (E/C — ziehen)', smokeJoint: 'Du zündest den Joint an. Alles wird weich… (E/C — ziehen)', smokeBlunt: 'Du zündest den Blunt an. Der Raum beginnt zu schweben… (E/C — ziehen)', busy: 'Du rauchst schon.', weight: 'Drogen-Gewicht: {cur}', full: 'Kein Platz mehr im Inventar.', fullSuggestSafe: 'Kein Platz mehr — leg was in deinen Safe in der Trap!', safeFull: 'Kein Platz mehr im Safe — bau ihn aus!', equipped: 'Ausgerüstet: {name}', unequipped: '{name} weggesteckt.' },
+    inv: { title: 'INVENTAR', hint: 'I / ESC — SCHLIESSEN • KLICK — BENUTZEN', empty: 'Leer.', smokeCig: 'Du zündest eine Marlboro an. (E/B/C — ziehen)', smokeJoint: 'Du zündest den Joint an. Alles wird weich… (E/B/C — ziehen)', smokeBlunt: 'Du zündest den Blunt an. Der Raum beginnt zu schweben… (E/B/C — ziehen)', busy: 'Du rauchst schon.', weight: 'Drogen-Gewicht: {cur}', full: 'Kein Platz mehr im Inventar.', fullSuggestSafe: 'Kein Platz mehr — leg was in deinen Safe in der Trap!', safeFull: 'Kein Platz mehr im Safe — bau ihn aus!', equipped: 'Ausgerüstet: {name}', unequipped: '{name} weggesteckt.' },
     items: {
       cig_pack: { name: 'Marlboro-Packung', desc: 'Noch {n} Kippen. Klicken zum Rauchen.' },
       beer: { name: 'Bier', desc: '6 Schlücke — E: ein Schluck, E halten: auf ex. +2 HP und leichter Schwips pro Schluck.' },
@@ -1181,8 +1181,8 @@ const I18N = {
       ammoHud: 'DRACO {cur}/{max}', reloadingHud: 'NACHLADEN…'
     },
     drink: {
-      openBeer: 'Bier aufgemacht. (E — Schluck, E halten — auf ex)',
-      openVodka: 'Vodka aufgeschraubt. (E — Schluck, E halten — auf ex)',
+      openBeer: 'Bier aufgemacht. (E/B/C — Schluck, E halten — auf ex)',
+      openVodka: 'Vodka aufgeschraubt. (E/B/C — Schluck, E halten — auf ex)',
       empty: 'Flasche leer.',
       busy: 'Du hast schon eine Flasche offen.'
     },
@@ -1239,7 +1239,13 @@ const I18N = {
       title: 'NAVI — ZIEL WÄHLEN', off: '× NAVI AUS', hint: 'KLICK — ZIEL WÄHLEN<br>N / ESC — ZUKLAPPEN',
       started: 'Navi läuft: {name}', arrived: 'Ziel erreicht.',
       dest: { dealer: 'DEALER (GASSE)', villa: 'REICHE TRAP', roma: 'RESTAURANT ROMA', spaeti: 'SPÄTI 24', home: 'TRAP-HAUS', station: 'BAHNHOF', ybc: 'YBC-BLOCK', btk: 'BTK-BLOCK', stb: 'STB-BLOCK', ntl: 'NTL-BLOCK', liefer: 'LIEFERUNG', corner: 'CORNER SHOP', bike: 'BIKE SHOP', armor: 'ARMOR SHOP', baustelle: 'BAUSTELLE', growshop: 'GROW SHOP', drip: 'DRIP', casino: 'EL DORADO SPIELHALLE', security: 'SECURITY-RUNDE' },
-      home: { title: 'NOKIA 3310', hint: 'KLICK — APP ÖFFNEN<br>ESC/N — SCHLIESSEN', appNavi: 'NAVI', appMessages: 'NACHRICHTEN', back: '< ZURÜCK', noMessages: 'Keine Nachrichten.', hintList: 'KLICK — AUSWÄHLEN<br>ESC/N — SCHLIESSEN' }
+      home: { title: 'NOKIA 3310', hint: 'KLICK — APP ÖFFNEN<br>ESC/N — SCHLIESSEN', appNavi: 'NAVI', appMessages: 'NACHRICHTEN', appFelony: 'FELONY', back: '< ZURÜCK', noMessages: 'Keine Nachrichten.', hintList: 'KLICK — AUSWÄHLEN<br>ESC/N — SCHLIESSEN' }
+    },
+    felony: {
+      title: 'FELONY',
+      clean: 'Sauber. Keine offene Fahndung.',
+      wanted: 'Fahndungslevel: {stars}/5 Sterne.',
+      arrests: 'Bisher {n}x verhaftet.'
     },
     dialog: { hint: '▼ E', prompt: '[E]' },
     zone: { neutral: 'Neutral-Zone', war: 'Kriegszone — STB vs NTL' },
@@ -1315,7 +1321,7 @@ const I18N = {
       stageNote: 'COMBAT &middot; JOBS &middot; GROW CORNER &middot; METH LAB &middot; KIOSK &amp; DRIP SHOP &middot; GANGS &amp; TERRITORIES &middot; POLICE &amp; ARREST<br>INTERIORS COMING AFTER THE BETA &middot; SPRITES REPLACEABLE (ASSETS.MD)'
     },
     hud: { muteTitle: 'Music on/off', muteOn: 'ON', muteOff: 'OFF', map: 'MAP', mapTitle: 'CITY MAP — THE FOUR TERRITORIES', mapHint: 'K / ESC — CLOSE', invTitle: 'Inventory (I)' },
-    inv: { title: 'INVENTORY', hint: 'I / ESC — CLOSE • CLICK — USE', empty: 'Empty.', smokeCig: 'You light a Marlboro. (E/C — take a drag)', smokeJoint: 'You light the joint. Everything goes soft… (E/C — take a drag)', smokeBlunt: 'You light the blunt. The room starts floating… (E/C — take a drag)', busy: 'You are already smoking.', weight: 'Drug weight: {cur}', full: 'No room left in your inventory.', equipped: 'Equipped: {name}', unequipped: '{name} put away.' },
+    inv: { title: 'INVENTORY', hint: 'I / ESC — CLOSE • CLICK — USE', empty: 'Empty.', smokeCig: 'You light a Marlboro. (E/B/C — take a drag)', smokeJoint: 'You light the joint. Everything goes soft… (E/B/C — take a drag)', smokeBlunt: 'You light the blunt. The room starts floating… (E/B/C — take a drag)', busy: 'You are already smoking.', weight: 'Drug weight: {cur}', full: 'No room left in your inventory.', equipped: 'Equipped: {name}', unequipped: '{name} put away.' },
     items: {
       cig_pack: { name: 'Pack of Marlboros', desc: '{n} cigarettes left. Click to smoke.' },
       beer: { name: 'Beer', desc: '6 sips — E: one sip, hold E: chug. +2 HP and a light buzz per sip.' },
@@ -1382,8 +1388,8 @@ const I18N = {
       noMoney: 'Not enough cash.', alreadyOwned: 'You already have this.'
     },
     drink: {
-      openBeer: 'Cracked open a beer. (E — sip, hold E — chug)',
-      openVodka: 'Unscrewed the vodka. (E — sip, hold E — chug)',
+      openBeer: 'Cracked open a beer. (E/B/C — sip, hold E — chug)',
+      openVodka: 'Unscrewed the vodka. (E/B/C — sip, hold E — chug)',
       empty: 'Bottle is empty.',
       busy: 'You already have an open bottle.'
     },
@@ -1494,7 +1500,13 @@ const I18N = {
       title: 'NAVI — PICK DESTINATION', off: '× NAVI OFF', hint: 'CLICK — SET DESTINATION<br>N / ESC — CLOSE',
       started: 'Navi running: {name}', arrived: 'Destination reached.',
       dest: { dealer: 'DEALER (ALLEY)', villa: 'RICH TRAP', roma: 'RESTAURANT ROMA', spaeti: 'SPÄTI 24', home: 'TRAP HOUSE', station: 'STATION', ybc: 'YBC BLOCK', btk: 'BTK BLOCK', stb: 'STB BLOCK', ntl: 'NTL BLOCK', liefer: 'DELIVERY', corner: 'CORNER SHOP', bike: 'BIKE SHOP', armor: 'ARMOR SHOP', baustelle: 'CONSTRUCTION SITE', growshop: 'GROW SHOP', drip: 'DRIP', casino: 'EL DORADO SPIELHALLE', security: 'SECURITY ROUND' },
-      home: { title: 'NOKIA 3310', hint: 'CLICK — OPEN APP<br>ESC/N — CLOSE', appNavi: 'NAVI', appMessages: 'MESSAGES', back: '< BACK', noMessages: 'No messages.', hintList: 'CLICK — SELECT<br>ESC/N — CLOSE' }
+      home: { title: 'NOKIA 3310', hint: 'CLICK — OPEN APP<br>ESC/N — CLOSE', appNavi: 'NAVI', appMessages: 'MESSAGES', appFelony: 'FELONY', back: '< BACK', noMessages: 'No messages.', hintList: 'CLICK — SELECT<br>ESC/N — CLOSE' }
+    },
+    felony: {
+      title: 'FELONY',
+      clean: 'Clean. No active warrant.',
+      wanted: 'Wanted level: {stars}/5 stars.',
+      arrests: 'Arrested {n}x so far.'
     },
     dialog: { hint: '▼ E', prompt: '[E]' },
     zone: { neutral: 'Neutral Zone', war: 'War zone — STB vs NTL' },
@@ -7415,8 +7427,20 @@ joyEl.addEventListener('pointerup',joyEnd);
 joyEl.addEventListener('pointercancel',joyEnd);
 
 el('btn-a').addEventListener('pointerdown',e=>{ e.preventDefault(); performAttack('slash'); });
-el('btn-b').addEventListener('pointerdown',e=>{ e.preventDefault(); enterBuilding(); });
-el('btn-c').addEventListener('pointerdown',e=>{ e.preventDefault(); performAttack('stab'); });
+// Rauchen/Trinken ("ziehen") hat auf Mobile bisher gar nicht funktioniert — B/C griffen hart durch auf
+// Gebäude-Betreten/Angriff, ohne player.smoking/drinking zu prüfen (Desktop macht das über interact()/E).
+el('btn-b').addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  if(player.smoking){ puffSmoke(); return; }
+  if(player.drinking){ takeSip(); return; }
+  enterBuilding();
+});
+el('btn-c').addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  if(player.smoking){ puffSmoke(); return; }
+  if(player.drinking){ takeSip(); return; }
+  performAttack('stab');
+});
 el('enter-prompt').addEventListener('pointerdown',e=>{ e.preventDefault(); e.stopPropagation(); enterBuilding(); });
 
 /* ---------------- Dialog (Buchstabe für Buchstabe) ---------------- */
@@ -9553,7 +9577,7 @@ function updateDrinking(dt){
 
 /* ---------------- Nokia & Navi ---------------- */
 let phoneOpen=false, navTarget=null;
-let phoneApp='home';   // 'home' | 'navi' | 'messages' — Home-Bildschirm mit App-Icons (Paket 4c)
+let phoneApp='home';   // 'home' | 'navi' | 'messages' | 'felony' — Home-Bildschirm mit App-Icons (Paket 4c, Stufe 3)
 function unreadBuyerCount(){ return (buyerRequest&&!buyerRequest.seen)?1:0; }
 function phoneDests(){
   const d=[];
@@ -9601,6 +9625,13 @@ function renderPhone(){
       +'<div class="app-glyph">MSG</div><div>'+t('phone.home.appMessages')+'</div>';
     msgIcon.addEventListener('click',()=>{ phoneApp='messages'; renderPhone(); });
     appsEl.appendChild(msgIcon);
+    const felIcon=document.createElement('div');
+    felIcon.className='phone-app-icon';
+    const stars=wantedStars();
+    felIcon.innerHTML=(stars>0?'<div class="phone-app-badge">'+stars+'</div>':'')
+      +'<div class="app-glyph">LAW</div><div>'+t('phone.home.appFelony')+'</div>';
+    felIcon.addEventListener('click',()=>{ phoneApp='felony'; renderPhone(); });
+    appsEl.appendChild(felIcon);
     return;
   }
   appsEl.classList.add('hidden');
@@ -9652,6 +9683,19 @@ function renderPhone(){
       });
       listEl.appendChild(row);
     }
+  } else if(phoneApp==='felony'){
+    // Polizei (Stufe 3): reine Status-Anzeige, keine Interaktion — Fahndungslevel + Verhaftungs-Historie
+    el('phone-title').textContent=t('felony.title');
+    el('phone-hint').innerHTML=t('phone.home.hintList');
+    const stars=wantedStars();
+    const status=document.createElement('div');
+    status.className='phone-row';
+    status.textContent=stars>0?t('felony.wanted',{stars}):t('felony.clean');
+    listEl.appendChild(status);
+    const arrests=document.createElement('div');
+    arrests.className='phone-row';
+    arrests.textContent=t('felony.arrests',{n:player.timesArrested});
+    listEl.appendChild(arrests);
   }
 }
 function openPhone(){
