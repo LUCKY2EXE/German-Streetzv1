@@ -1784,8 +1784,10 @@ function updateLanguageUI(){
 const MANIFEST = {
   terrain_tileset:{file:'terrain_tileset.png', w:256, h:256, kind:'terrain'},
   player:  {file:'player.png',   w:64, h:256, kind:'char', pal:{hood:'#6b6b74',hoodD:'#54545c',body:'#4a4a52',pants:'#1c1c22',skin:'#c99e78'}},
-  // Neue PixelLab-Sprites (Starter-Charakter + Nike-Trainingsanzug, siehe OUTFIT_PALETTES/applyOutfit()) —
-  // aus EMBEDDED{} geladen wie weapon_knife.png etc., pal nur als Fallback falls das Embed je fehlschlägt.
+  // PixelLab-Sprite für den Nike-Trainingsanzug (siehe OUTFIT_PALETTES/applyOutfit()) — aus EMBEDDED{}
+  // geladen wie weapon_knife.png etc., pal nur als Fallback falls das Embed je fehlschlägt.
+  // player_base bleibt im Manifest (Embed unten), wird vom Starter-Outfit aber nicht mehr referenziert —
+  // 'default' zeichnet wieder das prozedurale phChar()-Sprite wie vor dem PixelLab-Update.
   player_base:      {file:'player_base.png',      w:64, h:256, kind:'char', pal:{hood:'#6b6b74',hoodD:'#54545c',body:'#4a4a52',pants:'#1c1c22',skin:'#c99e78'}},
   player_tracksuit: {file:'player_tracksuit.png',  w:64, h:256, kind:'char', pal:{hood:'#1c1c1c',hoodD:'#0d0d0d',body:'#1c1c1c',pants:'#0a0a0a',skin:'#c99e78'}},
   npc_ybc: {file:'npc_ybc.png',  w:64, h:256, kind:'char', pal:{hood:'#173d22',hoodD:'#102b18',body:'#2ea34a',pants:'#101010',skin:'#b98a63',band:'#39ff64'}},
@@ -9798,10 +9800,7 @@ window.addEventListener('keydown',e=>{
    IMAGES.player sofort neu — bewusst einfach gehalten: kein "Besitz"-Tracking, jeder Kauf kostet
    erneut den vollen Preis (nur der GERADE getragene Look ist im Kauf-Panel deaktiviert). */
 const OUTFIT_PALETTES=[
-  // 'default' und 'tracksuit' sind realArt-Outfits (echtes PixelLab-Sprite statt prozeduralem
-  // phChar()-Platzhalter, siehe applyOutfit()) — hood/hoodD/body/pants bleiben trotzdem gesetzt,
-  // rein für den Dripshop-Swatch (renderDripshop() liest nur o.body) und als harmloser Fallback.
-  {id:'default',  name:{de:'Standard',en:'Default'},      price:0,    hood:'#6b6b74',hoodD:'#54545c',body:'#4a4a52',pants:'#1c1c22', realArt:true, imgKey:'player_base'},
+  {id:'default',  name:{de:'Standard',en:'Default'},      price:0,    hood:'#6b6b74',hoodD:'#54545c',body:'#4a4a52',pants:'#1c1c22'},
   {id:'camo',     name:{de:'Camo-Grün',en:'Camo Green'},  price:800,  hood:'#3a4a2e',hoodD:'#2a3620',body:'#4a5a3a',pants:'#22281a'},
   {id:'allblack', name:{de:'All-Black',en:'All Black'},   price:900,  hood:'#1a1a1a',hoodD:'#0d0d0d',body:'#222222',pants:'#0a0a0a'},
   {id:'royal',    name:{de:'Royal-Blau',en:'Royal Blue'}, price:1000, hood:'#1a3a8a',hoodD:'#122a66',body:'#2a4aae',pants:'#0e1c40'},
