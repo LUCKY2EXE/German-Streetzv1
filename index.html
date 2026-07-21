@@ -5500,14 +5500,16 @@ function interactInterior(){
     return;
   }
   if(f.interactive==='jail_bail'){
-    // Early-Bail: Preis live berechnen (tickt mit der Restzeit runter), erst beim Dialog-Schließen abbuchen —
-    // exakt dasselbe Muster wie methlab_unlock oben, nur mit dynamischem statt statischem Preistext.
+    // Early-Bail: Preis EINMAL beim Öffnen berechnen und einfrieren (Bugfix, Adversarial-Review) — sonst
+    // tickt er zwischen Dialog-Öffnen und -Schließen weiter runter und der Spieler zahlt am Ende weniger,
+    // als im Dialog stand. Sonst exakt dasselbe Muster wie methlab_unlock oben.
     const label=f.label&&f.label[currentLang]?f.label[currentLang]:(currentLang==='en'?'Payphone':'Münztelefon');
-    openDialog(label,[t('jail.bailOffer',{amount:earlyBailCost()})]);
+    const quotedPrice=earlyBailCost();
+    openDialog(label,[t('jail.bailOffer',{amount:quotedPrice})]);
     const checkBail=setInterval(()=>{
       if(!dialog.active){
         clearInterval(checkBail);
-        payEarlyBail();
+        payEarlyBail(quotedPrice);
       }
     },100);
     return;
@@ -7379,16 +7381,16 @@ function earlyBailCost(){
   const frac=Math.min(1,remain/player.custodyTotalMs);
   return Math.round(bailCost()*frac);
 }
-function payEarlyBail(){
+function payEarlyBail(quotedPrice){
   // bailCost() EINMAL snapshotten, bevor irgendwas an player.money sich ändert (Bugfix, Adversarial-Review):
   // releaseFromCustody() ruft bailCost() gleich nochmal für die reguläre Fine auf — ohne denselben Snapshot
   // würde das gegen das durch premium bereits reduzierte Geld rechnen, die Fine fiele kleiner aus, und der
   // Spieler zahlt insgesamt spürbar weniger als die angedachten bailCost()×(1+Restzeit-Anteil).
   const baseCost=bailCost();
   if(!player.arrested||!(player.custodyTotalMs>0)) return;
-  const remain=Math.max(0,player.custodyReleaseAt-Date.now());
-  const frac=Math.min(1,remain/player.custodyTotalMs);
-  const premium=Math.round(baseCost*frac);
+  // Eingefrorener Preis aus dem Dialog-Moment (Bugfix, Adversarial-Review) — sonst tickt der Preis zwischen
+  // Dialog-Öffnen und -Schließen weiter runter und es wird am Ende weniger abgebucht, als angezeigt wurde.
+  const premium=Number.isFinite(quotedPrice)?quotedPrice:earlyBailCost();
   if(player.money<premium){ toast(t('jail.noMoney')); return; }
   player.money-=premium;
   player.custodyBailSnapshot=baseCost;   // releaseFromCustody() nutzt denselben Wert für die reguläre Fine
