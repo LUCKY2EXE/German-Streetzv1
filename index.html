@@ -520,7 +520,7 @@ canvas#game{
 #roll-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
 
 /* ---------- Grow-Shop-UI + Pack-UI: gleiche Panel-Familie wie Roll-UI ---------- */
-#growshop-box, #pack-box, #kiosk-box, #chemshop-box, #dripshop-box, #armor-box, #casino-box, #blackjack-box, #dealershop-box, #police-station-box{
+#growshop-box, #pack-box, #kiosk-box, #chemshop-box, #dripshop-box, #armor-box, #casino-box, #blackjack-box, #dealershop-box, #police-station-box, #gangjoin-box{
   position: fixed;
   left: 50%;
   top: 50%;
@@ -535,7 +535,7 @@ canvas#game{
   z-index: 47;
   box-shadow: 0 6px 0 rgba(0,0,0,.55);
 }
-#growshop-title, #pack-title, #kiosk-title, #chemshop-title, #dripshop-title, #armor-title, #blackjack-title, #dealershop-title, #police-station-title{ font-size: 11px; margin-bottom: 10px; text-shadow: 1px 1px 0 #000; }
+#growshop-title, #pack-title, #kiosk-title, #chemshop-title, #dripshop-title, #armor-title, #blackjack-title, #dealershop-title, #police-station-title, #gangjoin-title{ font-size: 11px; margin-bottom: 10px; text-shadow: 1px 1px 0 #000; }
 #police-station-content{ font-size: 9px; line-height: 1.7; }
 #police-station-content .roll-btn{ display: block; width: 100%; margin-top: 10px; text-align: center; }
 .shop-row{
@@ -561,7 +561,9 @@ canvas#game{
   cursor: pointer;
 }
 .shop-row button:disabled{ opacity: .35; cursor: default; }
-#growshop-hint, #pack-hint, #kiosk-hint, #chemshop-hint, #dripshop-hint, #armor-hint, #casino-hint, #blackjack-hint, #dealershop-hint, #police-station-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
+#growshop-hint, #pack-hint, #kiosk-hint, #chemshop-hint, #dripshop-hint, #armor-hint, #casino-hint, #blackjack-hint, #dealershop-hint, #police-station-hint, #gangjoin-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
+#gangjoin-content{ font-size: 9px; line-height: 1.7; }
+#gangjoin-content .roll-btn{ display: block; width: 100%; margin-top: 10px; text-align: center; }
 #casino-reels{ display: block; margin: 0 auto 10px; border: 1px solid rgba(255,255,255,.2); image-rendering: pixelated; }
 #casino-paytable{ margin-bottom: 10px; }
 .casino-pay-row{ display: flex; justify-content: space-between; font-size: 8px; color: #cfcdc6; padding: 3px 2px; border-bottom: 1px solid rgba(255,255,255,.06); }
@@ -938,6 +940,14 @@ canvas#game{
   <div id="police-station-hint"></div>
 </div>
 
+<!-- Gang-Basis (Paket 20): Beitrittsangebot am Boss, Ja/Nein-Wahl (kein Choice-Dialog vorhanden, siehe Polizeiwache-Panel als Vorlage) -->
+<div id="gangjoin-box" class="hidden">
+  <button id="gangjoin-close" class="panel-close-btn" title="Schließen">✕</button>
+  <div id="gangjoin-title">GANG</div>
+  <div id="gangjoin-content"></div>
+  <div id="gangjoin-hint"></div>
+</div>
+
 <!-- DRIP-Shop-UI: Outfit-Kauf an der Theke (Paket 8) -->
 <div id="dripshop-box" class="hidden">
   <button id="dripshop-close" class="panel-close-btn" title="Schließen">✕</button>
@@ -1255,9 +1265,9 @@ const I18N = {
       raidFined: 'Durchsucht — {fine}$ Strafe, Ware weg. War nicht da, kam mit einer Geldstrafe davon.'
     },
     gangjoin: {
-      offer: ['Du tauchst hier ständig auf. Respekt — oder Todeswunsch.','NTL sucht Leute, die anpacken. Kein Zurück, wenn du drin bist.','Also: Bist du dabei?'],
+      offer: ['Du tauchst hier ständig auf. Respekt — oder Todeswunsch.','Wir suchen Leute, die anpacken. Kein Zurück, wenn du drin bist.','Also: Bist du dabei?'],
       yes: 'JA, ICH BIN DABEI', no: 'NEIN, NOCH NICHT',
-      welcome: 'Willkommen bei NTL. Das Viertel ist jetzt auch dein Viertel.',
+      welcome: 'Willkommen bei {gang}. Das Viertel ist jetzt auch dein Viertel.',
       declined: 'Dann verschwinde, bevor es sich einer anders überlegt.',
       already: ['Du gehörst zur Familie. Halt die Augen offen.','Wenn du Geld brauchst: Die Job-Station steht vorm Haus.'],
       rival: ['Falsche Farben, falsches Viertel.','Verschwinde, solange du noch laufen kannst.']
@@ -1574,6 +1584,14 @@ const I18N = {
       sold: 'Sold {n}g of {product} for ${pay}.',
       nothing: 'You have got nothing for me. Never mind.',
       wait: 'Not right now. Come back later.'
+    },
+    gangjoin: {
+      offer: ['You keep showing up around here. Respect — or a death wish.','We need people who pull their weight. No going back once you are in.','So: are you in?'],
+      yes: 'YES, I AM IN', no: 'NOT YET',
+      welcome: 'Welcome to {gang}. This block is your block now.',
+      declined: 'Then get lost before someone changes their mind.',
+      already: ['You are family. Keep your eyes open.','Need cash? The job station is right outside.'],
+      rival: ['Wrong colors, wrong block.','Get out while you can still walk.']
     },
     cigmachine: {
       bought: 'Grabbed a pack of cigarettes — $25.', noMoney: 'Not enough cash for the machine.'
@@ -6095,7 +6113,8 @@ function updateZoneStay(dt){
     zoneStay={key,t:0,triggered:false,gid:z&&z.gang?z.id:null,rect:z&&z.gang?z.rect:null};
     return;
   }
-  if(!key||zoneStay.triggered) return;
+  // Gang-Basis: das eigene Revier ist safe — kein Loiter-Timer gegen die eigenen Leute
+  if(!key||zoneStay.triggered||(player.gang&&player.gang===zoneStay.gid)) return;
   zoneStay.t+=dt;
   if(zoneStay.t>15){
     zoneStay.triggered=true;
@@ -7263,7 +7282,8 @@ const player={
   // Felony-Erweiterung: offene Straftaten [{key,time}] bis Verhaftung/Sich-stellen/Freikauf — bewusst
   // PERSISTIERT (im Gegensatz zu heat/arrested), sonst wäre ein Tab-Reload ein Freifahrtschein.
   criminalRecord:[],
-  weaponCarryLogged:false   // Dedup-Flag fürs Waffe-offen-tragen-Logging, siehe updateHeat()
+  weaponCarryLogged:false,  // Dedup-Flag fürs Waffe-offen-tragen-Logging, siehe updateHeat()
+  gang:null   // Gang-Basis: null oder 'YBC'/'BTK'/'STB'/'NTL' — siehe interactBoss()
 };
 const SPEED_BOOST_MULT=1.4;
 /* Waffen-Werte: Schaden + Reichweite (px). Faust greift, wenn kein weapon equippt ist.
@@ -7375,11 +7395,6 @@ function logCrime(key){
   // zeigt konkret WAS geloggt wurde und wie viel Zwangsaufenthalt das bei einer Verhaftung jetzt bedeuten würde.
   toast(t('felony.logged',{crime:t('felony.entry.'+key),time:formatCustodyRemaining(custodyDurationMs())}));
 }
-function maxRecordSeverity(){
-  let m=0;
-  for(const e of player.criminalRecord){ const s=(CRIME_CATALOG[e.key]||{}).severity||0; if(s>m) m=s; }
-  return m;
-}
 // Nutzer-Vorgabe: die Zeit muss sich STAPELN — jede offene Straftat zählt mit ihrer vollen Zeit aus
 // CUSTODY_TIME_BY_SEVERITY, nicht nur die schwerste (die alte Version nahm nur die schwerste Tat als Basis
 // und skalierte sie mit einem bei ×3 gedeckelten Anhäufungs-Faktor — 5 Körperverletzungen zählten damit kaum
@@ -7393,10 +7408,16 @@ function custodyDurationMs(){
   }
   return Math.round(totalSec*1000);
 }
+// Nutzer-Vorgabe: X Minuten Haftzeit müssen IMMER gleich viel kosten — vorher war die Kaution ein
+// Prozentsatz des aktuellen Kontostands, wodurch dieselben 20 Minuten mal 100$ und mal 10.000$ kosten
+// konnten, je nachdem wie viel Geld gerade zufällig da war. Jetzt ein fester Satz pro Minute, direkt an
+// custodyDurationMs() gekoppelt — dieselbe Straftat(en)-Kombination kostet immer denselben Betrag.
+// "Manchmal pleite machen" bleibt trotzdem möglich: ein armer Spieler mit einer langen Akte merkt den
+// festen Betrag klar mehr als ein reicher — nur eben nicht mehr zufällig, sondern nachvollziehbar.
+const BAIL_RATE_PER_MIN=20;
 function bailCost(){
-  const sev=maxRecordSeverity();
-  const finePercent=Math.min(0.95, 0.15+0.05*sev+0.05*player.criminalRecord.length);
-  return Math.round(player.money*finePercent);
+  const minutes=custodyDurationMs()/60000;
+  return Math.round(minutes*BAIL_RATE_PER_MIN);
 }
 // Early-Bail (Zelle, Münztelefon): Aufpreis, um eine LAUFENDE Haft vorzeitig zu beenden — zusätzlich zur
 // normalen Kaution/Fine, die releaseFromCustody() ohnehin abzieht. Direkt nach der Verhaftung (100% Restzeit)
@@ -8064,6 +8085,7 @@ function interact(){
   else if(currentTarget.kind==='job') startJobStation(currentTarget.ref);
   else if(currentTarget.kind==='buyer') sellToBuyer(currentTarget.ref);
   else if(currentTarget.kind==='cigmachine') buyFromCigMachine(currentTarget.ref);
+  else if(currentTarget.kind==='boss') interactBoss(currentTarget.ref);
 }
 
 /* E an der Tür = kleiner Flavor-Text. Reingehen läuft über die BETRETEN-Taste/Button. */
@@ -9526,6 +9548,65 @@ function renderPoliceStationUI(){
 }
 window.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&!el('police-station-box').classList.contains('hidden')) closePoliceStationUI();
+});
+
+/* ---------------- Gang-Basis (Paket 20): Beitritt am Boss ----------------
+   Boss ist jetzt ansprechbar (siehe currentTarget-Suche/interact() in update(dt)) statt nur angreifbar.
+   Eigenes Panel im selben Baukasten-Muster wie die Polizeiwache — braucht eine echte Ja/Nein-Wahl, die
+   das lineare Dialogsystem nicht kann. Reine Flavor-Reaktionen (schon Mitglied/Rivale) laufen normal
+   über den bestehenden Dialog (openDialog/advanceDialog). */
+let gangJoinOpen=false;
+function interactBoss(n){
+  if(dialog.active||gangJoinOpen) return;
+  const gid=n.gang;
+  if(player.gang===gid){
+    openDialog(GANGS[gid].name, tArr('gangjoin.already'));
+    return;
+  }
+  if(player.gang){
+    openDialog(GANGS[gid].name, tArr('gangjoin.rival'));
+    return;
+  }
+  closeInventory(); closePhone();
+  renderGangJoinUI(gid);
+  el('gangjoin-box').classList.remove('hidden');
+  gangJoinOpen=true;
+  showPanelBackdrop(closeGangJoinUI);
+}
+function closeGangJoinUI(){ el('gangjoin-box').classList.add('hidden'); gangJoinOpen=false; hidePanelBackdrop(); }
+el('gangjoin-close').addEventListener('click', closeGangJoinUI);
+function renderGangJoinUI(gid){
+  const g=GANGS[gid];
+  el('gangjoin-title').textContent=g.name;
+  const box=el('gangjoin-content');
+  box.innerHTML='';
+  for(const line of tArr('gangjoin.offer')){
+    const p=document.createElement('div');
+    p.textContent=line;
+    box.appendChild(p);
+  }
+  const yesBtn=document.createElement('button');
+  yesBtn.className='roll-btn';
+  yesBtn.textContent=t('gangjoin.yes');
+  yesBtn.addEventListener('click',()=>{
+    player.gang=gid;
+    closeGangJoinUI();
+    toast(t('gangjoin.welcome',{gang:g.name}));
+    saveGame();
+  });
+  box.appendChild(yesBtn);
+  const noBtn=document.createElement('button');
+  noBtn.className='roll-btn';
+  noBtn.textContent=t('gangjoin.no');
+  noBtn.addEventListener('click',()=>{
+    closeGangJoinUI();
+    toast(t('gangjoin.declined'));
+  });
+  box.appendChild(noBtn);
+  el('gangjoin-hint').textContent='';
+}
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!el('gangjoin-box').classList.contains('hidden')) closeGangJoinUI();
 });
 
 /* ---------------- DRIP-Outfit-System (Paket 8) ----------------
@@ -11013,6 +11094,13 @@ function update(dt){
     const d=ddx*ddx+ddy*ddy;
     if(d<best){ best=d; bestRef=n; bestKind='buyer'; }
   }
+  // Gang-Basis: Boss ansprechbar statt nur angreifbar (Paket 20) — pro Gang existiert genau ein Boss-NPC
+  for(const n of NPCS){
+    if(n.kind!=='boss'||n.state==='dead') continue;
+    const ddx=n.px-player.px, ddy=n.py-player.py;
+    const d=ddx*ddx+ddy*ddy;
+    if(d<best){ best=d; bestRef=n; bestKind='boss'; }
+  }
   for(const m of CIG_MACHINES){
     const ddx=m.px+10-player.px, ddy=m.py+16-player.py;
     const d=ddx*ddx+ddy*ddy;
@@ -11731,7 +11819,8 @@ function saveGame(){
       // Stunden dauern — heat/wantedStars() bleiben bewusst weiter sitzungsbasiert, siehe startGame()).
       criminalRecord:player.criminalRecord,
       arrested:player.arrested, custodyReleaseAt:player.custodyReleaseAt, arrestVoluntary:player.arrestVoluntary,
-      custodyTotalMs:player.custodyTotalMs
+      custodyTotalMs:player.custodyTotalMs,
+      gang:player.gang
     }));
   }catch(e){}
 }
@@ -11853,6 +11942,8 @@ function startGame(fresh){
     // schon abgelaufen → sofort auflösen (releaseFromCustody() reagiert korrekt auf die Zeit-Differenz).
     player.criminalRecord=Array.isArray(s.criminalRecord)?s.criminalRecord.filter(e=>e&&CRIME_CATALOG[e.key]):[];
     player.arrestVoluntary=!!s.arrestVoluntary;
+    // Gang-Basis: nur eine der 4 echten Gangs übernehmen, alte/kaputte Werte auf null zurücksetzen
+    player.gang=(s.gang&&GANGS[s.gang])?s.gang:null;
     player.money=s.money;
     player.inv=Array.isArray(s.inv)
       ? s.inv.filter(i=>i&&ITEMS[i.id]&&i.n>0)
@@ -11914,7 +12005,7 @@ function startGame(fresh){
     player.hp=player.maxhp; player.money=50;
     player.dead=false; deathFade=0; deathFadeDir=0;
     player.heat=0; player.heatCoolT=0; player.arrested=false; player.custodyReleaseAt=0;
-    player.arrestVoluntary=false; player.criminalRecord=[]; arrestFade=0; arrestFadeDir=0;
+    player.arrestVoluntary=false; player.criminalRecord=[]; player.gang=null; arrestFade=0; arrestFadeDir=0;
     player.timesArrested=0;
     player.inv=STARTER_INV();
     player.weapon=null;
