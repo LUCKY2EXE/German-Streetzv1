@@ -7757,6 +7757,12 @@ function startArrest(voluntary){
   if(player.arrested||player.dead) return;
   player.arrested=true;
   player.arrestVoluntary=!!voluntary;
+  // Nutzer-Vorgabe: der Safe wird bei einer Verhaftung DRAUSSEN nur ab 4-5 Sternen mitgeleert, nicht
+  // bei jeder Festnahme — Schnappschuss JETZT (nicht erst bei releaseFromCustody()), da player.heat
+  // während der Haft eingefroren bleibt (updateHeat() läuft nur im Exterior-Zweig), ein Snapshot ist
+  // trotzdem robuster als sich darauf zu verlassen. Hausdurchsuchungen leeren den Safe ohnehin schon
+  // separat in resolveRaid() — dieser Wert ist für den Raid-Fall irrelevant (Safe ist dann eh schon leer).
+  player.custodyStarsAtArrest=wantedStars();
   // Erst beginCustody() würfelt die echte Freilassungszeit — bis dahin 0, nie ein Altwert aus einer
   // früheren Verhaftung stehen lassen (sonst könnte ein Save mitten in der Fade-Animation fälschlich
   // als "Strafe schon abgelaufen" statt als "Strafe noch nicht gewürfelt" gelesen werden, siehe startGame()).
@@ -7842,7 +7848,12 @@ function releaseFromCustody(){
   const baseCost=Number.isFinite(player.custodyBailSnapshot)?player.custodyBailSnapshot:bailCost();
   const fine=Math.round(baseCost*(player.arrestVoluntary?0.5:1));   // Sich-stellen halbiert auch die Strafe
   player.custodyBailSnapshot=undefined;
-  confiscateContraband('all');
+  // Nutzer-Vorgabe: Safe nur ab 4-5 Sternen mitkonfiszieren — darunter nur das Inventar (scope 'search',
+  // wie bei einer normalen Personenkontrolle), der Safe zuhause bleibt unangetastet. Bei einer Hausdurchsuchung
+  // (resolveRaid()) ist der Safe ohnehin schon separat geleert, dieser Wert ändert daran nichts.
+  const starsAtArrest=Number.isFinite(player.custodyStarsAtArrest)?player.custodyStarsAtArrest:wantedStars();
+  player.custodyStarsAtArrest=undefined;
+  confiscateContraband(starsAtArrest>=4?'all':'search');
   player.money=Math.max(0,player.money-fine);
   player.heat=0;
   player.criminalRecord=[];
@@ -11880,6 +11891,7 @@ function saveGame(){
       criminalRecord:player.criminalRecord,
       arrested:player.arrested, custodyReleaseAt:player.custodyReleaseAt, arrestVoluntary:player.arrestVoluntary,
       custodyTotalMs:player.custodyTotalMs,
+      custodyStarsAtArrest:player.custodyStarsAtArrest,   // Safe-Schutz (siehe startArrest()/releaseFromCustody()) — muss Reload überleben, Haft kann Stunden dauern
       gang:player.gang
     }));
   }catch(e){}
@@ -12002,6 +12014,10 @@ function startGame(fresh){
     // schon abgelaufen → sofort auflösen (releaseFromCustody() reagiert korrekt auf die Zeit-Differenz).
     player.criminalRecord=Array.isArray(s.criminalRecord)?s.criminalRecord.filter(e=>e&&CRIME_CATALOG[e.key]):[];
     player.arrestVoluntary=!!s.arrestVoluntary;
+    // Safe-Schutz (siehe startArrest()/releaseFromCustody()): Sterne-Snapshot muss den Reload überleben,
+    // sonst würde eine später auflösende Haft fälschlich mit 0 Sternen (heat startet nach Reload immer bei 0)
+    // rechnen und den Safe nie mitkonfiszieren, selbst wenn bei der Verhaftung 4-5 Sterne aktiv waren.
+    player.custodyStarsAtArrest=Number.isFinite(s.custodyStarsAtArrest)?s.custodyStarsAtArrest:undefined;
     // Gang-Basis: nur eine der 4 echten Gangs übernehmen, alte/kaputte Werte auf null zurücksetzen
     player.gang=(s.gang&&GANGS[s.gang])?s.gang:null;
     player.money=s.money;
@@ -12066,6 +12082,7 @@ function startGame(fresh){
     player.dead=false; deathFade=0; deathFadeDir=0;
     player.heat=0; player.heatCoolT=0; player.arrested=false; player.custodyReleaseAt=0;
     player.arrestVoluntary=false; player.criminalRecord=[]; player.gang=null; arrestFade=0; arrestFadeDir=0;
+    player.custodyStarsAtArrest=undefined;
     player.timesArrested=0;
     player.inv=STARTER_INV();
     player.weapon=null;
