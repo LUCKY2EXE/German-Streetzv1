@@ -7669,6 +7669,18 @@ function respawnPlayer(){
   player.money=Math.floor(player.money*0.8);       // -20%
   player.hp=player.maxhp;
   player.dir=0;
+  // Bugfix (Nutzer-Feedback): ohne das hier hetzt der Angreifer nach dem Respawn munter weiter — sein State
+  // (chase/copchase/suspicious) übersteht den Tod unverändert, und player.px/py zeigt jetzt aufs Trap-Haus,
+  // er "teleportiert" die Verfolgung quasi direkt zum frisch respawnten Spieler. Zurück auf den Anker,
+  // zurück in einen neutralen State — deeskaliert komplett, wie ein natürliches Aufgeben.
+  for(const n of NPCS){
+    if(n.state==='chase'||n.state==='copchase'||n.state==='suspicious'||n.state==='return'){
+      n.state=n.act?'act':'idle';
+      n.px=n.anchor.x; n.py=n.anchor.y;
+      n.combatAggro=false;
+      n.waitT=rand(0.5,2);
+    }
+  }
   el('minimap-wrap').classList.remove('hidden'); // Respawn landet immer draußen (auch nach Tod in einem Gebäude)
   toast(t('toast.playerDown',{lost}));
   saveGame();
