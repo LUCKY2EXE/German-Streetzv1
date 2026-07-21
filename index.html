@@ -766,27 +766,33 @@ canvas#game{
   border-radius: 2px;
 }
 
-/* ---------- Verhaftung (Stufe 3): Zwangsaufenthalt-Overlay, blockiert Eingabe analog #death-fade ---------- */
+/* ---------- Verhaftung (Stufe 3): Custody-Anzeige ----------
+   War früher ein Vollbild-Blackout (Zwangsaufenthalt = reiner Timer). Jetzt läuft die Haft in einer
+   begehbaren Zelle (siehe enterJailCell()), daher nur noch eine kleine, nicht-blockierende Ecken-Box —
+   die Zelle muss dahinter sichtbar und bespielbar bleiben. */
 #custody-overlay{
   position: fixed;
-  inset: 0;
+  top: 14px;
+  right: 14px;
   z-index: 52;
-  background: rgba(5,5,8,.92);
+  background: rgba(5,5,8,.85);
+  border: 2px solid #ff4545;
+  padding: 8px 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
+  gap: 4px;
   text-align: center;
+  pointer-events: none;
 }
 #custody-title{
-  font-size: 16px;
+  font-size: 9px;
   color: #ff4545;
-  text-shadow: 2px 2px 0 #000;
-  letter-spacing: 2px;
+  text-shadow: 1px 1px 0 #000;
+  letter-spacing: 1px;
 }
 #custody-countdown{
-  font-size: 12px;
+  font-size: 9px;
   color: #e8e6df;
   text-shadow: 1px 1px 0 #000;
 }
@@ -1242,7 +1248,8 @@ const I18N = {
       released: 'Entlassen. {fine}$ Strafe, Ware weg. Lass dich nicht nochmal blicken.',
       raidWarning: 'Vor deiner Trap tut sich was…',
       raidResult: 'Durchsucht. Dein Safe ist leer.',
-      raidClean: 'Durchsucht — nichts gefunden. Diesmal Glück gehabt.'
+      raidClean: 'Durchsucht — nichts gefunden. Diesmal Glück gehabt.',
+      raidFined: 'Durchsucht — {fine}$ Strafe, Ware weg. War nicht da, kam mit einer Geldstrafe davon.'
     },
     gangjoin: {
       offer: ['Du tauchst hier ständig auf. Respekt — oder Todeswunsch.','NTL sucht Leute, die anpacken. Kein Zurück, wenn du drin bist.','Also: Bist du dabei?'],
@@ -1313,6 +1320,11 @@ const I18N = {
       payBail: 'KAUTION ZAHLEN — {amount}$',
       bailed: 'Kaution bezahlt: {amount}$. Register gelöscht.',
       hint: 'Stellen = Zwangsaufenthalt mit Rabatt · Kaution = kein Zwangsaufenthalt, aber voller Preis'
+    },
+    jail: {
+      bailOffer: 'Anwalt anrufen? Sofort raus kostet extra — {amount}$.',
+      bailed: 'Freigekauft: {amount}$ extra bezahlt.',
+      noMoney: 'Nicht genug Geld dafür.'
     },
     dialog: { hint: '▼ E', prompt: '[E]' },
     zone: { neutral: 'Neutral-Zone', war: 'Kriegszone — STB vs NTL' },
@@ -1529,7 +1541,8 @@ const I18N = {
       released: 'Released. ${fine} fine, goods gone. Do not let us see you again.',
       raidWarning: 'Something is going on outside your trap…',
       raidResult: 'Searched. Your stash is empty.',
-      raidClean: 'Searched — found nothing. Lucky this time.'
+      raidClean: 'Searched — found nothing. Lucky this time.',
+      raidFined: 'Searched — ${fine} fine, goods gone. You were not home, so no arrest.'
     },
     growcorner: {
       needSeedFert: 'You need a seed and fertilizer.', planted: 'Planted {name}.',
@@ -1611,6 +1624,11 @@ const I18N = {
       payBail: 'PAY BAIL — ${amount}',
       bailed: 'Bail paid: ${amount}. Record cleared.',
       hint: 'Turning yourself in = custody at a discount · Bail = no custody, but full price'
+    },
+    jail: {
+      bailOffer: 'Call a lawyer? Getting out now costs extra — ${amount}.',
+      bailed: 'Bailed out: paid ${amount} extra.',
+      noMoney: 'Not enough cash for that.'
     },
     dialog: { hint: '▼ E', prompt: '[E]' },
     zone: { neutral: 'Neutral Zone', war: 'War zone — STB vs NTL' },
@@ -2850,6 +2868,24 @@ function makeInterior(type){
       if(player.hasMethLab) I.furniture.push(makeLabHatchFurniture());
       break;
     }
+    /* ===== GEFÄNGNISZELLE (Custody, siehe enterJailCell()) ===== */
+    case 'jail_cell':{
+      I.w=6; I.h=6; I.floor='concrete_dark'; I.wall='#3a3a42'; I.ambientColor='rgba(15,15,20,0.4)';
+      I.furniture.push(
+        {k:'bed',x:0.8,y:1,w:2,h:1.4,c:'#2a2a30',detail:'mattress'},
+        {k:'toilet',x:4.2,y:0.8,w:1,h:1.2,c:'#6a6a72'},
+        {k:'scratches',x:0.2,y:3.2,w:1.2,h:1.4,c:'#5a5a62'},
+        {k:'payphone',x:4.3,y:3,w:1,h:1.6,c:'#3a3a42',interactive:'jail_bail',
+         label:{de:'Münztelefon',en:'Payphone'}},
+        {k:'bars',x:1.5,y:5.3,w:3,h:0.5,c:'#0a0a0c'},
+        {k:'window',x:4.4,y:0.15,w:1,h:0.5,c:'#0a0e18',detail:'night'},
+        {k:'lamp',x:3,y:1,w:0,h:0,c:'#c8c8d0',detail:'ceiling',glow:true,glowColor:'rgba(180,180,195,0.18)',glowR:55}
+      );
+      // Bewusst KEIN I.exits — die Zelle ist erst wieder verlassbar, wenn releaseFromCustody() den Spieler
+      // aktiv rausholt (Strafe abgelaufen oder Early-Bail am Münztelefon) — kein Weglaufen zu Fuß möglich.
+      I.lights.push({x:3,y:1,r:70,c:'rgba(180,180,195,0.12)'});
+      break;
+    }
     /* ===== SPÄTI 24 ===== */
     case 'shop_kiosk':{
       I.w=16; I.h=10; I.floor='tile_check'; I.ambientColor='rgba(30,30,40,0.1)';
@@ -3370,7 +3406,7 @@ function makeInterior(type){
     'ticketmachine','info','info_counter','display','display_big','weaponwall','vestdisplay',
     'toolwall','bike_wall','bikestand','crate','box','trashcan','counter_glass','glass',
     'wall_glass','schedule_board','bench_broken','bench_detailed','bike_rack','sign_stand','sofa',
-    'cookstation','mixtank','still','clothes_rack','changing_booth']);
+    'cookstation','mixtank','still','clothes_rack','changing_booth','toilet','payphone','bars']);
   for(const f of I.furniture){
     if(SOLID.has(f.k)){
       I.colliders.push({x:f.x*INT_TILE,y:f.y*INT_TILE,w:f.w*INT_TILE,h:f.h*INT_TILE});
@@ -4488,6 +4524,51 @@ function drawInteriorFurniture(ctx, f, time){
       ctx.beginPath(); ctx.ellipse(tx+tw/2,ty+th/2,tw*0.1,th*0.1,0,0,7); ctx.fill();
       break;
     }
+    /* ===== Zelle (Custody, siehe enterJailCell()) ===== */
+    case 'toilet':{
+      ctx.fillStyle='#7a7a82';
+      ctx.fillRect(tx+tw*0.15,ty,tw*0.7,th*0.35);
+      ctx.fillStyle='#8a8a92';
+      ctx.beginPath(); ctx.ellipse(tx+tw*0.5,ty+th*0.72,tw*0.42,th*0.28,0,0,7); ctx.fill();
+      ctx.fillStyle='#2a2a2e';
+      ctx.beginPath(); ctx.ellipse(tx+tw*0.5,ty+th*0.72,tw*0.24,th*0.16,0,0,7); ctx.fill();
+      break;
+    }
+    case 'bars':{
+      ctx.fillStyle='#0a0a0c';
+      ctx.fillRect(tx,ty,tw,th*0.14);
+      ctx.fillRect(tx,ty+th*0.86,tw,th*0.14);
+      const barN=Math.max(3,Math.round(tw/6));
+      ctx.fillStyle='#2a2a2e';
+      for(let i=0;i<=barN;i++){
+        const bx=tx+(i/barN)*tw;
+        ctx.fillRect(bx-1,ty,2,th);
+      }
+      break;
+    }
+    case 'scratches':{
+      // Strichliste an der Wand — Tage gezählt
+      ctx.strokeStyle=f.c; ctx.lineWidth=1;
+      for(let i=0;i<5;i++){
+        const lx=tx+2+i*(tw/6);
+        ctx.beginPath(); ctx.moveTo(lx,ty+th*0.15); ctx.lineTo(lx,ty+th*0.85); ctx.stroke();
+      }
+      ctx.beginPath(); ctx.moveTo(tx+2,ty+th*0.5); ctx.lineTo(tx+2+4*(tw/6),ty+th*0.15); ctx.stroke();
+      break;
+    }
+    case 'payphone':{
+      // Wandmontierte Münztelefon-Box (Early-Bail-Interaktion, siehe interactInterior())
+      ctx.fillStyle='#3a3a42';
+      ctx.fillRect(tx,ty,tw,th);
+      ctx.fillStyle='#1a1a1e';
+      ctx.fillRect(tx+tw*0.15,ty+th*0.1,tw*0.7,th*0.5);
+      ctx.strokeStyle='#6a6a72'; ctx.lineWidth=1;
+      ctx.beginPath();
+      ctx.moveTo(tx+tw*0.3,ty+th*0.65);
+      ctx.quadraticCurveTo(tx+tw*0.5,ty+th*0.85,tx+tw*0.7,ty+th*0.65);
+      ctx.stroke();
+      break;
+    }
     default:{
       ctx.fillStyle=f.c;
       ctx.fillRect(tx,ty,tw,th);
@@ -5302,6 +5383,17 @@ function intSpawnSafe(x,y){
   }
   return {x,y};
 }
+// Custody (Stufe 3, Zelle): Verhaftung springt direkt in dieses Interior — analog enterInterior(), aber ohne
+// Gebäude-Bezug (kein doorX/doorY, keine BUILDING_TO_INT-Zuordnung nötig, da es kein begehbares Gebäude ist).
+function enterJailCell(){
+  interior=makeInterior('jail_cell');
+  intFade=1; intFadeDir=0;
+  intTargetBuilding=null;
+  const spot=intSpawnSafe(interior.w*INT_TILE/2, interior.h*INT_TILE*0.7);
+  intPlayer.x=spot.x; intPlayer.y=spot.y;
+  intPlayer.dir=0; intPlayer.frame=0; intPlayer.moving=false;
+  el('minimap-wrap').classList.add('hidden');
+}
 function enterInterior(buildingType,doorX,doorY){
   const intType=BUILDING_TO_INT[buildingType];
   if(!intType) return;
@@ -5403,6 +5495,19 @@ function interactInterior(){
       if(!dialog.active){
         clearInterval(checkBuy);
         buyMethLab();
+      }
+    },100);
+    return;
+  }
+  if(f.interactive==='jail_bail'){
+    // Early-Bail: Preis live berechnen (tickt mit der Restzeit runter), erst beim Dialog-Schließen abbuchen —
+    // exakt dasselbe Muster wie methlab_unlock oben, nur mit dynamischem statt statischem Preistext.
+    const label=f.label&&f.label[currentLang]?f.label[currentLang]:(currentLang==='en'?'Payphone':'Münztelefon');
+    openDialog(label,[t('jail.bailOffer',{amount:earlyBailCost()})]);
+    const checkBail=setInterval(()=>{
+      if(!dialog.active){
+        clearInterval(checkBail);
+        payEarlyBail();
       }
     },100);
     return;
@@ -6166,20 +6271,22 @@ function zonePerimeterSpot(rect,margin){
   return null;
 }
 function spawnPolicePatrols(){
-  // 2 Streifen pro echtem Gang-Revier (dort spielt sich das eigentliche Verbrechen ab, also auch die
-  // Polizeipräsenz) + 2 citywide zur Abwechslung. warLook-Zone (NTL-Norden) ausgenommen — sieht schon
-  // wie Kriegsgebiet aus, keine Cops, die sich da freiwillig reinstellen.
+  // 3 Streifen pro echtem Gang-Revier (dort spielt sich das eigentliche Verbrechen ab, also auch die
+  // Polizeipräsenz) + 4 citywide zur Abwechslung (Nutzer-Feedback: mehr sichtbare Polizei als reine
+  // Stadt-Präsenz, unabhängig von Fahndung — Personenkontrollen bleiben genauso selten wie bisher,
+  // siehe updatePoliceDetection(), das ist hier unverändert). warLook-Zone (NTL-Norden) ausgenommen —
+  // sieht schon wie Kriegsgebiet aus, keine Cops, die sich da freiwillig reinstellen.
   const beats=[GANGS.YBC.zone,GANGS.BTK.zone,GANGS.STB.zone,
     ...(Array.isArray(GANGS.NTL.zone)?GANGS.NTL.zone:[GANGS.NTL.zone])].filter(z=>!z.warLook);
   for(const rect of beats){
-    for(let i=0;i<2;i++){
+    for(let i=0;i<3;i++){
       const s=zonePerimeterSpot(rect,60)||neutralSpot(150,850,150,850);
       if(!s) continue;
       const p=makeNpc('police','npc_police',s.px,s.py,{hp:30,speed:1.5,wanderR:rand(260,360)});
       p.weapon='mini_draco';
     }
   }
-  for(let i=0;i<2;i++){
+  for(let i=0;i<4;i++){
     const s=neutralSpot(150,850,150,850);
     if(!s) continue;
     const p=makeNpc('police','npc_police',s.px,s.py,{hp:30,speed:1.5,wanderR:rand(300,420)});
@@ -7206,7 +7313,8 @@ const POLICE_CFG={
   dispatchRingMin: 320,        // Spawn-Ring um den Spieler: nah genug für sofortige Präsenz, nicht direkt drauf
   dispatchRingMax: 520,
   dispatchTargetByStars: {1:1, 2:2, 3:3, 4:4, 5:5},   // aktive Verfolger, die bei X Sternen unterwegs sein sollen
-  maxTotalPolice: 20           // Deckel gegen unbegrenztes Nachspawnen über eine lange Session hinweg
+  maxTotalPolice: 24           // Deckel gegen unbegrenztes Nachspawnen — 16 Ambient (spawnPolicePatrols) +
+                                // bis zu 5 Dispatch-Verfolger + Puffer, siehe spawnPolicePatrols()
 };
 let arrestFade=0, arrestFadeDir=0;
 function wantedStars(){
@@ -7261,6 +7369,25 @@ function bailCost(){
   const finePercent=Math.min(0.95, 0.15+0.05*sev+0.05*player.criminalRecord.length);
   return Math.round(player.money*finePercent);
 }
+// Early-Bail (Zelle, Münztelefon): Aufpreis, um eine LAUFENDE Haft vorzeitig zu beenden — zusätzlich zur
+// normalen Kaution/Fine, die releaseFromCustody() ohnehin abzieht. Direkt nach der Verhaftung (100% Restzeit)
+// zahlt man effektiv bailCost()×2, kurz vor der eh anstehenden Entlassung (Restzeit→0) nur noch ~bailCost()×1 —
+// nie günstiger als normales Absitzen (das kostet immer exakt bailCost()×1), nur bequemer.
+function earlyBailCost(){
+  if(!player.arrested||!(player.custodyTotalMs>0)) return 0;
+  const remain=Math.max(0,player.custodyReleaseAt-Date.now());
+  const frac=Math.min(1,remain/player.custodyTotalMs);
+  return Math.round(bailCost()*frac);
+}
+function payEarlyBail(){
+  const premium=earlyBailCost();
+  if(player.money<premium){ toast(t('jail.noMoney')); return; }
+  player.money-=premium;
+  toast(t('jail.bailed',{amount:premium}));
+  // Restzeit auf 0 setzen — der bestehende updateCustody()→releaseFromCustody()-Mechanismus übernimmt den
+  // Rest (reguläre Fine, Kontraband-Check, Teleport, Zelle verlassen) im nächsten Tick ganz normal.
+  player.custodyReleaseAt=Date.now();
+}
 
 function collides(px,py){
   if(px<12||py<20||px>MAP_PX-12||py>MAP_PX-6) return true;
@@ -7310,7 +7437,7 @@ canvas.addEventListener('pointerdown',(e)=>{
   // Interagieren läuft ausschließlich über E/Enter bzw. Klick auf das [E]-Prompt selbst (siehe unten) —
   // sonst würde jeder Kampf-Klick in der Nähe einer Tür/eines NPCs den Angriff schlucken und stattdessen
   // den Interaktions-Text auslösen ("vor dem Haus angegriffen, Klick macht den [E]-Text statt Schlag").
-  if(dialog.active&&!player.arrested) advanceDialog();   // Konsistenz mit interact(): keine Dialog-Eingabe während der Custody-Blende
+  if(dialog.active&&!arrestBlocksInput()) advanceDialog();   // Konsistenz mit interact()/arrestBlocksInput()
   else if(e.button===0){ mouseFireDown=true; performAttack('stab'); }       // nur Linksklick — Rechtsklick läuft über 'contextmenu'
 });
 window.addEventListener('pointerup',(e)=>{ if(e.button===0) mouseFireDown=false; });
@@ -7422,12 +7549,12 @@ function applyDamageToNpc(n,dmg){
   for(let i=0;i<5;i++) spawnParticle(n.px+rand(-6,6),n.py-rand(10,30),
     {vy:-rand(10,30),vx:rand(-20,20),life:rand(.25,.45),size:2,color:i<3?'#b32020':'#7a1414'});
   spawnBloodDecal(n.px+rand(-6,6),n.py+rand(-2,4));
-  // Polizei (Stufe 3), Auslöser "Waffengewalt": Treffer zählt nur, wenn ein Zivilist es mitbekommt
-  if(civWitnessNearby(n.px,n.py,POLICE_CFG.witnessD2)){
-    addHeat(POLICE_CFG.heatPerHit);
-    // Felony-Erweiterung: "Körperverletzung" nur einmal pro Ziel/Begegnung loggen, nicht pro Treffer
-    if(!n.assaultLogged){ n.assaultLogged=true; logCrime('assault'); }
-  }
+  // Polizei (Stufe 3), Auslöser "Waffengewalt": akute Heat (löst Polizei-Reaktion JETZT aus) zählt nur,
+  // wenn ein Zivilist es mitbekommt. Das Felony-Register merkt sich die Tat aber immer, unabhängig von
+  // Zeugen (Nutzer-Vorgabe: "alles wird gespeichert, das Risiko erwischt zu werden bleibt bestehen") —
+  // nur einmal pro Ziel/Begegnung geloggt, nicht pro Treffer.
+  if(civWitnessNearby(n.px,n.py,POLICE_CFG.witnessD2)) addHeat(POLICE_CFG.heatPerHit);
+  if(!n.assaultLogged){ n.assaultLogged=true; logCrime('assault'); }
   if(n.hp<=0){ killNpc(n); return; }
   n.combatAggro=true;                               // getroffen = kämpft zurück, unabhängig von der Gang-Zone
   if(n.state!=='chase') enterChase(n);              // sofortiger Gegenschlag, unabhängig vom 15s-Zonen-Timer
@@ -7531,8 +7658,14 @@ function startArrest(voluntary){
 function beginCustody(){
   const ms=custodyDurationMs()*(player.arrestVoluntary?0.5:1);   // Sich-stellen halbiert die Zeit
   player.custodyReleaseAt=Date.now()+ms;
+  player.custodyTotalMs=ms;   // Ausgangsdauer — braucht earlyBailCost() für den Restzeit-Anteil
   el('custody-title').textContent=t('police.custodyTitle');
   el('custody-overlay').classList.remove('hidden');
+  // Begehbare Zelle statt Blackscreen: Verhaftung selbst hat bereits zu Schwarz überblendet (arrestFadeDir),
+  // daher hier direkt aufdecken (arrestFade=0) statt einen zweiten Fade-Zyklus zu bauen — updateArrestFade()
+  // bleibt dadurch unverändert und exklusiv für die echte Freilassung reserviert.
+  enterJailCell();
+  arrestFade=0;
 }
 function updateArrestFade(dt){
   if(arrestFadeDir===0) return;
@@ -7593,6 +7726,8 @@ function releaseFromCustody(){
   player.criminalRecord=[];
   player.timesArrested++;
   player.arrestVoluntary=false;
+  // Zelle verlassen — egal ob die Strafe natürlich ablief oder per Early-Bail beendet wurde
+  interior=null; intFade=0; intFadeDir=0; intTargetBuilding=null;
   const rp=policeStationB||trapHouse;
   player.px=rp.door.x; player.py=rp.baseY+40;
   player.dir=0;
@@ -7608,10 +7743,10 @@ function releaseFromCustody(){
    typischerweise binnen einer Minute nach der letzten Tat wieder auf 0 decayt (siehe updateHeat()),
    traf "hasContraband UND heat>0" in der Praxis fast nie auf denselben Prüf-Tick, die Durchsuchung
    feuerte quasi nie (Nutzer-Feedback: "Labor voll, trotzdem keine Verhaftung"). Jetzt: echte
-   Echtzeit-Wiederholung alle 40-70s, solange ein Fahndungsstern aktiv ist — mehrere Versuche pro
+   Echtzeit-Wiederholung alle 30-55s, solange ein Fahndungsstern aktiv ist — mehrere Versuche pro
    Rampage/Session statt eines einzigen Losses. Die Vorwarnung (raidWarnT) bleibt als faire Reaktionszeit.
-   Wird etwas gefunden, gilt das als Verhaftung — unabhängig davon, wo der Spieler gerade steckt
-   (Nutzer-Vorgabe: "illegales Item gefunden = gepackt, egal wo er sich befindet"). */
+   Verhaftung nur, wenn live im eigenen Trap-Haus mit Kontraband angetroffen — sonst (nicht anwesend)
+   nur Fund+Geldstrafe, siehe resolveRaid(). */
 let raidState=null, raidCheckT=0;
 function updateRaidCheck(dt){
   if(raidState){
@@ -7633,13 +7768,22 @@ function updateRaidCheck(dt){
 }
 function resolveRaid(){
   const res=confiscateContraband('all');
-  if(res.n>0){
-    toast(t('police.raidResult'));
-    startArrest();   // Fund = Verhaftung, egal ob der Spieler gerade im Trap steht oder woanders unterwegs ist
-  } else {
+  if(res.n===0){
     // Bugfix: vorher blieb eine Vorwarnung ohne jedes Ergebnis, wenn hasMethLab/hasGrowTent zwar gesetzt
     // war, aber nichts mehr wirklich da war (z.B. Ware längst verkauft) — wirkte wie "nichts passiert".
     toast(t('police.raidClean'));
+    return;
+  }
+  // Verhaftung nur, wenn der Spieler live mit Kontraband im eigenen Trap-Haus angetroffen wird — sonst
+  // (Spieler woanders unterwegs) gibt's Fund+Geldstrafe, aber keine Festnahme (Nutzer-Vorgabe: man kann
+  // niemanden verhaften, der gar nicht da ist).
+  if(interior&&interior.type==='house_trap'){
+    toast(t('police.raidResult'));
+    startArrest();
+  } else {
+    const fine=Math.round(bailCost()*0.4);
+    player.money=Math.max(0,player.money-fine);
+    toast(t('police.raidFined',{fine}));
   }
 }
 
@@ -7700,11 +7844,13 @@ function addHeat(amount){
 function updateHeat(dt){
   if(player.heatCoolT>0) player.heatCoolT=Math.max(0,player.heatCoolT-dt);
   else if(player.heat>0) player.heat=Math.max(0,player.heat-POLICE_CFG.decayPerSec*dt);
-  // Waffe offen tragen: langsamer Verdachts-Trickle, solange irgendeine Schusswaffe (nicht nur Mini Draco —
-  // gilt jetzt für alle 4 Feuerwaffen) in Zivilistensicht equippt bleibt. "weaponCarry" wird nur einmal
-  // pro Trage-Session geloggt (Dedup-Flag, zurückgesetzt beim Ab-/Umrüsten, siehe equipWeapon()).
-  if(WEAPON_STATS[player.weapon||'fist'].ranged&&!player.dead&&!player.arrested&&civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)){
-    addHeat(POLICE_CFG.heatPerGunOutPerSec*dt);
+  // Waffe offen tragen: langsamer Verdachts-Trickle (nur mit Zeugen — akute Heat braucht jemanden, der's
+  // gerade mitbekommt), solange irgendeine Schusswaffe (alle 4 Feuerwaffen) equippt bleibt. Das Register
+  // merkt sich "weaponCarry" aber immer, unabhängig von Zeugen (Nutzer-Vorgabe: alles wird gespeichert,
+  // das Risiko erwischt zu werden bleibt bestehen) — nur einmal pro Trage-Session (Dedup-Flag, zurückgesetzt
+  // beim Ab-/Umrüsten, siehe equipWeapon()).
+  if(WEAPON_STATS[player.weapon||'fist'].ranged&&!player.dead&&!player.arrested){
+    if(civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)) addHeat(POLICE_CFG.heatPerGunOutPerSec*dt);
     if(!player.weaponCarryLogged){ player.weaponCarryLogged=true; logCrime('weaponCarry'); }
   }
 }
@@ -7800,8 +7946,14 @@ function closeDialog(){
 }
 el('dialog-box').addEventListener('pointerdown',e=>{ e.stopPropagation(); advanceDialog(); });
 
+// Zwangsaufenthalt (Stufe 3): blockiert Interaktion/Dialog-Eingabe normalerweise komplett — AUSSER in der
+// eigenen Zelle, wo Interagieren (Münztelefon = Early-Bail) der ganze Sinn der Sache ist. Eine Funktion statt
+// die Bedingung zweimal (E-Taste + Klick) auszuschreiben, sonst laufen die beiden Stellen irgendwann auseinander.
+function arrestBlocksInput(){
+  return player.arrested&&!(interior&&interior.type==='jail_cell');
+}
 function interact(){
-  if(player.arrested) return;                             // Zwangsaufenthalt (Stufe 3): kein Interagieren durch die Custody-Blende
+  if(arrestBlocksInput()) return;
   if(dialog.active){ advanceDialog(); return; }          // Dialog hat immer Vorrang
   if(phoneOpen){ closePhone(); return; }
   if(invOpen){ closeInventory(); return; }
@@ -9940,8 +10092,10 @@ function sellToBuyer(n){
   n.state='idle';
   if(navTarget&&navTarget.key==='buyer') navTarget=null;
   if(req.itemId.startsWith('meth_')) JobSystem.addXp('meth',15);   // XP pro Meth-Deal, zusätzlich zur Ernte-XP
-  // Polizei (Stufe 3), Auslöser "Dealen in Sichtweite": zählt nur, wenn ein Zivilist zusieht
-  if(civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)){ addHeat(POLICE_CFG.heatPerDeal); logCrime('dealing'); }
+  // Polizei (Stufe 3), Auslöser "Dealen": akute Heat nur mit Zeugen, das Register merkt sich den Deal aber
+  // immer (Nutzer-Vorgabe: alles wird gespeichert, das Risiko erwischt zu werden bleibt bestehen).
+  if(civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)) addHeat(POLICE_CFG.heatPerDeal);
+  logCrime('dealing');
   buyerRequest=null;
   saveGame();
 }
@@ -9995,8 +10149,10 @@ function sellToWalkupNpc(g,req){
     {vy:-rand(15,30),vx:rand(-15,15),life:rand(.3,.5),size:2,color:'#f5c542'});
   toast(t('walkup.sold',{n:req.grams,product:req.product,pay:req.price}));
   if(req.itemId.startsWith('meth_')) JobSystem.addXp('meth',5);   // kleiner Bonus, deutlich unter einem echten Buyer-Deal (15)
-  // Polizei (Stufe 3), Auslöser "Dealen in Sichtweite": zählt nur, wenn ein Zivilist zusieht
-  if(civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)){ addHeat(POLICE_CFG.heatPerDeal); logCrime('dealing'); }
+  // Polizei (Stufe 3), Auslöser "Dealen": akute Heat nur mit Zeugen, das Register merkt sich den Deal aber
+  // immer (Nutzer-Vorgabe: alles wird gespeichert, das Risiko erwischt zu werden bleibt bestehen).
+  if(civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)) addHeat(POLICE_CFG.heatPerDeal);
+  logCrime('dealing');
   g.saleCD=WALKUP_SALE_COOLDOWN;
   saveGame();
 }
@@ -10144,11 +10300,10 @@ function startDrinking(type){
   player.drinking={type, sips:DRINK_CFG[type].sips, sipT:0, sipCD:0};
   toast(t(type==='beer'?'drink.openBeer':'drink.openVodka'));
   // Felony-Erweiterung, Auslöser "Öffentlicher Alkoholkonsum": beim Öffnen der Flasche, nicht pro Schluck
-  // (sonst 6-10 Log-Einträge pro Bier) — nur wenn ein Zivilist in Sichtweite ist.
-  if(civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)){
-    addHeat(POLICE_CFG.heatPerDrinkPublic);
-    logCrime('publicDrinking');
-  }
+  // (sonst 6-10 Log-Einträge pro Bier). Akute Heat nur mit Zeugen, das Register merkt sich die Tat aber
+  // immer (Nutzer-Vorgabe: alles wird gespeichert, das Risiko erwischt zu werden bleibt bestehen).
+  if(civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)) addHeat(POLICE_CFG.heatPerDrinkPublic);
+  logCrime('publicDrinking');
   return true;
 }
 function takeSip(){
@@ -11465,7 +11620,8 @@ function saveGame(){
       // Felony-Erweiterung: Register + laufende Verhaftung überleben jetzt einen Reload (Strafen können
       // Stunden dauern — heat/wantedStars() bleiben bewusst weiter sitzungsbasiert, siehe startGame()).
       criminalRecord:player.criminalRecord,
-      arrested:player.arrested, custodyReleaseAt:player.custodyReleaseAt, arrestVoluntary:player.arrestVoluntary
+      arrested:player.arrested, custodyReleaseAt:player.custodyReleaseAt, arrestVoluntary:player.arrestVoluntary,
+      custodyTotalMs:player.custodyTotalMs
     }));
   }catch(e){}
 }
@@ -11614,9 +11770,13 @@ function startGame(fresh){
     if(s.arrested&&Number.isFinite(s.custodyReleaseAt)&&s.custodyReleaseAt>Date.now()){
       player.arrested=true;
       player.custodyReleaseAt=s.custodyReleaseAt;
-      arrestFade=1; arrestFadeDir=0;
+      player.custodyTotalMs=Number.isFinite(s.custodyTotalMs)&&s.custodyTotalMs>0
+        ? s.custodyTotalMs
+        : Math.max(1,s.custodyReleaseAt-Date.now());   // alte Saves ohne das Feld: Restzeit als Näherung
+      arrestFade=0; arrestFadeDir=0;   // Zelle direkt sichtbar statt Blackscreen
       el('custody-title').textContent=t('police.custodyTitle');
       el('custody-overlay').classList.remove('hidden');
+      enterJailCell();
     } else if(s.arrested&&!(s.custodyReleaseAt>0)){
       // Gespeichert mitten in der ~0.2s-Fade-in-Animation, bevor beginCustody() eine echte
       // Freilassungszeit gewürfelt hat (custodyReleaseAt daher noch 0) — keine "abgelaufene Strafe",
