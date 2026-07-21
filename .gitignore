@@ -1,3 +1,7 @@
 # Lokale Backups/Arbeitskopien — nicht mitversionieren, index.html ist die veröffentlichte Kopie
 *backup*.html
 *BACKUP*.html
+
+# Roh-Export aus PixLab (Starter-Charakter) — nur Ausgangsmaterial für german_streetz_assets/player_base.png
+# & player_tracksuit.png, kein eigenes Deliverable, nicht mitversionieren.
+Pixel_art_character_base_body_32x64px_4_directions/
