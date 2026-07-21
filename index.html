@@ -1324,6 +1324,7 @@ const I18N = {
     jail: {
       bailOffer: 'Anwalt anrufen? Sofort raus kostet extra — {amount}$.',
       bailed: 'Freigekauft: {amount}$ extra bezahlt.',
+      partialBail: 'Reicht nicht für die volle Freilassung — {amount}$ bezahlt (jetzt pleite), noch {time} übrig.',
       noMoney: 'Nicht genug Geld dafür.'
     },
     dialog: { hint: '▼ E', prompt: '[E]' },
@@ -1628,6 +1629,7 @@ const I18N = {
     jail: {
       bailOffer: 'Call a lawyer? Getting out now costs extra — ${amount}.',
       bailed: 'Bailed out: paid ${amount} extra.',
+      partialBail: 'Not enough for full release — paid ${amount} (now broke), {time} left.',
       noMoney: 'Not enough cash for that.'
     },
     dialog: { hint: '▼ E', prompt: '[E]' },
@@ -6570,6 +6572,13 @@ function updateNPCs(dt){
     }
     if(d2>NPC_ACTIVE_D2) continue;
 
+    // Waffen-Update: Glock-Verlangsamung klingt ab (siehe applyDamageToNpc()) — n.speed läuft dadurch
+    // ganz normal überall dort wieder auf den Originalwert zurück, wo sonst n.speed gelesen wird
+    // (Chase/Patrol/Follow etc.), ohne dass jede einzelne Bewegungsstelle extra angepasst werden muss.
+    if(n.slowT>0){
+      n.slowT-=dt;
+      if(n.slowT<=0&&n.baseSpeed!=null){ n.speed=n.baseSpeed; n.baseSpeed=null; }
+    }
     // NTL: schwarze Partikel-Aura auf dem Outfit
     if(n.gang==='NTL'&&d2<NPC_EMIT_D2){
       n.auraT=(n.auraT||0)-dt;
@@ -7258,7 +7267,7 @@ const SPEED_BOOST_MULT=1.4;
 const WEAPON_STATS={
   fist:   {dmg:3,  reach:40},
   knife:  {dmg:6,  reach:44},
-  machete:{dmg:9,  reach:50},
+  machete:{dmg:10, reach:50},   // Nutzer-Vorgabe: spürbar mehr Schaden als das Messer
   axe:    {dmg:12, reach:48},
   mini_draco:{dmg:18, reach:260, ranged:true, mag:30, reloadT:2, fireCD:0.14},
   // Waffen-Update: Fully Draco trifft genauso hart wie die Semi Draco (mini_draco) — nur der Feuermodus
@@ -7391,13 +7400,29 @@ function payEarlyBail(quotedPrice){
   // Eingefrorener Preis aus dem Dialog-Moment (Bugfix, Adversarial-Review) — sonst tickt der Preis zwischen
   // Dialog-Öffnen und -Schließen weiter runter und es wird am Ende weniger abgebucht, als angezeigt wurde.
   const premium=Number.isFinite(quotedPrice)?quotedPrice:earlyBailCost();
-  if(player.money<premium){ toast(t('jail.noMoney')); return; }
-  player.money-=premium;
-  player.custodyBailSnapshot=baseCost;   // releaseFromCustody() nutzt denselben Wert für die reguläre Fine
-  toast(t('jail.bailed',{amount:premium}));
-  // Restzeit auf 0 setzen — der bestehende updateCustody()→releaseFromCustody()-Mechanismus übernimmt den
-  // Rest (reguläre Fine, Kontraband-Check, Teleport, Zelle verlassen) im nächsten Tick ganz normal.
-  player.custodyReleaseAt=Date.now();
+  if(premium<=0) return;   // Restzeit ist praktisch schon abgelaufen, updateCustody() übernimmt gleich selbst
+  if(player.money>=premium){
+    player.money-=premium;
+    player.custodyBailSnapshot=baseCost;   // releaseFromCustody() nutzt denselben Wert für die reguläre Fine
+    toast(t('jail.bailed',{amount:premium}));
+    // Restzeit auf 0 setzen — der bestehende updateCustody()→releaseFromCustody()-Mechanismus übernimmt den
+    // Rest (reguläre Fine, Kontraband-Check, Teleport, Zelle verlassen) im nächsten Tick ganz normal.
+    player.custodyReleaseAt=Date.now();
+  } else if(player.money>0){
+    // Nutzer-Vorgabe: reicht das Geld nicht für die volle Freilassung, wird stattdessen nur der Anteil der
+    // Restzeit abgekauft, den man sich leisten kann — zahlt alles, was da ist, statt komplett leer auszugehen.
+    // Kein custodyBailSnapshot nötig: player.money ist danach 0, bailCost() liefert bei der irgendwann
+    // regulär ablaufenden (jetzt kürzeren) Reststrafe ohnehin 0 — passt genau.
+    const paid=player.money;
+    const remain=Math.max(0,player.custodyReleaseAt-Date.now());
+    const reduceMs=Math.round(remain*(paid/premium));
+    player.money=0;
+    player.custodyReleaseAt=Math.max(Date.now(),player.custodyReleaseAt-reduceMs);
+    const left=Math.max(0,player.custodyReleaseAt-Date.now());
+    toast(t('jail.partialBail',{amount:paid,time:formatCustodyRemaining(left)}));
+  } else {
+    toast(t('jail.noMoney'));
+  }
 }
 
 function collides(px,py){
@@ -7566,6 +7591,15 @@ function applyDamageToNpc(n,dmg){
   // nur einmal pro Ziel/Begegnung geloggt, nicht pro Treffer.
   if(civWitnessNearby(n.px,n.py,POLICE_CFG.witnessD2)) addHeat(POLICE_CFG.heatPerHit);
   if(!n.assaultLogged){ n.assaultLogged=true; logCrime('assault'); }
+  // Waffen-Update (Nutzer-Vorgabe): Glock-Treffer (semi/fully) verlangsamen das Ziel kurz — n.baseSpeed
+  // merkt den Original-Wert nur beim ERSTEN Treffer, damit sich mehrere Treffer hintereinander nicht
+  // aufschaukeln (sonst würde ein zweiter Treffer auf den bereits halbierten Wert nochmal halbieren).
+  // Abklingen + Zurücksetzen läuft in updateNPCs() (Suche nach "slowT").
+  if(player.weapon==='semi_glock'||player.weapon==='fully_glock'){
+    if(n.baseSpeed==null) n.baseSpeed=n.speed;
+    n.speed=n.baseSpeed*0.5;
+    n.slowT=1.5;
+  }
   if(n.hp<=0){ killNpc(n); return; }
   n.combatAggro=true;                               // getroffen = kämpft zurück, unabhängig von der Gang-Zone
   if(n.state!=='chase') enterChase(n);              // sofortiger Gegenschlag, unabhängig vom 15s-Zonen-Timer
