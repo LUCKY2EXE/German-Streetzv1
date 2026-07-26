@@ -90,6 +90,33 @@ canvas#game{
   color: #fff;
   text-shadow: 1px 1px 0 #000;
 }
+/* Armor-Bar (Paket 2): zeigt die Schadensreduktion durch Westen (Stichschutz/Military), blau statt rot */
+#armor-bar{
+  position: relative;
+  width: 190px;
+  height: 14px;
+  background: #0e1a2a;
+  border: 2px solid #000;
+  outline: 1px solid var(--line);
+  box-shadow: 0 2px 0 rgba(0,0,0,.6);
+}
+#armor-fill{
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  background: linear-gradient(180deg,#6ab8ff,#2c7fd6);
+  transition: width .25s steps(8);
+}
+#armor-bar span{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 7px;
+  color: #fff;
+  text-shadow: 1px 1px 0 #000;
+}
 #money{
   font-size: 11px;
   color: var(--money);
@@ -125,7 +152,7 @@ canvas#game{
   background: var(--panel);
 }
 @media (max-width: 480px){
-  #hp-bar{ width: clamp(130px,42vw,190px); }
+  #hp-bar,#armor-bar{ width: clamp(130px,42vw,190px); }
   #zone{ max-width: clamp(140px,50vw,230px); }
   #btn-mute,#btn-inv{ padding: 8px 10px; }
 }
@@ -809,6 +836,7 @@ canvas#game{
 <div id="hud" class="hidden">
   <div id="hud-left">
     <div id="hp-bar"><div id="hp-fill"></div><span id="hp-text">100/100</span></div>
+    <div id="armor-bar" class="hidden"><div id="armor-fill"></div><span id="armor-text"></span></div>
     <div id="money">$ 50</div>
     <div id="job-hud" class="hidden"></div>
     <div id="ammo-hud" class="hidden"></div>
@@ -1148,6 +1176,7 @@ const I18N = {
       lab_coat: { name: 'Lab-Kittel', desc: 'Klicken: anlegen. Reduziert Explosions-Schaden im Labor.', installed: 'Lab-Kittel angelegt.', already: 'Hast du schon an.' },
       gasmask: { name: 'Gasmaske', desc: 'Klicken: anlegen. Verhindert Gift-Gas-Schaden beim Mischen.', installed: 'Gasmaske angelegt.', already: 'Hast du schon an.' },
       vest_stab: { name: 'Stichschutzweste (schwarz)', desc: 'Klicken: anlegen. Reduziert erlittenen Schaden spürbar.', installed: 'Stichschutzweste angelegt.', already: 'Trägst du schon.' },
+      vest_military: { name: 'Military-Weste', desc: 'Klicken: anlegen. Schützt stärker als die Stichschutzweste.', installed: 'Military-Weste angelegt.', already: 'Trägst du schon.' },
       meth_dirty: { name: 'Meth (unrein)', desc: '{n}g. Schlechte Qualität — niedriger Preis.' },
       meth_pure: { name: 'Meth (rein)', desc: '{n}g. Solide Qualität.' },
       meth_blue: { name: 'Blue Ice', desc: '{n}g. Beste Qualität — höchster Preis.' },
@@ -1482,6 +1511,7 @@ const I18N = {
       lab_coat: { name: 'Lab Coat', desc: 'Click: put on. Reduces explosion damage in the lab.', installed: 'Lab coat put on.', already: 'Already wearing it.' },
       gasmask: { name: 'Gas Mask', desc: 'Click: put on. Prevents poison gas damage while mixing.', installed: 'Gas mask put on.', already: 'Already wearing it.' },
       vest_stab: { name: 'Stab-Resistant Vest (Black)', desc: 'Click: put on. Noticeably reduces damage taken.', installed: 'Stab-resistant vest put on.', already: 'Already wearing it.' },
+      vest_military: { name: 'Military Vest', desc: 'Click: put on. Protects more than the stab-resistant vest.', installed: 'Military vest put on.', already: 'Already wearing it.' },
       meth_dirty: { name: 'Meth (dirty)', desc: '{n}g. Poor quality — low price.' },
       meth_pure: { name: 'Meth (pure)', desc: '{n}g. Solid quality.' },
       meth_blue: { name: 'Blue Ice', desc: '{n}g. Best quality — highest price.' },
@@ -7327,6 +7357,8 @@ const player={
   safeLevel:0,
   // Armor Shop (Mobile-Polish-Update): Stichschutzweste, siehe ITEMS.vest_stab/phChar()/damagePlayer()
   hasVest:false,
+  // Paket 2: Military-Weste (Armor Shop, stärkerer Schutz als vest_stab), siehe ITEMS.vest_military/armorPct()
+  hasVestMilitary:false,
   // Tutorials (Mobile-Polish-Update): einmalige Zusatzzeile pro Laden beim ersten Türdialog, siehe tutorialLine()
   tutorialsSeen:{},
   // Polizei (Stufe 3): Verdachtslevel 0-100, sitzungsbasiert wie NPCs/Combat-Aggro — siehe addHeat()/updateHeat()
@@ -7766,7 +7798,9 @@ function updateDeadNpcs(dt){
 }
 function damagePlayer(amount){
   if(player.dead||player.arrested) return;   // Zwangsaufenthalt (Stufe 3): kein Schaden während der Custody-Blende
-  if(player.hasVest) amount=Math.round(amount*0.6);   // Stichschutzweste: -40% Schaden (Armor Shop)
+  // Paket 2: Military-Weste schützt stärker als die Stichschutzweste, beide zusammen wirken nicht kumulativ.
+  if(player.hasVestMilitary) amount=Math.round(amount*0.4);        // Military-Weste: -60% Schaden
+  else if(player.hasVest) amount=Math.round(amount*0.6);           // Stichschutzweste: -40% Schaden (Armor Shop)
   player.hp=Math.max(0,player.hp-amount);
   player.hitFlashT=0.25;
   addShake(0.3);
@@ -8539,6 +8573,13 @@ const ITEMS={
                player.hasVest=true; applyOutfit(player.outfit);
                toast(t('items.vest_stab.installed')); saveGame(); return true;
              } },
+  // Paket 2: Military-Weste (Armor Shop) — stärkerer Schutz als vest_stab, siehe damagePlayer()/armorPct()
+  vest_military: { icon:'vest_military', cat:'tool', weight:1400,
+             use(){
+               if(player.hasVestMilitary){ toast(t('items.vest_military.already')); return false; }
+               player.hasVestMilitary=true; applyOutfit(player.outfit);
+               toast(t('items.vest_military.installed')); saveGame(); return true;
+             } },
   meth_dirty:{ icon:'meth', cat:'drug', weight:1, use(){ toast(t('items.meth_dirty.desc',{n:invCount('meth_dirty')})); return false; } },
   meth_pure: { icon:'meth', cat:'drug', weight:1, use(){ toast(t('items.meth_pure.desc',{n:invCount('meth_pure')})); return false; } },
   meth_blue: { icon:'meth', cat:'drug', weight:1, use(){ toast(t('items.meth_blue.desc',{n:invCount('meth_blue')})); return false; } },
@@ -9059,6 +9100,21 @@ function makeItemIcons(){
   x.fillRect(6.5,10,2,7);
   x.fillRect(15.5,10,2,7);
   ITEM_ICONS.vest_stab=c.toDataURL();
+  // Military-Weste (Paket 2): olivgrüne Weste mit Brustplatte, kräftigere Silhouette als vest_stab
+  c=mkCanvas(24,24); x=c.getContext('2d');
+  x.fillStyle='#3a4430';
+  x.beginPath();
+  x.moveTo(7,3); x.lineTo(17,3); x.lineTo(19,7); x.lineTo(17,21); x.lineTo(7,21); x.lineTo(5,7);
+  x.closePath();
+  x.fill();
+  x.fillStyle='#242c1e';
+  x.beginPath(); x.moveTo(7,3); x.lineTo(12,7); x.lineTo(17,3); x.closePath(); x.fill();
+  x.fillStyle='#57634a';
+  x.fillRect(8,9,8,7);
+  x.fillStyle='#1a1a1a';
+  x.fillRect(5.5,10,2,7);
+  x.fillRect(16.5,10,2,7);
+  ITEM_ICONS.vest_military=c.toDataURL();
   // Meth-Kristall: eisig-blaue Bruchstücke (dieselbe Grafik für alle 3 Qualitätsstufen — Unterschied ist reiner Name/Text)
   c=mkCanvas(24,24); x=c.getContext('2d');
   x.fillStyle='#bfe6f0';
@@ -9660,7 +9716,9 @@ const ARMOR_ITEMS=[
   {id:'semi_glock', price:6000, n:1},
   // Neue Waffen (Update): Nutzer-Vorgabe, militaryarp bewusst hier statt beim Dealer — Ausnahme von der
   // "nur halbautomatisch"-Regel oben (militaryarp ist auto:true), da explizit als Armor-Shop-Exklusiv gewünscht.
-  {id:'militaryarp', price:60000, n:1}
+  {id:'militaryarp', price:60000, n:1},
+  // Paket 2: Military-Weste, stärkerer Schutz als vest_stab, gleiche Owned-Sperre wie diese.
+  {id:'vest_military', price:4500, n:1}
 ];
 let armorOpen=false;
 function openArmorUI(){
@@ -9681,7 +9739,7 @@ function renderArmor(){
     const row=document.createElement('div');
     row.className='shop-row';
     // Paket E: Waffen sind Toggle-Equip-Items — Zweitkauf wäre sinnlos, daher gleiche owned-Sperre wie die Weste
-    const owned=(g.id==='vest_stab'&&player.hasVest)||(ITEMS[g.id].cat==='weapon'&&invCount(g.id)>0);
+    const owned=(g.id==='vest_stab'&&player.hasVest)||(g.id==='vest_military'&&player.hasVestMilitary)||(ITEMS[g.id].cat==='weapon'&&invCount(g.id)>0);
     const img=document.createElement('img');
     img.src=ITEM_ICONS[ITEMS[g.id].icon];
     img.alt='';
@@ -9856,7 +9914,7 @@ function applyOutfit(id){
     IMAGES.player=IMAGES[o.imgKey]||phChar(MANIFEST.player);
   } else {
     MANIFEST.player.pal={hood:o.hood,hoodD:o.hoodD,body:o.body,pants:o.pants,skin:'#c99e78'};
-    MANIFEST.player.vest=!!player.hasVest;   // Armor Shop (Mobile-Polish-Update): siehe phChar()
+    MANIFEST.player.vest=!!(player.hasVest||player.hasVestMilitary);   // Armor Shop (Mobile-Polish-Update): siehe phChar()
     IMAGES.player=phChar(MANIFEST.player);
   }
   player.outfit=id;
@@ -12083,7 +12141,7 @@ function saveGame(){
       hasMethLab:player.hasMethLab, hasLabCoat:player.hasLabCoat, hasGasmask:player.hasGasmask,
       methLabSlots:player.methLabSlots, methCooks:player.methCooks,
       outfit:player.outfit,
-      hasVest:player.hasVest, tutorialsSeen:player.tutorialsSeen,
+      hasVest:player.hasVest, hasVestMilitary:player.hasVestMilitary, tutorialsSeen:player.tutorialsSeen,
       timesArrested:player.timesArrested,
       // Felony-Erweiterung: Register + laufende Verhaftung überleben jetzt einen Reload (Strafen können
       // Stunden dauern — heat/wantedStars() bleiben bewusst weiter sitzungsbasiert, siehe startGame()).
@@ -12111,6 +12169,19 @@ function updateHUD(){
   if(hudT%9) return;                       // ~alle 150ms bei 60fps
   el('hp-fill').style.width=(player.hp/player.maxhp*100)+'%';
   el('hp-text').textContent=player.hp+'/'+player.maxhp;
+  // Paket 2: Armor-Bar zeigt die aktuelle Schadensreduktion durch Westen, blau statt rot; ausgeblendet
+  // ohne Weste (gleiche Sichtbarkeits-Konvention wie ammo-hud/drink-hud/wanted-hud).
+  {
+    const armorPct=player.hasVestMilitary?60:(player.hasVest?40:0);
+    const armorBar=el('armor-bar');
+    if(armorPct>0){
+      armorBar.classList.remove('hidden');
+      el('armor-fill').style.width=armorPct+'%';
+      el('armor-text').textContent='-'+armorPct+'%';
+    } else {
+      armorBar.classList.add('hidden');
+    }
+  }
   el('money').textContent='$ '+player.money;
   // Paket A: Farb-Flash bei Geldänderung (null-Check, damit der Spielstart nicht flasht)
   if(lastHudMoney!==null && player.money!==lastHudMoney){
@@ -12248,6 +12319,7 @@ function startGame(fresh){
       player.methCooks=player.hasMethLab?[(s.methCook&&typeof s.methCook==='object')?s.methCook:null]:[];
     }
     player.hasVest=!!s.hasVest;
+    player.hasVestMilitary=!!s.hasVestMilitary;
     player.tutorialsSeen=(s.tutorialsSeen&&typeof s.tutorialsSeen==='object')?s.tutorialsSeen:{};
     applyOutfit(OUTFIT_PALETTES.some(o=>o.id===s.outfit)?s.outfit:'default');
     // Custody-Resume läuft ERST hier, NACHDEM money/inv/stash/methCook oben geladen sind — releaseFromCustody()
@@ -12300,7 +12372,7 @@ function startGame(fresh){
     player.growPots=0; player.pots=[]; player.stash=[]; player.safeLevel=0;
     player.hasMethLab=false; player.hasLabCoat=false; player.hasGasmask=false;
     player.methLabSlots=0; player.methCooks=[];
-    player.hasVest=false; player.tutorialsSeen={};
+    player.hasVest=false; player.hasVestMilitary=false; player.tutorialsSeen={};
     applyOutfit('default');
     for(const k in JobSystem.levels) JobSystem.levels[k]={xp:0,lvl:1,introSeen:false,cooldownUntil:0};   // neues Spiel: Job-Level zurücksetzen
     gameMin=CFG.START_HOUR*60;
