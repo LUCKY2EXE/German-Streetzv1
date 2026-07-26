@@ -6237,6 +6237,63 @@ function updateGangAmbushCheck(dt){
   // mehr Schaden/Sekunde als das bisherige Maximum von 3) — nach dem ersten Test hochdrehbar.
   startChase(z.id,z.rect,randi(1,6));
 }
+/* ---------------- Paket 6: Autonome Gang-Kriege (MVP: nur STB vs. NTL) ----------------
+   Bewusst eng gefasst auf die einzige im Code schon als Rivalität markierte Gang-Paarung (WARZONE/
+   warLook). Startet komplett unabhängig von der Spielerposition — kein player.px/py-Bezug in der
+   Auslösebedingung. Nutzt npcDefeated() statt killNpc(), damit der Spieler weder Geld noch Heat/Crime-Log
+   für einen Kampf bekommt, an dem er nicht beteiligt war. */
+function npcGangFight(n,dt){
+  const target=n.fightTarget;
+  if(!target||target.state==='dead'||!NPCS.includes(target)){
+    n.state=n.act?'act':'idle'; n.fightTarget=null; return;
+  }
+  const dx=target.px-n.px, dy=target.py-n.py, d=Math.hypot(dx,dy);
+  if(d<28){
+    n.frame=0;
+    n.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?1:2):(dy<0?3:0);
+    if(n.atkCD>0) n.atkCD-=dt;
+    else{ applyGangFightDamage(target,WEAPON_STATS[n.weapon||'fist'].dmg); n.atkCD=rand(0.9,1.2); }
+    return;
+  }
+  const sp=3.1*CFG.TILE*dt, ux=dx/d, uy=dy/d;
+  const nx=n.px+ux*sp, ny=n.py+uy*sp;
+  if(!collides(nx,n.py)) n.px=nx;
+  if(!collides(n.px,ny)) n.py=ny;
+  n.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?1:2):(dy<0?3:0);
+  n.animT+=dt;
+  if(n.animT>0.16){ n.animT=0; n.frame^=1; }
+}
+function applyGangFightDamage(n,dmg){
+  n.hp-=dmg;
+  for(let i=0;i<5;i++) spawnParticle(n.px+rand(-6,6),n.py-rand(10,30),
+    {vy:-rand(10,30),vx:rand(-20,20),life:rand(.25,.45),size:2,color:'#b32020'});
+  spawnBloodDecal(n.px+rand(-6,6),n.py+rand(-2,4));
+  if(n.hp<=0) npcDefeated(n);
+}
+let gangWarT=rand(180,300);
+function updateGangWarCheck(dt){
+  gangWarT-=dt;
+  if(gangWarT>0) return;
+  gangWarT=rand(180,300);
+  const stbRect=GANGS.STB.zone;
+  const ntlWarRect=GANGS.NTL.zone.find(z=>z.warLook);
+  if(!stbRect||!ntlWarRect) return;
+  const stb=[], ntl=[];
+  for(const n of NPCS){
+    if(n.kind!=='gang'||n.state==='dead') continue;
+    if(n.act==='meth'||n.act==='dograce'||n.act==='dice') continue;   // gleiche Ausschluss-Filter wie startChase()
+    if(n.sprayer||n.patrol==='follow') continue;
+    if(n.state==='chase'||n.state==='return'||n.state==='gangfight') continue;
+    if(n.gang==='STB'&&n.homeRect===stbRect) stb.push(n);
+    else if(n.gang==='NTL'&&n.homeRect===ntlWarRect) ntl.push(n);
+  }
+  const cnt=Math.min(stb.length,ntl.length,randi(1,3));
+  for(let i=0;i<cnt;i++){
+    const a=stb[i], b=ntl[i];
+    a.fightTarget=b; b.fightTarget=a;
+    a.state='gangfight'; b.state='gangfight';
+  }
+}
 /* Schickt einen NPC in den Verfolgungs-/Kampf-Zustand — sowohl vom Zonen-Loiter-Trigger
    (startChase) als auch von einem Treffer im Kampf (applyDamageToNpc) genutzt. */
 function enterChase(n){
@@ -6682,15 +6739,17 @@ function updateNPCs(dt){
     lastNight=night;                                 // Verfolgung der Verschwindenden beenden
     for(const n of NPCS){
       n.bubble=null;
-      if(!npcOut(n)&&(n.state==='chase'||n.state==='return')){
+      if(!npcOut(n)&&(n.state==='chase'||n.state==='return'||n.state==='gangfight')){
         n.state=n.act?'act':'idle';
         n.px=n.anchor.x; n.py=n.anchor.y;
+        n.fightTarget=null;   // Paket 6: Gang-Krieg endet spätestens am Tag/Nacht-Wechsel
       }
     }
     zoneStay.triggered=false; zoneStay.t=0;
   }
   updateZoneStay(dt);
   updateGangAmbushCheck(dt);
+  updateGangWarCheck(dt);
   if(greetCD>0) greetCD-=dt;
   let reloBudget=6;                                  // max. Umsetzungen pro Frame
   for(const n of NPCS){
@@ -6809,6 +6868,7 @@ function updateNPCs(dt){
         }
         break;}
       case 'chase': npcChase(n,dt); break;
+      case 'gangfight': npcGangFight(n,dt); break;
       case 'suspicious':{                             // Polizei (Stufe 3): Telegraph vor der Verfolgung
         n.frame=0;
         n.dir=Math.abs(pdx)>Math.abs(pdy)?(pdx>0?1:2):(pdy>0?3:0);
@@ -7808,6 +7868,17 @@ function cashDropFor(n){
   if(n.kind==='guard') return Math.round(rand(10,20));
   return Math.round(rand(5,15));
 }
+// Paket 6: reiner Tod-Effekt (Status/Partikel/Blut), ausgelagert aus killNpc() — von killNpc() (Spieler-Kill,
+// mit Geld/Heat/Crime-Log davor) UND npcDefeated() (Gang-Kriegs-Kill, ohne jegliche Spieler-Auswirkung) genutzt.
+function npcDeathFx(n){
+  n.state='dead';
+  n.deadT=0.45;
+  n.hp=0;
+  n.bubble=null;
+  for(let i=0;i<6;i++) spawnParticle(n.px+rand(-8,8),n.py-rand(4,20),
+    {vy:-rand(6,16),vx:rand(-16,16),life:rand(.3,.5),size:2,color:'#8a1414'});
+  for(let i=0;i<randi(3,5);i++) spawnBloodDecal(n.px+rand(-8,8),n.py+rand(-3,5),{r:rand(7,13)});
+}
 function killNpc(n){
   player.money+=cashDropFor(n);
   for(const other of NPCS) if(other.leader===n) other.leader=null;   // Patrol-Follower nicht auf einer Leiche festfrieren lassen
@@ -7815,15 +7886,15 @@ function killNpc(n){
   addHeat(n.kind==='police'?POLICE_CFG.heatPerCopKilled:POLICE_CFG.heatPerKill);
   // Felony-Erweiterung: Mord (Zivilist, wehrlos) / Totschlag (Gang im Gegenkampf) / Mord an Polizeibeamten
   logCrime(n.kind==='police'?'killCop':n.kind==='civ'?'killCivilian':'killGang');
-  n.state='dead';
-  n.deadT=0.45;
-  n.hp=0;
-  n.bubble=null;
-  for(let i=0;i<6;i++) spawnParticle(n.px+rand(-8,8),n.py-rand(4,20),
-    {vy:-rand(6,16),vx:rand(-16,16),life:rand(.3,.5),size:2,color:'#8a1414'});
   for(let i=0;i<4;i++) spawnParticle(n.px+rand(-6,6),n.py-rand(10,26),
     {vy:-rand(20,34),vx:rand(-10,10),grav:40,life:rand(.5,.8),size:2,color:'#f5c542'});   // Cash-Drop-Tell
-  for(let i=0;i<randi(3,5);i++) spawnBloodDecal(n.px+rand(-8,8),n.py+rand(-3,5),{r:rand(7,13)});
+  npcDeathFx(n);
+}
+// Paket 6: Tod im autonomen Gang-Krieg (NPC gegen NPC) — bewusst OHNE player.money/addHeat/logCrime/
+// Cash-Drop-Tell, der Spieler war an diesem Kampf nicht beteiligt und darf dafür nicht belohnt/bestraft werden.
+function npcDefeated(n){
+  for(const other of NPCS) if(other.leader===n) other.leader=null;
+  npcDeathFx(n);
 }
 function updateDeadNpcs(dt){
   for(let i=NPCS.length-1;i>=0;i--){
@@ -7863,10 +7934,11 @@ function respawnPlayer(){
   // er "teleportiert" die Verfolgung quasi direkt zum frisch respawnten Spieler. Zurück auf den Anker,
   // zurück in einen neutralen State — deeskaliert komplett, wie ein natürliches Aufgeben.
   for(const n of NPCS){
-    if(n.state==='chase'||n.state==='copchase'||n.state==='suspicious'||n.state==='return'){
+    if(n.state==='chase'||n.state==='copchase'||n.state==='suspicious'||n.state==='return'||n.state==='gangfight'){
       n.state=n.act?'act':'idle';
       n.px=n.anchor.x; n.py=n.anchor.y;
       n.combatAggro=false;
+      n.fightTarget=null;   // Paket 6
       n.waitT=rand(0.5,2);
     }
   }
