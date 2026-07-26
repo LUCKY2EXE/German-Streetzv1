@@ -5234,7 +5234,7 @@ function renderInterior(time){
   ctx.drawImage(IMAGES.player,p.frame*32,p.dir*64,32,64,
     Math.round(p.x)-16,Math.round(p.y)-60,32,64);
   // Paket B: Kippe/Joint/Blunt + Flasche auch drinnen am Sprite (fehlte hier komplett)
-  drawConsumables(Math.round(p.x),Math.round(p.y)-33,p.dir);
+  drawConsumables(Math.round(p.x),Math.round(p.y)-EQUIP_ANCHOR_DY,p.dir);
   // Paket 18: Sprechblasen der ambienten Interior-NPCs (Kopie aus renderBubbles(), ohne
   // Tag/Nacht-/Kamera-Frustum-Filter — ein Interior-Raum ist immer komplett sichtbar).
   ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='bold 9px monospace';
@@ -10683,8 +10683,12 @@ function startSmoking(type,strain){
 }
 // Fester Hand-Anker für die ausgerüstete Waffe — bleibt immer an derselben Stelle/Seite,
 // egal in welche Richtung der Spieler gerade läuft (gleiches Prinzip wie cigTip(), aber ohne Rotation).
+// Paket 4: einheitlicher Anker für Waffen- UND Konsum-Item-Zeichnung (Mund-/Handhöhe relativ zu py) —
+// ersetzt die bisher unabhängig voneinander gepflegten -30/-33-Werte in weaponAnchor()/cigTip()/
+// drawConsumables()-Aufrufstellen, die beim "Zigarette hängt zu hoch"-Bug auseinandergelaufen waren.
+const EQUIP_ANCHOR_DY=30;
 function weaponAnchor(){
-  return {x:Math.round(player.px)+8, y:Math.round(player.py)-30};
+  return {x:Math.round(player.px)+8, y:Math.round(player.py)-EQUIP_ANCHOR_DY};
 }
 /* Paket B: Rauchen/Trinken funktioniert jetzt auch drinnen — dort steht der Spieler auf
    intPlayer.x/y, während player.px/py die (veraltete) Außenwelt-Position behält. Ohne diesen
@@ -10695,7 +10699,7 @@ function consumeAnchor(){
 }
 function cigTip(){
   const a=consumeAnchor();
-  const bx=Math.round(a.x), by=Math.round(a.y)-33;
+  const bx=Math.round(a.x), by=Math.round(a.y)-EQUIP_ANCHOR_DY;
   if(a.dir===1) return {x:bx-15,y:by};
   if(a.dir===2) return {x:bx+13,y:by};
   if(a.dir===3) return {x:bx,y:by-8};
@@ -11596,7 +11600,7 @@ function render(time){
       }
       // Kippe/Joint/Blunt + Flasche sichtbar (Rückenansicht: verdeckt) — Paket B: gemeinsame
       // Zeichnung mit renderInterior(), siehe drawConsumables()
-      drawConsumables(Math.round(player.px),Math.round(player.py)-33,player.dir);
+      drawConsumables(Math.round(player.px),Math.round(player.py)-EQUIP_ANCHOR_DY,player.dir);
       // Ausgerüstete Waffe sichtbar in der Hand (Rückenansicht: verdeckt) — gleiche Technik wie bei NPCs
       if(player.weapon&&player.dir!==3){
         const anchor=weaponAnchor();
