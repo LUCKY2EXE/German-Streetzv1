@@ -1062,7 +1062,7 @@ const CHUNK_PX = CFG.CHUNK * CFG.TILE;
      "https://cdn.jsdelivr.net/gh/DEINNAME/hood-assets@v1/assets/"
    Fehlende Dateien fallen automatisch auf Platzhalter zurück.
    ASSET_VERSION hochzählen = Browser-Cache umgehen (?v=).      */
-const ASSET_BASE_URL = "";   // leer = eingebettete Sprites + Platzhalter (läuft offline per Doppelklick)
+const ASSET_BASE_URL = "german_streetz_assets/";   // relativ zu index.html, wird von static.yml mitdeployed (GitHub Pages); fehlende Dateien fallen auf EMBEDDED/Platzhalter zurück
 const ASSET_VERSION  = "1";
 
 /* Eingebettete eigene Sprites (base64). Eine gesetzte ASSET_BASE_URL hat Vorrang,
@@ -1827,6 +1827,14 @@ const MANIFEST = {
   weapon_machete:{file:'weapon_machete.png',w:48, h:34, kind:'weapon'},
   weapon_axe:    {file:'weapon_axe.png',    w:28, h:40, kind:'weapon'},
   weapon_mini_draco:{file:'weapon_mini_draco.png', w:64, h:40, kind:'weapon'},
+  // Neue Waffen (Update): Netzwerk-Ladepfad (ASSET_BASE_URL) statt Base64-Embed — file: ist der
+  // tatsächliche Dateiname in german_streetz_assets/, ohne "weapon_"-Präfix (anders als die
+  // Base64-Embeds oben, die intern umbenannt wurden).
+  weapon_g30:{file:'g30.png', w:854, h:923, kind:'weapon'},
+  weapon_g17:{file:'g17.png', w:1275, h:962, kind:'weapon'},
+  weapon_fullyarp:{file:'fullyarp.png', w:1150, h:734, kind:'weapon'},
+  weapon_militaryarp:{file:'militaryarp.png', w:1482, h:804, kind:'weapon'},
+  weapon_costumfullyarp:{file:'costumfullyarp.png', w:1263, h:842, kind:'weapon'},
   house_trap:   {file:'house_trap.png',   w:160, h:160, kind:'building'},
   house_ybc:    {file:'house_ybc.png',    w:192, h:192, kind:'building'},
   house_btk:    {file:'house_btk.png',    w:192, h:192, kind:'building'},
@@ -7359,7 +7367,17 @@ const WEAPON_STATS={
   // Polizei-NPC-Waffe (Nutzer-Vorgabe: Cops sollen ihre eigene Polizeiwaffe tragen, nicht die Fully Draco der
   // Spieler-Waffenhändler-Seite). Nicht käuflich (kein ITEMS-Eintrag) — nur von Polizei-NPCs equippt,
   // siehe spawnPolicePatrols()/updatePoliceDispatch(). Stats wie mini_draco, da bisher deren Platzhalter war.
-  police_gun:{dmg:18, reach:260, ranged:true, mag:30, reloadT:2, fireCD:0.14}
+  police_gun:{dmg:18, reach:260, ranged:true, mag:30, reloadT:2, fireCD:0.14},
+  // Neue Waffen (Update): g17/g30 Werte wie ursprünglich vom Nutzer vorgegeben, nur die Tippfehler
+  // (rangend/reloadeT/realoadeT) korrigiert. fullyarp/militaryarp neu, Werte an bestehende Tiers angelehnt —
+  // beim ersten Test-Durchlauf ggf. mit dem Nutzer feinjustieren.
+  g30:{dmg:4, reach:200, ranged:true, mag:35, reloadT:1, fireCD:0.06},
+  g17:{dmg:6, reach:225, ranged:true, mag:40, reloadT:1.2, fireCD:0.05},
+  fullyarp:{dmg:7, reach:240, ranged:true, auto:true, mag:45, reloadT:2.2, fireCD:0.09},
+  militaryarp:{dmg:8, reach:250, ranged:true, auto:true, mag:40, reloadT:2, fireCD:0.08},
+  // costumfullyarp: reine Optik-Variante (rote statt schwarze Akzente) desselben Modells wie fullyarp,
+  // deshalb identische Werte.
+  costumfullyarp:{dmg:7, reach:240, ranged:true, auto:true, mag:45, reloadT:2.2, fireCD:0.09},
 };
 /* Zeichen-Größe pro Waffe (Quell-Crop/Ziel-Größe). Messer/Axt unverändert (verifiziert),
    Machete bewusst deutlich größer — einzige Stelle, an der die Größe definiert wird,
@@ -7376,7 +7394,15 @@ const WEAPON_VISUAL={
   semi_glock:{sw:56,sh:39,dw:26,dh:18},
   fully_glock:{sw:60,sh:40,dw:28,dh:19},
   g40:{sw:60,sh:57,dw:28,dh:26},
-  police_gun:{sw:76,sh:23,dw:36,dh:11}   // M16A4, flaches breites Sprite — nur von Polizei-NPCs getragen
+  police_gun:{sw:76,sh:23,dw:36,dh:11},   // M16A4, flaches breites Sprite — nur von Polizei-NPCs getragen
+  // Neue Waffen (Update): sw/sh = exakte Pixelmaße der freigestellten/zugeschnittenen PNGs
+  // (german_streetz_assets/g17.png etc., geladen über ASSET_BASE_URL). dw/dh an bestehende
+  // Waffengrößen angelehnt, bitte im Browser visuell feinjustieren.
+  g30:{sw:854,sh:923,dw:26,dh:28},
+  g17:{sw:1275,sh:962,dw:30,dh:23},
+  fullyarp:{sw:1150,sh:734,dw:34,dh:22},
+  militaryarp:{sw:1482,sh:804,dw:38,dh:21},
+  costumfullyarp:{sw:1263,sh:842,dw:34,dh:23}
 };
 function weaponVisual(key){ return WEAPON_VISUAL[key]||WEAPON_VISUAL.knife; }
 let deathFade=0, deathFadeDir=0;
@@ -9352,7 +9378,12 @@ const DEALER_ITEMS=[
   // Nutzer-Vorgabe: "heiße" Ware kommt vom Dealer. Owned-Sperre wie im Armor Shop, siehe renderDealershop().
   {id:'fully_draco', price:30000, n:1},
   {id:'fully_glock', price:22000, n:1},
-  {id:'g40', price:50000, n:1}
+  {id:'g40', price:50000, n:1},
+  // Neue Waffen (Update): g30/g17 als günstigere Zweitwaffen, fullyarp als starke Auto-Option nahe g40-Tier.
+  {id:'g30', price:15000, n:1},
+  {id:'g17', price:18000, n:1},
+  {id:'fullyarp', price:45000, n:1},
+  {id:'costumfullyarp', price:50000, n:1}
 ];
 let dealershopOpen=false;
 function openDealershopUI(){
@@ -9626,7 +9657,10 @@ const ARMOR_ITEMS=[
   // Schusswaffen bleiben hier — die vollautomatischen (illegalen) Varianten gibt's nur beim Dealer
   // in der Gasse, siehe DEALER_ITEMS.
   {id:'mini_draco', price:10000, n:1},
-  {id:'semi_glock', price:6000, n:1}
+  {id:'semi_glock', price:6000, n:1},
+  // Neue Waffen (Update): Nutzer-Vorgabe, militaryarp bewusst hier statt beim Dealer — Ausnahme von der
+  // "nur halbautomatisch"-Regel oben (militaryarp ist auto:true), da explizit als Armor-Shop-Exklusiv gewünscht.
+  {id:'militaryarp', price:60000, n:1}
 ];
 let armorOpen=false;
 function openArmorUI(){
