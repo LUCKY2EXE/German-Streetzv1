@@ -8452,7 +8452,7 @@ function buyMethlabSlot(){
   if(interior&&interior.type==='meth_lab') interior.furniture.push(makeCookstationFurniture(idx));
   toast(t('methlab.slotBought',{n:idx+1,price}));
   saveGame();
-  renderChemshop();
+  renderDealershop();   // Paket 3: Kauf-UI ist umgezogen, siehe renderDealershop()
 }
 const ITEMS={
   nokia:   { icon:'nokia', cat:'tool',       weight:150, use(){ openPhone(); return false; } },   // wird nicht verbraucht
@@ -9478,6 +9478,29 @@ function renderDealershop(){
     row.appendChild(img); row.appendChild(name); row.appendChild(price); row.appendChild(btn);
     box.appendChild(row);
   }
+  // Paket 3 (Nutzer-Vorgabe): Methlabor-Upgrades ("der reiche Dealer") sind vom Chemie-Regal
+  // hierher umgezogen — nur wenn das Labor überhaupt existiert, sonst gibt's noch nichts, wo
+  // eine zweite Station stehen könnte. Gleiches Zeilen-Muster wie zuvor in renderChemshop().
+  if(player.hasMethLab){
+    const price=nextMethlabSlotPrice();
+    const row=document.createElement('div');
+    row.className='shop-row';
+    const img=document.createElement('img');
+    img.src=ITEM_ICONS[ITEMS.gasmask.icon];   // geliehenes Labor-Icon, kein eigenes Stationen-Icon nötig
+    img.alt='';
+    const name=document.createElement('div');
+    name.className='shop-row-name';
+    name.textContent=price===null?t('methlab.slotsMaxedLabel'):t('methlab.buySlotLabel',{n:player.methLabSlots+1});
+    const priceEl=document.createElement('div');
+    priceEl.className='shop-row-price';
+    priceEl.textContent=price===null?'':price+'$';
+    const btn=document.createElement('button');
+    btn.textContent=price===null?t('armor.alreadyOwned'):'+';
+    btn.disabled=price===null||player.money<price;
+    btn.addEventListener('click',buyMethlabSlot);
+    row.appendChild(img); row.appendChild(name); row.appendChild(priceEl); row.appendChild(btn);
+    box.appendChild(row);
+  }
 }
 function buyDealershopItem(g){
   if(player.money<g.price){ toast(t('dealer.noMoney')); return; }
@@ -9664,28 +9687,8 @@ function renderChemshop(){
     row.appendChild(img); row.appendChild(name); row.appendChild(price); row.appendChild(btn);
     box.appendChild(row);
   }
-  // Zusatz-Zeile (Nutzer-Feedback): weitere Koch-Stationen kaufen — nur wenn das Labor überhaupt
-  // existiert, sonst gibt's noch nichts, wo eine zweite Station stehen könnte.
-  if(player.hasMethLab){
-    const price=nextMethlabSlotPrice();
-    const row=document.createElement('div');
-    row.className='shop-row';
-    const img=document.createElement('img');
-    img.src=ITEM_ICONS[ITEMS.gasmask.icon];   // geliehenes Labor-Icon, kein eigenes Stationen-Icon nötig
-    img.alt='';
-    const name=document.createElement('div');
-    name.className='shop-row-name';
-    name.textContent=price===null?t('methlab.slotsMaxedLabel'):t('methlab.buySlotLabel',{n:player.methLabSlots+1});
-    const priceEl=document.createElement('div');
-    priceEl.className='shop-row-price';
-    priceEl.textContent=price===null?'':price+'$';
-    const btn=document.createElement('button');
-    btn.textContent=price===null?t('growshop.alreadyOwned'):'+';
-    btn.disabled=price===null||player.money<price;
-    btn.addEventListener('click',buyMethlabSlot);
-    row.appendChild(img); row.appendChild(name); row.appendChild(priceEl); row.appendChild(btn);
-    box.appendChild(row);
-  }
+  // Paket 3: Methlabor-Upgrade-Kauf ist zum Dealer umgezogen (renderDealershop()) — Zutaten sind
+  // laut Nutzer-Vorgabe schon exklusiv beim Dealer, die Stationen-Upgrades passen dort besser hin.
 }
 function buyChemshopItem(g){
   if(player.money<g.price){ toast(t('chemshop.noMoney')); return; }
