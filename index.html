@@ -7338,6 +7338,9 @@ const ctx=canvas.getContext('2d');
 const minimapCanvas=el('minimap');
 const minimapCtx=minimapCanvas.getContext('2d');
 let cw=0, ch=0, dpr=1, ZOOM=2, camX=0, camY=0;
+// Paket 7: einmalig ermittelt (statt wie bisher lokal in startGame()), damit auch das neue Aim-System
+// weiß, ob es auf Desktop (Maus-Aim aktiv) oder Touch (bisherige 4-Richtungs-Logik bleibt) läuft.
+const IS_TOUCH = ('ontouchstart' in window || navigator.maxTouchPoints>0);
 
 function computeZoom(){
   ZOOM = window.innerWidth>=1300 ? 2 : (window.innerWidth>=700 ? 1.5 : 1.25);
@@ -7448,6 +7451,9 @@ const player={
   outfit:'default',
   // Schusswaffen (Paket 14): Patronen im Magazin + laufender Nachlade-Timer (R), Rückstoß nur Optik
   ammo:30, reloadT:0, shootRecoil:0,
+  // Paket 7: Blickwinkel zur Maus (Desktop) in Radiant — siehe updateAim(); auf Touch bleibt er bei 0
+  // ungenutzt, dort greift weiterhin die bewegungsbasierte 4-Richtungs-Logik (player.dir).
+  aimAngle:0,
   // Gang-Zugehörigkeit (Paket 14): null = zivil, sonst Gang-ID ('NTL' etc.) — Beitritt beim Boss
   gang:null,
   // Safe-Ausbau (Paket C): Stufe 0 = 16 Basis-Slots, jede Stufe +8 Slots (stashSlots()/buySafeUpgrade())
@@ -7735,6 +7741,13 @@ canvas.addEventListener('pointerdown',(e)=>{
   else if(e.button===0){ mouseFireDown=true; performAttack('stab'); }       // nur Linksklick — Rechtsklick läuft über 'contextmenu'
 });
 window.addEventListener('pointerup',(e)=>{ if(e.button===0) mouseFireDown=false; });
+// Paket 7: Maus-Position für das Aim-System — gefiltert auf pointerType 'mouse', damit Touch-Events
+// (die auch pointermove auslösen können) nicht versehentlich player.aimAngle verändern; der Joystick
+// hat seinen eigenen, an joyEl gebundenen pointermove-Listener und ist davon unberührt.
+let mouseCssX=0, mouseCssY=0, mouseInWindow=false;
+window.addEventListener('pointermove',(e)=>{
+  if(e.pointerType==='mouse'){ mouseCssX=e.clientX; mouseCssY=e.clientY; mouseInWindow=true; }
+});
 el('prompt').addEventListener('pointerdown',e=>{ e.preventDefault(); e.stopPropagation(); interact(); });
 
 /* ---------------- Kampfsystem ---------------- */
@@ -7788,7 +7801,10 @@ function performAttack(kind){
    Magazin/Nachladen über player.ammo/player.reloadT, Mündungsfeuer über spawnParticle. */
 function findShotTarget(reach){
   const o=meleeOrigin(10);
-  const dvx=player.dir===1?-1:player.dir===2?1:0, dvy=player.dir===3?-1:(player.dir===1||player.dir===2?0:1);
+  // Paket 7: auf Desktop zeigt der Trefferkorridor in Richtung player.aimAngle (Maus) statt der festen
+  // 4 Richtungen; auf Touch bleibt die bisherige, bewegungsbasierte Richtung als Fallback erhalten.
+  const dvx=IS_TOUCH ? (player.dir===1?-1:player.dir===2?1:0) : Math.cos(player.aimAngle);
+  const dvy=IS_TOUCH ? (player.dir===3?-1:(player.dir===1||player.dir===2?0:1)) : Math.sin(player.aimAngle);
   let bestAlong=reach+1, target=null;
   for(const n of NPCS){
     if(n.state==='dead'||!npcOut(n)) continue;
@@ -11432,7 +11448,18 @@ function addShake(a){ camShake=Math.min(0.6, Math.max(camShake, a)); }
 function updateCameraShake(dt){ if(camShake>0) camShake=Math.max(0, camShake-dt*1.8); }
 
 /* ---------------- Update ---------------- */
+/* Paket 7: player.aimAngle aus der Mausposition (Weltkoordinaten) relativ zur Spieler-Brust (py-20,
+   nicht py selbst, sonst würde der Winkel am Fußpunkt ansetzen). Nur Desktop — auf Touch bleibt
+   player.aimAngle unverändert bei 0, findShotTarget() nutzt dort weiterhin die alte 4-Richtungs-Logik. */
+function updateAim(){
+  if(IS_TOUCH||!mouseInWindow) return;
+  if(dialog.active||invOpen||phoneOpen||interior||player.dead||player.arrested) return;
+  const r=canvas.getBoundingClientRect();
+  const wx=(mouseCssX-r.left)/ZOOM+camX, wy=(mouseCssY-r.top)/ZOOM+camY;
+  player.aimAngle=Math.atan2(wy-(player.py-20), wx-player.px);
+}
 function update(dt){
+  updateAim();
   // Interior-Modus: eigener Update-Loop
   if(interior&&intFade>=1){
     updateInterior(dt);
@@ -11751,23 +11778,37 @@ function render(time){
           ctx.drawImage(IMAGES['weapon_'+player.weapon],0,0,wv.sw,wv.sh,-wv.dw/2,-pivotY,wv.dw,wv.dh);
           ctx.restore();
         } else {
-          // Ruhehaltung: fester Punkt, keine Rotation — gleiches Prinzip wie die Kippe am Mund.
-          // Schusswaffe (Paket 14): Sprite zeigt nach rechts → nach links gespiegelt zeichnen,
-          // plus kurzer Rückstoß-Versatz entgegen der Blickrichtung direkt nach dem Schuss.
-          const wst=WEAPON_STATS[player.weapon];
-          if(wst&&wst.ranged){
-            const rec=Math.round(player.shootRecoil*3);
-            if(player.dir===1){
-              ctx.save();
-              ctx.translate(Math.round(player.px)-8+rec, anchor.y);
-              ctx.scale(-1,1);
-              ctx.drawImage(IMAGES['weapon_'+player.weapon],0,0,wv.sw,wv.sh,0,0,wv.dw,wv.dh);
-              ctx.restore();
+          // Ruhehaltung Touch: unverändert wie bisher — fester Punkt/Spiegelung, keine Rotation.
+          // Ruhehaltung Desktop (Paket 7): Waffe rotiert kontinuierlich zu player.aimAngle (Maus).
+          if(IS_TOUCH){
+            // Schusswaffe (Paket 14): Sprite zeigt nach rechts → nach links gespiegelt zeichnen,
+            // plus kurzer Rückstoß-Versatz entgegen der Blickrichtung direkt nach dem Schuss.
+            const wst=WEAPON_STATS[player.weapon];
+            if(wst&&wst.ranged){
+              const rec=Math.round(player.shootRecoil*3);
+              if(player.dir===1){
+                ctx.save();
+                ctx.translate(Math.round(player.px)-8+rec, anchor.y);
+                ctx.scale(-1,1);
+                ctx.drawImage(IMAGES['weapon_'+player.weapon],0,0,wv.sw,wv.sh,0,0,wv.dw,wv.dh);
+                ctx.restore();
+              } else {
+                ctx.drawImage(IMAGES['weapon_'+player.weapon],0,0,wv.sw,wv.sh,anchor.x-rec,anchor.y,wv.dw,wv.dh);
+              }
             } else {
-              ctx.drawImage(IMAGES['weapon_'+player.weapon],0,0,wv.sw,wv.sh,anchor.x-rec,anchor.y,wv.dw,wv.dh);
+              ctx.drawImage(IMAGES['weapon_'+player.weapon],0,0,wv.sw,wv.sh,anchor.x,anchor.y,wv.dw,wv.dh);
             }
           } else {
-            ctx.drawImage(IMAGES['weapon_'+player.weapon],0,0,wv.sw,wv.sh,anchor.x,anchor.y,wv.dw,wv.dh);
+            // Rotationswinkel-Offset +Math.PI: die Waffen-Sprites (g17/g30/fullyarp/militaryarp/costumfullyarp
+            // etc.) liegen im Quellbild mit der Mündung nach LINKS — ohne den Offset würde die Mündung beim
+            // Zielen nach rechts (aimAngle≈0) fälschlich nach links zeigen. Per automatisiertem Headless-
+            // Screenshot-Test (aimAngle≈0° und ≈90°) visuell verifiziert, nicht nur geschätzt.
+            const rec=Math.round(player.shootRecoil*3);
+            ctx.save();
+            ctx.translate(anchor.x+wv.dw/2-rec*Math.cos(player.aimAngle), anchor.y+wv.dh/2-rec*Math.sin(player.aimAngle));
+            ctx.rotate(player.aimAngle+Math.PI);
+            ctx.drawImage(IMAGES['weapon_'+player.weapon],0,0,wv.sw,wv.sh,-wv.dw/2,-wv.dh/2,wv.dw,wv.dh);
+            ctx.restore();
           }
         }
       }
@@ -11921,6 +11962,20 @@ function render(time){
   } else ep.classList.add('hidden');
   // Paket D: die alten Dealer-Proximity-Buttons sind weg — der Dealer-Shop öffnet jetzt
   // per E am Dealer-NPC (groupDialog-Fall 'dealer' → openDealershopUI()).
+  // Paket 7: Crosshair an der Mausposition — nur Desktop, nur mit ausgerüsteter Waffe. Eigener
+  // Screen-Space-Block (wie beim hitFlash-Overlay), ganz am Ende gezeichnet, damit es über allem liegt.
+  if(!IS_TOUCH&&player.weapon&&!dialog.active&&!invOpen&&!phoneOpen){
+    const cx=mouseCssX-canvas.getBoundingClientRect().left, cy=mouseCssY-canvas.getBoundingClientRect().top;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.strokeStyle='rgba(255,255,255,.75)';
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(cx-6,cy); ctx.lineTo(cx-2,cy);
+    ctx.moveTo(cx+2,cy); ctx.lineTo(cx+6,cy);
+    ctx.moveTo(cx,cy-6); ctx.lineTo(cx,cy-2);
+    ctx.moveTo(cx,cy+2); ctx.lineTo(cx,cy+6);
+    ctx.stroke();
+  }
 }
 
 /* =====================================================================
@@ -12516,8 +12571,8 @@ function startGame(fresh){
   // Bugfix (Adversarial-Review): nicht wieder einblenden, wenn eine laufende Verhaftung übernommen wurde —
   // enterJailCell()/beginCustody() haben sie oben schon korrekt versteckt (Zelle hat keine Minimap).
   if(!player.arrested) el('minimap-wrap').classList.remove('hidden');
-  const touch = ('ontouchstart' in window || navigator.maxTouchPoints>0);
-  if(touch) el('mobile-controls').classList.remove('hidden');
+  if(IS_TOUCH) el('mobile-controls').classList.remove('hidden');
+  else canvas.style.cursor='none';   // Paket 7: OS-Cursor aus, das Crosshair in render() übernimmt seine Rolle
   el('debug-toggle').classList.remove('hidden');   // Konsole überall verfügbar (auch Touch-Laptops), zusätzlich F8
   Music.start();                          // im User-Gesture → Autoplay-Policy OK
   Ambience.start();
