@@ -1414,6 +1414,9 @@ const I18N = {
       civUnwohl: ['Hier fühl ich mich unwohl…','Falsche Gegend für mich.','Ich sollte hier schnell weg.','Hier stimmt doch was nicht.'],
       civChat: ['…','Ehrlich jetzt?','Krass.','Und dann?','Nee, oder?'],
       gangStare: ['Was willst du?','Weitergehen.','Falsches Viertel.','Ich seh dich.'],
+      // Paket 5: freundlich (eigene Gang) / feindlich (fremde Gang oder keine Gang) statt generisch.
+      gangStareFriend: ['Alles klar, Bruder.','Bist einer von uns.','Pass auf dich auf da draußen.','Immer noch am Start, respekt.'],
+      gangStareRival: ['Was willst du hier?','Falsches Viertel für dich.','Verschwinde, Fremder.','Das ist nicht dein Gebiet.'],
       chaseStart: ['Verpiss dich hier!','Du gehörst hier nicht her!','Hau ab, sofort!'],
       chaseWarn: ['Letzte Warnung!','Bleib bloß nicht stehen!','Ich zähl bis drei…'],
       chaseEdge: ['Und bleib draußen!','Lass dich hier nie wieder blicken!'],
@@ -1430,6 +1433,8 @@ const I18N = {
       spray: ['Der Block gehört uns.','Frische Farbe.','Kunst, Bruder.','Das bleibt jetzt so.'],
       pushed: ['Ey, pass doch auf!','Hallo?!','Rempel nicht!','Unverschämt!','Geht’s noch?'],
       pushedGang: ['Ey! Willst du Stress?','Pass auf, wo du hinläufst.','Noch einmal und es knallt.'],
+      pushedGangFriend: ['Hey, pass auf, Bruder.','Immer locker bleiben, wir sind eine Familie.','Alles gut, aber schau wo du hinläufst.'],
+      pushedGangRival: ['Ey! Willst du Stress mit uns?','Fass mich nicht an, Fremder.','Noch einmal und es knallt richtig.'],
       scared: ['Er hat ein Messer!!','WEG HIER!','HILFE!','Ist der irre?!'],
       policeSuspicious: ['Moment mal…','Was ist hier los?','He, du da!'],
       policeChaseStart: ['STEHENBLEIBEN, POLIZEI!','KEINEN SCHRITT WEITER!','HIER GEBLIEBEN!'],
@@ -1740,6 +1745,8 @@ const I18N = {
       civUnwohl: ['I feel unsafe here…','Wrong neighborhood for me.','I should get out of here.','Something is off here.'],
       civChat: ['…','For real?','Crazy.','And then?','No way…'],
       gangStare: ['What do you want?','Keep walking.','Wrong block.','I see you.'],
+      gangStareFriend: ['All good, brother.','You\'re one of us.','Watch yourself out there.','Still holding it down, respect.'],
+      gangStareRival: ['What do you want here?','Wrong block for you.','Get lost, stranger.','This ain\'t your turf.'],
       chaseStart: ['Get lost, now!','You do not belong here!','Run, before it gets ugly!'],
       chaseWarn: ['Last warning!','Do not just stand there!','I am counting to three…'],
       chaseEdge: ['And stay out!','Never show your face here again!'],
@@ -1756,6 +1763,8 @@ const I18N = {
       spray: ['This block is ours.','Fresh paint.','Art, brother.','That stays now.'],
       pushed: ['Hey, watch it!','Excuse me?!','Do not shove!','Rude!','Seriously?'],
       pushedGang: ['Hey! You want trouble?','Watch where you walk.','Do that again and see.'],
+      pushedGangFriend: ['Hey, watch it, brother.','Stay easy, we\'re family.','It\'s fine, just watch where you walk.'],
+      pushedGangRival: ['Hey! You want trouble with us?','Don\'t touch me, stranger.','Do that again and it\'s on.'],
       scared: ['He has a knife!!','RUN!','HELP!','Is he crazy?!'],
       policeSuspicious: ['Hold on a second…','What is going on here?','Hey, you there!'],
       policeChaseStart: ['STOP RIGHT THERE, POLICE!','DO NOT MOVE!','FREEZE!'],
@@ -6207,6 +6216,27 @@ function updateZoneStay(dt){
     startChase(zoneStay.gid,zoneStay.rect);
   }
 }
+/* ---------------- Paket 5: Ambush — 40% Zufallschance auf einen Gang-Überfall ----------------
+   Unabhängig von updateZoneStay() (die deterministisch nach 15s Verweildauer auslöst): hier läuft
+   ein eigener Cooldown-Timer, der in Fremdgebiet mit 40% Chance mehrere (statt max. 3) Gang-Mitglieder
+   gleichzeitig in den Chase-Zustand schickt. Flucht ist automatisch garantiert, weil startChase() nur
+   bereits existierende NPCs mit echtem homeRect umschaltet (kein Spawn) — dieselbe Distanz-/Gebiets-
+   Rückzugslogik wie sonst greift in npcChase() unverändert (d>1500 oder Gebietsgrenze verlassen). */
+let gangAmbushT=rand(60,100);
+function updateGangAmbushCheck(dt){
+  if(player.dead||player.arrested||dialog.active||interior) return;
+  gangAmbushT-=dt;
+  if(gangAmbushT>0) return;
+  gangAmbushT=rand(60,100);
+  const tx=Math.floor(player.px/CFG.TILE), ty=Math.floor(player.py/CFG.TILE);
+  const z=zoneAt(tx,ty);
+  if(!z||!z.gang) return;                              // nur in einem Gang-Territorium (nicht WAR/neutral)
+  if(player.gang&&player.gang===z.id) return;           // nie im eigenen Revier
+  if(Math.random()>=0.4) return;                        // 40%-Chance (Nutzer-Vorgabe)
+  // Soft-Start: erstmal max. 6 statt der vollen 10 (bis zu 10 gleichzeitige Angreifer bedeuten spürbar
+  // mehr Schaden/Sekunde als das bisherige Maximum von 3) — nach dem ersten Test hochdrehbar.
+  startChase(z.id,z.rect,randi(1,6));
+}
 /* Schickt einen NPC in den Verfolgungs-/Kampf-Zustand — sowohl vom Zonen-Loiter-Trigger
    (startChase) als auch von einem Treffer im Kampf (applyDamageToNpc) genutzt. */
 function enterChase(n){
@@ -6217,7 +6247,7 @@ function enterChase(n){
   // Gang-Mitglied (playerIn in npcChase() greift dank combatAggro so oder so) — nur die Zeile bleibt im Ton.
   say(n,n.kind==='police'?'bub.policeChaseStart':'bub.chaseStart');
 }
-function startChase(gid,rect){
+function startChase(gid,rect,maxN){
   const cand=[];
   for(const n of NPCS){
     if(n.gang!==gid||n.kind!=='gang'||n.homeRect!==rect) continue;
@@ -6228,7 +6258,9 @@ function startChase(gid,rect){
     if(d2<800*800) cand.push([d2,n]);
   }
   cand.sort((a,b)=>a[0]-b[0]);
-  for(const [,n] of cand.slice(0,3)) enterChase(n);
+  // Paket 5: optionaler 4. Parameter für die Angreifer-Anzahl (Ambush-Feature) — Default weiterhin 3,
+  // damit updateZoneStay()'s bestehender 2-Argumente-Aufruf unverändert funktioniert.
+  for(const [,n] of cand.slice(0,maxN||3)) enterChase(n);
 }
 function npcChase(n,dt){
   const dx=player.px-n.px, dy=player.py-n.py, d=Math.hypot(dx,dy);
@@ -6658,6 +6690,7 @@ function updateNPCs(dt){
     zoneStay.triggered=false; zoneStay.t=0;
   }
   updateZoneStay(dt);
+  updateGangAmbushCheck(dt);
   if(greetCD>0) greetCD-=dt;
   let reloBudget=6;                                  // max. Umsetzungen pro Frame
   for(const n of NPCS){
@@ -6835,7 +6868,8 @@ function updateNPCs(dt){
     if(n.kind==='gang'&&(n.state==='idle'||n.state==='act')&&d2<90*90&&n.bubbleCD<=0
        &&n.homeRect&&inRectPx(player.px,player.py,n.homeRect)){
       n.dir=Math.abs(pdx)>Math.abs(pdy)?(pdx>0?1:2):(pdy>0?3:0);
-      say(n,'bub.gangStare');
+      // Paket 5: freundlich, wenn der Spieler in genau dieser Gang ist, sonst feindlich (andere Gang ODER keine Gang).
+      say(n,(player.gang&&n.gang===player.gang)?'bub.gangStareFriend':'bub.gangStareRival');
       n.bubbleCD=rand(8,16);
     }
 
@@ -6851,7 +6885,10 @@ function updateNPCs(dt){
         if(!collides(ppx,ppy)){ player.px=ppx; player.py=ppy; }
       }
       if(n.bubbleCD<=0&&n.state!=='flee'&&(n.kind==='civ'||n.kind==='gang')){
-        say(n,n.kind==='civ'?'bub.pushed':'bub.pushedGang',2);
+        // Paket 5: bei Gang-NPCs freundlich/feindlich je nach player.gang vs. n.gang.
+        const pushedKey=n.kind==='civ' ? 'bub.pushed'
+          : ((player.gang&&n.gang===player.gang)?'bub.pushedGangFriend':'bub.pushedGangRival');
+        say(n,pushedKey,2);
         n.bubbleCD=rand(6,12);
       }
     }
