@@ -1310,6 +1310,9 @@ const I18N = {
     },
     police: {
       stopGreeting: 'Kontrolle. Tasche auf, Hände sichtbar.',
+      // Personenkontrolle (Nutzer-Vorgabe): eigene, schärfere Ansprache, wenn der Spieler schon offene
+      // Straftaten im Register hat — siehe startStopCheck().
+      stopGreetingFelony: 'Stehenbleiben! Personenkontrolle — Sie stehen bei uns im Register.',
       clean: 'Alles sauber. Verschwinde.',
       foundMinor: 'Was haben wir denn da… weg damit. {fine}$ Owi. Und jetzt ab mit dir.',
       foundHard: 'Das reicht. Du kommst mit.',
@@ -1379,6 +1382,7 @@ const I18N = {
       entry: {
         publicDrinking: 'Öffentlicher Alkoholkonsum',
         weaponCarry: 'Öffentliches Führen einer Schusswaffe',
+        stopSearchCaught: 'Fund illegaler Gegenstände bei einer Personenkontrolle',
         fraud: 'Betrug',
         assault: 'Körperverletzung',
         dealing: 'Handel mit BTM',
@@ -1627,6 +1631,7 @@ const I18N = {
     },
     police: {
       stopGreeting: 'Check. Open the bag, hands where I can see them.',
+      stopGreetingFelony: 'Stop right there! ID check — you\'re already in our system.',
       clean: 'All clear. Move along.',
       foundMinor: 'What do we have here… confiscated. ${fine} fine. Now get out of here.',
       foundHard: 'That is enough. You are coming with us.',
@@ -1715,6 +1720,7 @@ const I18N = {
       entry: {
         publicDrinking: 'Public Intoxication',
         weaponCarry: 'Illegal Weapon Possession',
+        stopSearchCaught: 'Illegal Items Found During a Stop-and-Search',
         fraud: 'Fraud',
         assault: 'Assault',
         dealing: 'Drug Dealing',
@@ -6398,12 +6404,17 @@ function updatePoliceDetection(n,dt,d2){
   if(n.stopCD>0) return;
   if(d2>POLICE_CFG.stopD2){ n.stopCD=0.5; return; }
   n.stopCD=rand(8,15);
-  if(Math.random()<0.05) startStopCheck(n);
+  // Personenkontrolle (Nutzer-Vorgabe): mit offenem Strafregister ist die Kontroll-Chance deutlich höher
+  // (0.2 statt 0.05) — wer schon aktenkundig ist, fällt eher auf.
+  const stopChance=player.criminalRecord.length>0?0.2:0.05;
+  if(Math.random()<stopChance) startStopCheck(n);
 }
 // Personenkontrolle: NPC friert für die Dauer des Dialogs ein (siehe case 'stopcheck' in updateNPCs()).
 function startStopCheck(n){
   n.state='stopcheck';
-  openDialog(t('speakers.police'),[t('police.stopGreeting')]);
+  // Nutzer-Vorgabe: schärfere "Stehenbleiben"-Ansprache, wenn schon offene Straftaten im Register stehen.
+  const greeting=player.criminalRecord.length>0?'police.stopGreetingFelony':'police.stopGreeting';
+  openDialog(t('speakers.police'),[t(greeting)]);
   const checkStop=setInterval(()=>{
     if(!dialog.active){
       clearInterval(checkStop);
@@ -6418,6 +6429,9 @@ function resolveStopSearch(n){
   } else if(res.hard){
     n.state='idle'; n.waitT=rand(0.5,1.5);
     toast(t('police.foundHard'));
+    // Nutzer-Vorgabe: der Fund selbst zählt jetzt als eigene Straftat mit eigener Haftzeit — kommt
+    // zusätzlich zu allem, was schon im Register steht (custodyDurationMs() summiert automatisch).
+    logCrime('stopSearchCaught');
     startArrest();
     return;
   } else {
@@ -7629,6 +7643,10 @@ function wantedStars(){
 const CRIME_CATALOG={
   publicDrinking:{severity:1},
   weaponCarry:   {severity:2},
+  // Personenkontrolle (Nutzer-Vorgabe): bei einer Kontrolle gefundene Waffen/harte Drogen zählen als
+  // eigene Straftat mit eigener Haftzeit — kommt zusätzlich zu allem, was schon im Register steht
+  // (custodyDurationMs() summiert automatisch den ganzen Registerbestand, siehe resolveStopSearch()).
+  stopSearchCaught:{severity:3},
   fraud:         {severity:2},
   assault:       {severity:3},
   dealing:       {severity:3},
