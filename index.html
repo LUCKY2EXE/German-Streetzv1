@@ -7820,8 +7820,10 @@ function findShotTarget(reach){
   const o=meleeOrigin(10);
   // Paket 7: auf Desktop zeigt der Trefferkorridor in Richtung player.aimAngle (Maus) statt der festen
   // 4 Richtungen; auf Touch bleibt die bisherige, bewegungsbasierte Richtung als Fallback erhalten.
-  const dvx=IS_TOUCH ? (player.dir===1?-1:player.dir===2?1:0) : Math.cos(player.aimAngle);
-  const dvy=IS_TOUCH ? (player.dir===3?-1:(player.dir===1||player.dir===2?0:1)) : Math.sin(player.aimAngle);
+  // Bugfix: IS_TOUCH durch !mouseInWindow ersetzt (siehe updateAim()-Kommentar) — sonst ignoriert das
+  // Spiel player.aimAngle auf jedem Geraet, das nur touch-faehige Hardware hat, auch wenn Maus benutzt wird.
+  const dvx=!mouseInWindow ? (player.dir===1?-1:player.dir===2?1:0) : Math.cos(player.aimAngle);
+  const dvy=!mouseInWindow ? (player.dir===3?-1:(player.dir===1||player.dir===2?0:1)) : Math.sin(player.aimAngle);
   let bestAlong=reach+1, target=null;
   for(const n of NPCS){
     if(n.state==='dead'||!npcOut(n)) continue;
@@ -11487,7 +11489,11 @@ function updateCameraShake(dt){ if(camShake>0) camShake=Math.max(0, camShake-dt*
    nicht py selbst, sonst würde der Winkel am Fußpunkt ansetzen). Nur Desktop — auf Touch bleibt
    player.aimAngle unverändert bei 0, findShotTarget() nutzt dort weiterhin die alte 4-Richtungs-Logik. */
 function updateAim(){
-  if(IS_TOUCH||!mouseInWindow) return;
+  // Bugfix: IS_TOUCH ist eine reine Hardware-Fähigkeits-Prüfung (maxTouchPoints>0) und schlägt auf
+  // vielen normalen Desktop-Geräten (Touchpad/Touchscreen-Laptop) fälschlich an, obwohl mit der Maus
+  // gespielt wird. mouseInWindow wird dagegen NUR bei einem echten pointerType==='mouse'-Event gesetzt
+  // (siehe pointermove-Listener oben) — das ist das verlässliche Signal, IS_TOUCH hier nicht mehr nötig.
+  if(!mouseInWindow) return;
   if(dialog.active||invOpen||phoneOpen||interior||player.dead||player.arrested) return;
   const r=canvas.getBoundingClientRect();
   const wx=(mouseCssX-r.left)/ZOOM+camX, wy=(mouseCssY-r.top)/ZOOM+camY;
@@ -11815,7 +11821,10 @@ function render(time){
         } else {
           // Ruhehaltung Touch: unverändert wie bisher — fester Punkt/Spiegelung, keine Rotation.
           // Ruhehaltung Desktop (Paket 7): Waffe rotiert kontinuierlich zu player.aimAngle (Maus).
-          if(IS_TOUCH){
+          // Bugfix: IS_TOUCH durch !mouseInWindow ersetzt — IS_TOUCH ist nur eine Hardware-Faehigkeits-
+          // Pruefung und schlaegt auf normalen Desktop-Geraeten mit Touchpad/Touchscreen faelschlich an,
+          // wodurch die Rotation komplett ignoriert wurde, obwohl mit der Maus gezielt wird.
+          if(!mouseInWindow){
             // Schusswaffe (Paket 14): Sprite zeigt nach rechts → nach links gespiegelt zeichnen,
             // plus kurzer Rückstoß-Versatz entgegen der Blickrichtung direkt nach dem Schuss.
             const wst=WEAPON_STATS[player.weapon];
