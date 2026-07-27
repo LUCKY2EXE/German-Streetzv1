@@ -1881,11 +1881,11 @@ const MANIFEST = {
   // Neue Waffen (Update): Netzwerk-Ladepfad (ASSET_BASE_URL) statt Base64-Embed — file: ist der
   // tatsächliche Dateiname in german_streetz_assets/, ohne "weapon_"-Präfix (anders als die
   // Base64-Embeds oben, die intern umbenannt wurden).
-  weapon_g30:{file:'g30.png', w:854, h:923, kind:'weapon'},
-  weapon_g17:{file:'g17.png', w:1275, h:962, kind:'weapon'},
-  weapon_fullyarp:{file:'fullyarp.png', w:1150, h:734, kind:'weapon'},
-  weapon_militaryarp:{file:'militaryarp.png', w:1482, h:804, kind:'weapon'},
-  weapon_costumfullyarp:{file:'costumfullyarp.png', w:1263, h:842, kind:'weapon'},
+  weapon_g30:{file:'g30.png', w:120, h:130, kind:'weapon'},
+  weapon_g17:{file:'g17.png', w:130, h:98, kind:'weapon'},
+  weapon_fullyarp:{file:'fullyarp.png', w:130, h:83, kind:'weapon'},
+  weapon_militaryarp:{file:'militaryarp.png', w:130, h:71, kind:'weapon'},
+  weapon_costumfullyarp:{file:'costumfullyarp.png', w:130, h:87, kind:'weapon'},
   house_trap:   {file:'house_trap.png',   w:160, h:160, kind:'building'},
   house_ybc:    {file:'house_ybc.png',    w:192, h:192, kind:'building'},
   house_btk:    {file:'house_btk.png',    w:192, h:192, kind:'building'},
@@ -7548,11 +7548,13 @@ const WEAPON_VISUAL={
   // Neue Waffen (Update): sw/sh = exakte Pixelmaße der freigestellten/zugeschnittenen PNGs
   // (german_streetz_assets/g17.png etc., geladen über ASSET_BASE_URL). dw/dh an bestehende
   // Waffengrößen angelehnt, bitte im Browser visuell feinjustieren.
-  g30:{sw:854,sh:923,dw:26,dh:28},
-  g17:{sw:1275,sh:962,dw:30,dh:23},
-  fullyarp:{sw:1150,sh:734,dw:34,dh:22},
-  militaryarp:{sw:1482,sh:804,dw:38,dh:21},
-  costumfullyarp:{sw:1263,sh:842,dw:34,dh:23}
+  // Bilder wurden nachtraeglich auf Pixel-Art-Groessenordnung verkleinert (vorher >1000px nativ,
+  // dadurch beim Herunterskalieren im Spiel unscharf/fleckig - jetzt aehnliche Groessenordnung wie g40).
+  g30:{sw:120,sh:130,dw:26,dh:28},
+  g17:{sw:130,sh:98,dw:30,dh:23},
+  fullyarp:{sw:130,sh:83,dw:34,dh:22},
+  militaryarp:{sw:130,sh:71,dw:38,dh:21},
+  costumfullyarp:{sw:130,sh:87,dw:34,dh:23}
 };
 function weaponVisual(key){ return WEAPON_VISUAL[key]||WEAPON_VISUAL.knife; }
 let deathFade=0, deathFadeDir=0;
