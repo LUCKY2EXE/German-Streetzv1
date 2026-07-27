@@ -413,6 +413,14 @@ canvas#game{
   margin-top: 10px;
   line-height: 1.9;
 }
+/* Bugfix: #phone-list hatte keine Höhenbegrenzung — bei vielen Vorstrafenregister-Einträgen (Felony-App)
+   wuchs das Handy über den Bildschirmrand hinaus, ohne dass man an die restlichen Zeilen scrollen konnte
+   (#phone-box ist zentriert per fixed position, die Seite selbst scrollt nicht). #phone-title bleibt
+   dadurch immer sichtbar, nur die Liste darunter wird bei Bedarf scrollbar. */
+#phone-list{
+  max-height: min(260px, 42vh);
+  overflow-y: auto;
+}
 #nav-chip{
   font-size: 8px;
   background: var(--panel);
