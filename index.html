@@ -5786,6 +5786,10 @@ function makeNpc(kind,tpl,px,py,o){
     cellW:o.cellW||32, cellH:o.cellH||64
   };
   if(kind==='gang'||kind==='boss'||kind==='guard') n.weapon=pick(['knife','machete','axe']);
+  // Nutzer-Vorgabe: ein Teil der Gang-Mitglieder trägt stattdessen eine Pistole — sonst könnten Gang-
+  // Kriege (updateGangWarCheck()/npcGangFight()) nie schießen, weil n.weapon dafür immer Nahkampf wäre.
+  // Bewusst nur normale gang-NPCs (nicht Boss/Guard) und nur eine Minderheit, nicht jeder ist bewaffnet.
+  if(kind==='gang'&&Math.random()<0.15) n.weapon=pick(['g17','semi_glock','g30']);
   NPCS.push(n);
   return n;
 }
@@ -6280,18 +6284,41 @@ function npcGangFight(n,dt){
     n.state=n.act?'act':'idle'; n.fightTarget=null; return;
   }
   const dx=target.px-n.px, dy=target.py-n.py, d=Math.hypot(dx,dy);
+  const stats=WEAPON_STATS[n.weapon||'fist'];
+  n.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?1:2):(dy<0?3:0);
+  // Nutzer-Vorgabe: Gang-Kriege sollen sich auch beschießen, nicht nur prügeln — bewaffnete NPCs (siehe
+  // makeNpc()) bleiben auf Schussdistanz stehen statt bis zum Nahkampf vorzurücken, und feuern im
+  // waffeneigenen Takt (fireCD), analog zu performShot() beim Spieler, nur ohne Munition/Nachladen.
+  if(stats.ranged){
+    const standoff=Math.min(stats.reach*0.85,140);
+    if(d>standoff+20){
+      const sp=3.1*CFG.TILE*dt, ux=dx/d, uy=dy/d;
+      const nx=n.px+ux*sp, ny=n.py+uy*sp;
+      if(!collides(nx,n.py)) n.px=nx;
+      if(!collides(n.px,ny)) n.py=ny;
+      n.animT+=dt; if(n.animT>0.16){ n.animT=0; n.frame^=1; }
+      return;
+    }
+    n.frame=0;
+    if(n.atkCD>0){ n.atkCD-=dt; return; }
+    n.atkCD=stats.fireCD||0.5;
+    applyGangFightDamage(target,stats.dmg);
+    const ang=Math.atan2(dy,dx), mx=n.px+Math.cos(ang)*16, my=n.py-20+Math.sin(ang)*16;
+    spawnParticle(mx,my,{size:5,color:'#fff3b0',life:0.06});
+    for(let i=0;i<3;i++) spawnParticle(mx,my,
+      {vx:Math.cos(ang)*rand(40,90),vy:Math.sin(ang)*rand(40,90),life:rand(.05,.1),size:2,color:i<2?'#ffd23a':'#ff7a2a'});
+    return;
+  }
   if(d<28){
     n.frame=0;
-    n.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?1:2):(dy<0?3:0);
     if(n.atkCD>0) n.atkCD-=dt;
-    else{ applyGangFightDamage(target,WEAPON_STATS[n.weapon||'fist'].dmg); n.atkCD=rand(0.9,1.2); }
+    else{ applyGangFightDamage(target,stats.dmg); n.atkCD=rand(0.9,1.2); }
     return;
   }
   const sp=3.1*CFG.TILE*dt, ux=dx/d, uy=dy/d;
   const nx=n.px+ux*sp, ny=n.py+uy*sp;
   if(!collides(nx,n.py)) n.px=nx;
   if(!collides(n.px,ny)) n.py=ny;
-  n.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?1:2):(dy<0?3:0);
   n.animT+=dt;
   if(n.animT>0.16){ n.animT=0; n.frame^=1; }
 }
