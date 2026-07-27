@@ -1145,6 +1145,13 @@ const I18N = {
       semi_glock: { name: 'Glock 17 (Semi)', desc: '9mm-Pistole, halbautomatisch. 17-Schuss-Magazin, R zum Nachladen. Klicken: ausrüsten/ablegen.' },
       fully_glock: { name: 'Glock 17 (Fully)', desc: '9mm-Pistole, vollautomatisch — F/Maustaste gedrückt halten zum Dauerfeuer. 17-Schuss-Magazin, R zum Nachladen.' },
       g40: { name: 'Glock 40', desc: '10mm-Pistole mit Trommelmagazin, vollautomatisch und extrem schnell — F/Maustaste gedrückt halten zum Dauerfeuer. 50-Schuss-Magazin, R zum Nachladen. Treffer verlangsamen den Gegner kurz.' },
+      // Paket 1 (nachgezogen): Namen fehlten komplett, dadurch zeigte das Inventar den rohen
+      // Übersetzungs-Key ("items.g17.name" etc.) statt eines echten Namens an.
+      g17: { name: 'Glock 17 (Vollauto)', desc: '9mm-Pistole mit Umbau auf Dauerfeuer, gleich schnell wie die Glock 40. 40-Schuss-Magazin, R zum Nachladen. Klicken: ausrüsten/ablegen.' },
+      g30: { name: 'Glock 30 (Vollauto)', desc: '.45er-Pistole mit Umbau auf Dauerfeuer — die schnellste Pistole im Spiel. 35-Schuss-Magazin, R zum Nachladen. Klicken: ausrüsten/ablegen.' },
+      fullyarp: { name: 'AR-Pistole (Vollauto)', desc: 'Kompakte Vollautomatik-AR-Pistole mit Trommelmagazin, Standard-Feuerrate. 45-Schuss-Magazin, R zum Nachladen. Klicken: ausrüsten/ablegen.' },
+      militaryarp: { name: 'Military AR-Pistole', desc: 'Militär-Ausführung der AR-Pistole, mehr Schaden und Reichweite, Standard-Feuerrate. 40-Schuss-Magazin, R zum Nachladen. Klicken: ausrüsten/ablegen.' },
+      costumfullyarp: { name: 'AR-Pistole (Custom)', desc: 'Rot lackierte Sondervariante der AR-Pistole, gleiche Werte wie das Standardmodell. 45-Schuss-Magazin, R zum Nachladen. Klicken: ausrüsten/ablegen.' },
       seed_standard: { name: 'Standard-Samen', desc: 'Erwarteter Ertrag: 5g. Wird am Topf in der Grow-Ecke gepflanzt.' },
       seed_premium:  { name: 'Premium-Samen',  desc: 'Erwarteter Ertrag: 15g. Solide Genetik.' },
       seed_exotic:   { name: 'Exotic-Samen',   desc: 'Erwarteter Ertrag: 25g. Top-Genetik.' },
@@ -1485,6 +1492,11 @@ const I18N = {
       semi_glock: { name: 'Glock 17 (Semi)', desc: '9mm pistol, semi-automatic. 17-round magazine, R to reload. Click: equip/unequip.' },
       fully_glock: { name: 'Glock 17 (Fully)', desc: '9mm pistol, fully automatic — hold F/mouse button for continuous fire. 17-round magazine, R to reload.' },
       g40: { name: 'Glock 40', desc: '10mm pistol with a drum magazine, fully automatic and extremely fast — hold F/mouse button for continuous fire. 50-round magazine, R to reload. Hits briefly slow the target.' },
+      g17: { name: 'Glock 17 (Full-Auto)', desc: '9mm pistol converted to fully automatic, same fire rate as the Glock 40. 40-round magazine, R to reload. Click: equip/unequip.' },
+      g30: { name: 'Glock 30 (Full-Auto)', desc: '.45 pistol converted to fully automatic — the fastest pistol in the game. 35-round magazine, R to reload. Click: equip/unequip.' },
+      fullyarp: { name: 'AR Pistol (Full-Auto)', desc: 'Compact fully-automatic AR pistol with a drum magazine, standard fire rate. 45-round magazine, R to reload. Click: equip/unequip.' },
+      militaryarp: { name: 'Military AR Pistol', desc: 'Military variant of the AR pistol, more damage and range, standard fire rate. 40-round magazine, R to reload. Click: equip/unequip.' },
+      costumfullyarp: { name: 'AR Pistol (Custom)', desc: 'Red custom-painted variant of the AR pistol, same stats as the standard model. 45-round magazine, R to reload. Click: equip/unequip.' },
       seed_standard: { name: 'Standard Seed', desc: 'Expected yield: 5g. Planted at a pot in the grow corner.' },
       seed_premium:  { name: 'Premium Seed',  desc: 'Expected yield: 15g. Solid genetics.' },
       seed_exotic:   { name: 'Exotic Seed',   desc: 'Expected yield: 25g. Top-shelf genetics.' },
@@ -7506,13 +7518,16 @@ const WEAPON_STATS={
   // Neue Waffen (Update): g17/g30 Werte wie ursprünglich vom Nutzer vorgegeben, nur die Tippfehler
   // (rangend/reloadeT/realoadeT) korrigiert. fullyarp/militaryarp neu, Werte an bestehende Tiers angelehnt —
   // beim ersten Test-Durchlauf ggf. mit dem Nutzer feinjustieren.
-  g30:{dmg:4, reach:200, ranged:true, mag:35, reloadT:1, fireCD:0.06},
-  g17:{dmg:6, reach:225, ranged:true, mag:40, reloadT:1.2, fireCD:0.05},
-  fullyarp:{dmg:7, reach:240, ranged:true, auto:true, mag:45, reloadT:2.2, fireCD:0.09},
-  militaryarp:{dmg:8, reach:250, ranged:true, auto:true, mag:40, reloadT:2, fireCD:0.08},
+  // Waffen-Tuning (Nutzer-Vorgabe, Nachjustierung): g17/g30 sind jetzt vollautomatisch (waren vorher
+  // semi-auto) — g17 exakt gleich schnell wie g40 (0.07), g30 schneller als beide (0.05). Die drei
+  // "arp"-Vollautomaten laufen alle auf derselben Standard-Vollauto-Geschwindigkeit wie fully_draco (0.14).
+  g30:{dmg:4, reach:200, ranged:true, auto:true, mag:35, reloadT:1, fireCD:0.05},
+  g17:{dmg:6, reach:225, ranged:true, auto:true, mag:40, reloadT:1.2, fireCD:0.07},
+  fullyarp:{dmg:7, reach:240, ranged:true, auto:true, mag:45, reloadT:2.2, fireCD:0.14},
+  militaryarp:{dmg:8, reach:250, ranged:true, auto:true, mag:40, reloadT:2, fireCD:0.14},
   // costumfullyarp: reine Optik-Variante (rote statt schwarze Akzente) desselben Modells wie fullyarp,
   // deshalb identische Werte.
-  costumfullyarp:{dmg:7, reach:240, ranged:true, auto:true, mag:45, reloadT:2.2, fireCD:0.09},
+  costumfullyarp:{dmg:7, reach:240, ranged:true, auto:true, mag:45, reloadT:2.2, fireCD:0.14},
 };
 /* Zeichen-Größe pro Waffe (Quell-Crop/Ziel-Größe). Messer/Axt unverändert (verifiziert),
    Machete bewusst deutlich größer — einzige Stelle, an der die Größe definiert wird,
