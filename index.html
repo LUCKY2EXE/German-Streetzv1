@@ -7910,12 +7910,21 @@ el('prompt').addEventListener('pointerdown',e=>{ e.preventDefault(); e.stopPropa
 /* ---------------- Kampfsystem ---------------- */
 
 // Punkt vor dem Spieler in Blickrichtung — gleiches Richtungs-Offset-Muster wie cigTip()
+// Nutzer-Vorgabe: Mündung/Klinge sollen dahin zeigen, wohin gezielt wird (Maus), nicht mehr wohin
+// gelaufen wird — ein gemeinsamer Richtungsvektor für Mündungsfeuer, Trefferkorridor UND Nahkampf-
+// Schwung/-Partikel, damit alle drei konsistent derselben Quelle folgen. Auf Touch (kein mouseInWindow)
+// bleibt die alte, bewegungsbasierte 4-Richtungs-Logik als Fallback erhalten (siehe updateAim()).
+function aimVector(){
+  if(mouseInWindow) return {dvx:Math.cos(player.aimAngle),dvy:Math.sin(player.aimAngle)};
+  return {
+    dvx:player.dir===1?-1:player.dir===2?1:0,
+    dvy:player.dir===3?-1:(player.dir===1||player.dir===2?0:1)
+  };
+}
 function meleeOrigin(offset){
   const bx=Math.round(player.px), by=Math.round(player.py)-28;
-  if(player.dir===1) return {x:bx-offset,y:by};
-  if(player.dir===2) return {x:bx+offset,y:by};
-  if(player.dir===3) return {x:bx,y:by-offset};
-  return {x:bx,y:by+offset};
+  const v=aimVector();
+  return {x:Math.round(bx+v.dvx*offset),y:Math.round(by+v.dvy*offset)};
 }
 // Nächster NPC jeder Art in Reichweite vor dem Spieler (Civs/Special eingeschlossen — die Reaktion entscheidet performAttack())
 function findMeleeTarget(reach){
@@ -7938,7 +7947,7 @@ function performAttack(kind){
   if(kind==='stab'){
     // Kurzer Partikel-Streak GENAU in Blickrichtung — macht den Stich unabhängig von der Icon-Form erkennbar
     const o=meleeOrigin(10);
-    const dvx=player.dir===1?-1:player.dir===2?1:0, dvy=player.dir===3?-1:(player.dir===2||player.dir===1?0:1);
+    const {dvx,dvy}=aimVector();
     for(let i=0;i<9;i++) spawnParticle(o.x+rand(-2,2),o.y+rand(-2,2),
       {vx:dvx*rand(40,70)+rand(-8,8),vy:dvy*rand(40,70)+rand(-8,8),life:rand(.12,.2),size:3,color:'#ffffff'});
     // Einmaliger heller Einschlag-Blitz am Ausschlag-Höhepunkt — bewusst kein Rot (Blut gehört ans Ziel, nicht ans Blade)
@@ -7962,8 +7971,7 @@ function findShotTarget(reach){
   // 4 Richtungen; auf Touch bleibt die bisherige, bewegungsbasierte Richtung als Fallback erhalten.
   // Bugfix: IS_TOUCH durch !mouseInWindow ersetzt (siehe updateAim()-Kommentar) — sonst ignoriert das
   // Spiel player.aimAngle auf jedem Geraet, das nur touch-faehige Hardware hat, auch wenn Maus benutzt wird.
-  const dvx=!mouseInWindow ? (player.dir===1?-1:player.dir===2?1:0) : Math.cos(player.aimAngle);
-  const dvy=!mouseInWindow ? (player.dir===3?-1:(player.dir===1||player.dir===2?0:1)) : Math.sin(player.aimAngle);
+  const {dvx,dvy}=aimVector();
   let bestAlong=reach+1, target=null;
   for(const n of NPCS){
     if(n.state==='dead'||!npcOut(n)) continue;
@@ -7986,7 +7994,7 @@ function performShot(){
   player.shootRecoil=1;
   // Mündungsposition: Punkt vor dem Spieler in Blickrichtung (gleiches Muster wie meleeOrigin)
   const mo=meleeOrigin(26);
-  const dvx=player.dir===1?-1:player.dir===2?1:0, dvy=player.dir===3?-1:(player.dir===1||player.dir===2?0:1);
+  const {dvx,dvy}=aimVector();
   // Mündungsfeuer: weißer Hotspot + gelb/orange Zungen + kurzer Rauch
   spawnParticle(mo.x,mo.y,{size:6,color:'#fff3b0',life:0.06});
   for(let i=0;i<6;i++) spawnParticle(mo.x+dvx*rand(2,10),mo.y+dvy*rand(2,10),
@@ -11950,7 +11958,11 @@ function render(time){
         const wv=weaponVisual(player.weapon);
         // Klinge zeigt in Ruhehaltung nach oben (0) — als Basis-Drehwinkel auf die Blickrichtung gemappt,
         // damit Schnitt/Stich beide um die tatsächliche Blickachse herum passieren, nicht nur "nach oben".
-        const dirRot=player.dir===1?-Math.PI/2:player.dir===2?Math.PI/2:Math.PI;
+        // Nutzer-Vorgabe: Nahkampf folgt jetzt der Maus-Zielrichtung statt der Laufrichtung — dirRot wird
+        // dafür aus player.aimAngle abgeleitet (Ruhe-Drehwinkel der Klinge ist +90° zur Blickachse gedreht,
+        // siehe aimVector()); auf Touch bleibt die alte 4-Richtungs-Formel exakt erhalten.
+        const av=aimVector();
+        const dirRot=mouseInWindow ? (player.aimAngle+Math.PI/2) : (player.dir===1?-Math.PI/2:player.dir===2?Math.PI/2:Math.PI);
         if(player.atkAnim&&player.atkAnim.kind==='slash'){
           // Schneiden: Schwung ZENTRIERT auf die Blickrichtung (± ~54°) — dadurch schneidet es auf beiden
           // Seiten gleich, statt immer nur den gleichen (rechten) Bogen unabhängig von der Blickrichtung.
@@ -11961,7 +11973,7 @@ function render(time){
           // rechts sitzenden) Ruhe-Anker würde bei 90°-Drehungen optisch kaum von der Seite abhängen,
           // weil ein symmetrisches Rechteck um seinen eigenen Mittelpunkt gedreht nicht die Seite wechselt.
           const p=Math.min(1,player.atkAnim.t/player.atkAnim.dur);
-          const sideOff=player.dir===1?-10:player.dir===2?10:0;
+          const sideOff=av.dvx*10;
           ctx.save();
           ctx.translate(Math.round(player.px)+sideOff+wv.dw/2,anchor.y+wv.dh/2);
           ctx.rotate(dirRot+(p-0.5)*1.9);
@@ -11976,8 +11988,7 @@ function render(time){
           const reach=WEAPON_STATS[player.weapon].reach;
           const dist=swing*reach*0.85;
           const bx=Math.round(player.px)-6, by=anchor.y;
-          let ox=0,oy=0;
-          if(player.dir===1) ox=-dist; else if(player.dir===2) ox=dist; else oy=dist;
+          const ox=av.dvx*dist, oy=av.dvy*dist;
           const pivotY=wv.dh*0.75;   // unteres Viertel des Icons = Griffbereich
           ctx.save();
           ctx.translate(bx+ox+wv.dw/2, by+oy+pivotY);
