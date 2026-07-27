@@ -863,6 +863,9 @@ canvas#game{
 
 <!-- Dialog -->
 <div id="dialog-box" class="hidden">
+  <!-- Bugfix: Mobile-Spieler hatten keine Möglichkeit, ein Gespräch vorzeitig zu verlassen (nur ESC,
+       das es auf Touch nicht gibt) — X-Button ergänzt, gleiches Muster wie die anderen Panels. -->
+  <button id="dialog-close" class="panel-close-btn" title="Schließen">✕</button>
   <div id="dialog-speaker">???</div>
   <div id="dialog-text"></div>
   <div id="dialog-hint">&#9660; E</div>
@@ -898,6 +901,9 @@ canvas#game{
 
 <!-- Inventar -->
 <div id="inv-box" class="hidden">
+  <!-- Bugfix: fehlender X-Button — Inventar liess sich bisher nur per ESC/erneutem Klick auf INV
+       schliessen, auf Mobile ohne Tastatur also nicht direkt aus dem Panel selbst heraus. -->
+  <button id="inv-close" class="panel-close-btn" title="Schließen">✕</button>
   <div id="inv-title">INVENTAR</div>
   <div id="inv-grid"></div>
   <div id="inv-weight"></div>
@@ -7748,7 +7754,8 @@ window.addEventListener('keydown',e=>{
   if(k==='m'){ toggleMute(); return; }
   if(k==='i'){ if(running&&!dialog.active&&!player.arrested){ closePhone(); toggleInventory(); } return; }
   if(k==='n'){ if(running&&!dialog.active&&!player.arrested&&invCount('nokia')>0) togglePhone(); return; }
-  if(k==='escape'){ if(phoneOpen) closePhone(); else if(invOpen) closeInventory(); return; }
+  // Bugfix: dialog.active fehlte hier — ESC schloss bisher kein laufendes Gespräch (nur Handy/Inventar).
+  if(k==='escape'){ if(dialog.active) closeDialog(); else if(phoneOpen) closePhone(); else if(invOpen) closeInventory(); return; }
   if(k==='f8'){ e.preventDefault(); if(running) toggleDebug(); return; }
   keys.add(k);
 });
@@ -8388,6 +8395,9 @@ function closeDialog(){
   el('dialog-box').classList.add('hidden');
 }
 el('dialog-box').addEventListener('pointerdown',e=>{ e.stopPropagation(); advanceDialog(); });
+// Bugfix: eigener pointerdown-Handler (nicht click) + stopPropagation, sonst würde der Klick auf den
+// X-Button erst über #dialog-box hochblubbern und advanceDialog() auslösen, bevor closeDialog() greift.
+el('dialog-close').addEventListener('pointerdown',e=>{ e.preventDefault(); e.stopPropagation(); closeDialog(); });
 
 // Zwangsaufenthalt (Stufe 3): blockiert Interaktion/Dialog-Eingabe normalerweise komplett — AUSSER in der
 // eigenen Zelle, wo Interagieren (Münztelefon = Early-Bail) der ganze Sinn der Sache ist. Eine Funktion statt
@@ -9441,12 +9451,15 @@ function openInventory(){
   invOpen=true;
   renderInv();
   el('inv-box').classList.remove('hidden');
+  showPanelBackdrop(closeInventory);   // Bugfix: X-Button/Backdrop-Klick, gleiches Muster wie andere Panels
 }
 function closeInventory(){
   invOpen=false;
   el('inv-box').classList.add('hidden');
+  hidePanelBackdrop();
 }
 function toggleInventory(){ invOpen?closeInventory():openInventory(); }
+el('inv-close').addEventListener('click', closeInventory);
 el('btn-inv').addEventListener('click',()=>{ if(running) toggleInventory(); });
 
 /* ---------------- Roll-UI: Joint selber drehen ----------------
