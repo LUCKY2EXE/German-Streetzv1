@@ -555,7 +555,7 @@ canvas#game{
 #roll-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
 
 /* ---------- Grow-Shop-UI + Pack-UI: gleiche Panel-Familie wie Roll-UI ---------- */
-#growshop-box, #pack-box, #kiosk-box, #chemshop-box, #dripshop-box, #armor-box, #casino-box, #blackjack-box, #dealershop-box, #police-station-box, #gangjoin-box{
+#growshop-box, #pack-box, #kiosk-box, #chemshop-box, #dripshop-box, #armor-box, #casino-box, #blackjack-box, #dealershop-box, #police-station-box, #gangjoin-box, #gangops-box{
   position: fixed;
   left: 50%;
   top: 50%;
@@ -570,7 +570,7 @@ canvas#game{
   z-index: 47;
   box-shadow: 0 6px 0 rgba(0,0,0,.55);
 }
-#growshop-title, #pack-title, #kiosk-title, #chemshop-title, #dripshop-title, #armor-title, #blackjack-title, #dealershop-title, #police-station-title, #gangjoin-title{ font-size: 11px; margin-bottom: 10px; text-shadow: 1px 1px 0 #000; }
+#growshop-title, #pack-title, #kiosk-title, #chemshop-title, #dripshop-title, #armor-title, #blackjack-title, #dealershop-title, #police-station-title, #gangjoin-title, #gangops-title{ font-size: 11px; margin-bottom: 10px; text-shadow: 1px 1px 0 #000; }
 #police-station-content{ font-size: 9px; line-height: 1.7; }
 #police-station-content .roll-btn{ display: block; width: 100%; margin-top: 10px; text-align: center; }
 .shop-row{
@@ -596,9 +596,13 @@ canvas#game{
   cursor: pointer;
 }
 .shop-row button:disabled{ opacity: .35; cursor: default; }
-#growshop-hint, #pack-hint, #kiosk-hint, #chemshop-hint, #dripshop-hint, #armor-hint, #casino-hint, #blackjack-hint, #dealershop-hint, #police-station-hint, #gangjoin-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
+#growshop-hint, #pack-hint, #kiosk-hint, #chemshop-hint, #dripshop-hint, #armor-hint, #casino-hint, #blackjack-hint, #dealershop-hint, #police-station-hint, #gangjoin-hint, #gangops-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
 #gangjoin-content{ font-size: 9px; line-height: 1.7; }
 #gangjoin-content .roll-btn{ display: block; width: 100%; margin-top: 10px; text-align: center; }
+#gangops-content{ font-size: 9px; line-height: 1.7; }
+#gangops-content .roll-btn{ display: block; width: 100%; margin-top: 10px; text-align: center; }
+#gangops-content .roll-btn:disabled{ opacity: .35; cursor: default; }
+.gangops-dice{ font-size: 26px; text-align: center; margin: 8px 0; }
 #casino-reels{ display: block; margin: 0 auto 10px; border: 1px solid rgba(255,255,255,.2); image-rendering: pixelated; }
 #casino-paytable{ margin-bottom: 10px; }
 #casino-bet-row{ display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
@@ -997,6 +1001,14 @@ canvas#game{
   <div id="gangjoin-hint"></div>
 </div>
 
+<!-- Gang-Basis: "opps sliden" — Angriff auf eine Rivalen-Gang auslösen, gleicher Baukasten wie gangjoin-box -->
+<div id="gangops-box" class="hidden">
+  <button id="gangops-close" class="panel-close-btn" title="Schließen">✕</button>
+  <div id="gangops-title">GANG</div>
+  <div id="gangops-content"></div>
+  <div id="gangops-hint"></div>
+</div>
+
 <!-- DRIP-Shop-UI: Outfit-Kauf an der Theke (Paket 8) -->
 <div id="dripshop-box" class="hidden">
   <button id="dripshop-close" class="panel-close-btn" title="Schließen">✕</button>
@@ -1345,6 +1357,12 @@ const I18N = {
       declined: 'Dann verschwinde, bevor es sich einer anders überlegt.',
       already: ['Du gehörst zur Familie. Halt die Augen offen.','Wenn du Geld brauchst: Die Job-Station steht vorm Haus.'],
       rival: ['Falsche Farben, falsches Viertel.','Verschwinde, solange du noch laufen kannst.']
+    },
+    gangops: {
+      attack: '{gang} angreifen',
+      result: '{n} Mitglieder ziehen los, um {gang} anzugreifen.',
+      hint: 'Mehr Angriffe auf eine Gang lassen ihre Gegenwehr härter werden.',
+      colorsOn: 'Gang-Farben tragen', colorsOff: 'Gang-Farben ablegen'
     },
     cigmachine: {
       bought: 'Kippen-Packung gezogen — 25$.', noMoney: 'Zu wenig Geld für den Automaten.'
@@ -1700,6 +1718,12 @@ const I18N = {
       declined: 'Then get lost before someone changes their mind.',
       already: ['You are family. Keep your eyes open.','Need cash? The job station is right outside.'],
       rival: ['Wrong colors, wrong block.','Get out while you can still walk.']
+    },
+    gangops: {
+      attack: 'Attack {gang}',
+      result: '{n} members head out to hit {gang}.',
+      hint: 'Attacking a gang more often makes their retaliation harsher.',
+      colorsOn: 'Wear gang colors', colorsOff: 'Take off gang colors'
     },
     cigmachine: {
       bought: 'Grabbed a pack of cigarettes — $25.', noMoney: 'Not enough cash for the machine.'
@@ -5870,7 +5894,8 @@ function makeNpc(kind,tpl,px,py,o){
   // Nutzer-Vorgabe: ein Teil der Gang-Mitglieder trägt stattdessen eine Pistole — sonst könnten Gang-
   // Kriege (updateGangWarCheck()/npcGangFight()) nie schießen, weil n.weapon dafür immer Nahkampf wäre.
   // Bewusst nur normale gang-NPCs (nicht Boss/Guard) und nur eine Minderheit, nicht jeder ist bewaffnet.
-  if(kind==='gang'&&Math.random()<0.15) n.weapon=pick(['g17','semi_glock','g30']);
+  // Nutzer-Vorgabe: Quote von 0.15 auf 0.25 angehoben — mehr bewaffnete Gang-Mitglieder insgesamt.
+  if(kind==='gang'&&Math.random()<0.25) n.weapon=pick(['g17','semi_glock','g30']);
   NPCS.push(n);
   return n;
 }
@@ -6053,6 +6078,22 @@ function placeMethLab(cx,cy){
   addProp('prop_lab_barrel', cx-46, cy-6);
 }
 
+// Nutzer-Vorgabe: die WARZONE (STB vs NTL) soll dauerhaft nach Kampfgebiet aussehen, nicht nur während
+// eines gerade laufenden Gefechts — Schutt + sehr langlebige Blutflecken einmalig beim Weltaufbau
+// verteilen (normale Kampf-Blutflecken über spawnBloodDecal() bleiben nur 14-22s liegen, hier bewusst
+// mit riesiger life-Zeit, damit sie de facto dauerhaft sind, ohne einen eigenen Render-Layer zu brauchen).
+function decorateWarzone(){
+  for(let i=0;i<14;i++){
+    const s=freeSpot(WARZONE.x0,WARZONE.x1,WARZONE.y0,WARZONE.y1,20);
+    if(!s) continue;
+    addProp('prop_trash', s.px+rand(-10,10), s.py+rand(-10,10));
+  }
+  for(let i=0;i<10;i++){
+    const s=freeSpot(WARZONE.x0,WARZONE.x1,WARZONE.y0,WARZONE.y1,20);
+    if(!s) continue;
+    spawnBloodDecal(s.px+rand(-8,8), s.py+rand(-6,6), {life:999999, alpha:rand(.4,.6)});
+  }
+}
 /* ---------------- Gang-Haus-Cluster: Boss, Meth, Würfel, Pflege, Rennen ---------------- */
 function gangHouseCluster(b,gid,rect,withBoss,withDograce){
   const key='npc_'+gid.toLowerCase();
@@ -6145,7 +6186,7 @@ function genNPCs(){
   genStreetFurniture();
 
   // Zivilisten: nur neutral, Innenstadt bevorzugt ("crazy belebt")
-  const civCount=randi(140,170);   // +20 ggü. vorher — Karte ist riesig, mehr Leben in den Straßen
+  const civCount=randi(165,200);   // Nutzer-Vorgabe: generell mehr NPCs, +~15-20% ggü. vorher
   for(let i=0;i<civCount;i++){
     const s=Math.random()<0.65 ? neutralSpot(392,606,392,606) : neutralSpot(80,920,80,920);
     if(!s) continue;
@@ -6176,7 +6217,8 @@ function genNPCs(){
   for(const gid of gangIds){
     const zones=Array.isArray(GANGS[gid].zone)?GANGS[gid].zone:[GANGS[gid].zone];
     const houses=BUILDINGS.filter(bb=>bb.gang===gid);
-    const total = gid==='NTL' ? randi(50,100) : randi(30,40);
+    // Nutzer-Vorgabe: generell mehr Gang-Mitglieder, +~15-20% ggü. vorher (nicht verdoppelt).
+    const total = gid==='NTL' ? randi(58,115) : randi(35,46);
     let used=0, bossDone=false;
     for(const b of houses){
       const btx=b.px/CFG.TILE, bty=b.py/CFG.TILE;
@@ -6205,6 +6247,7 @@ function genNPCs(){
         {gang:gid,hp:30,speed:rand(1.3,1.8),wanderR:360,ambient:true});
     }
   }
+  decorateWarzone();
 
   // Patrouillen, Sprayer & Start-Tags (Tag-War)
   spawnPatrols();
@@ -6350,9 +6393,10 @@ function updateGangAmbushCheck(dt){
   if(!z||!z.gang) return;                              // nur in einem Gang-Territorium (nicht WAR/neutral)
   if(player.gang&&player.gang===z.id) return;           // nie im eigenen Revier
   if(Math.random()>=0.4) return;                        // 40%-Chance (Nutzer-Vorgabe)
-  // Soft-Start: erstmal max. 6 statt der vollen 10 (bis zu 10 gleichzeitige Angreifer bedeuten spürbar
-  // mehr Schaden/Sekunde als das bisherige Maximum von 3) — nach dem ersten Test hochdrehbar.
-  startChase(z.id,z.rect,randi(1,6));
+  // Soft-Start-Obergrenze (6) jetzt an gangHeat gekoppelt (Nutzer-Vorgabe: mehr Angriffe auf eine Gang
+  // via "opps sliden" -> heftigere Gegenwehr dieser Gang) — steigt bis auf 10 bei maximalem Heat.
+  const maxAttackers=Math.min(10,6+Math.round((gangHeat[z.id]||0)/3));
+  startChase(z.id,z.rect,randi(1,maxAttackers));
 }
 /* ---------------- Paket 6: Autonome Gang-Kriege (MVP: nur STB vs. NTL) ----------------
    Bewusst eng gefasst auf die einzige im Code schon als Rivalität markierte Gang-Paarung (WARZONE/
@@ -6410,28 +6454,82 @@ function applyGangFightDamage(n,dmg){
   spawnBloodDecal(n.px+rand(-6,6),n.py+rand(-2,4));
   if(n.hp<=0) npcDefeated(n);
 }
-let gangWarT=rand(180,300);
-function updateGangWarCheck(dt){
-  gangWarT-=dt;
-  if(gangWarT>0) return;
-  gangWarT=rand(180,300);
-  const stbRect=GANGS.STB.zone;
-  const ntlWarRect=GANGS.NTL.zone.find(z=>z.warLook);
-  if(!stbRect||!ntlWarRect) return;
-  const stb=[], ntl=[];
+// Eskalation (Nutzer-Vorgabe): je öfter der Spieler eine Gang über "opps sliden" angreift, desto
+// heftiger werden die Kriege MIT dieser Gang danach — eigener Angriff, Ambush-Größe UND autonome
+// Kriegsgröße skalieren alle mit demselben Heat-Wert. Langsamer Decay, damit es nicht dauerhaft ist.
+let gangHeat={YBC:0,BTK:0,STB:0,NTL:0};
+let gangHeatDecayT=20;
+function updateGangHeatDecay(dt){
+  gangHeatDecayT-=dt;
+  if(gangHeatDecayT>0) return;
+  gangHeatDecayT=20;
+  for(const k in gangHeat) if(gangHeat[k]>0) gangHeat[k]--;
+}
+// Kurze Würfel-Animation als Feedback für "opps sliden" (Nutzer-Vorgabe) — rein Flavor, beeinflusst
+// NICHT die Squad-Größe (die kommt aus gangHeat, siehe interactBoss()/renderGangOpsUI()), damit das
+// Ergebnis vorhersehbar bleibt und nicht zusätzlich vom Zufall abhängt.
+let opsRoll={active:false,t:0,dur:1.1,val:1,onDone:null};
+function startOpsRoll(onDone){ opsRoll={active:true,t:0,dur:1.1,val:randi(1,6),onDone}; }
+function updateOpsRoll(dt){
+  if(!opsRoll.active) return;
+  opsRoll.t+=dt;
+  const diceEl=el('gangops-dice');
+  if(opsRoll.t<opsRoll.dur){
+    opsRoll.val=randi(1,6);
+    if(diceEl) diceEl.textContent=String(opsRoll.val);
+  } else {
+    opsRoll.active=false;
+    if(diceEl) diceEl.textContent=String(opsRoll.val);
+    const cb=opsRoll.onDone; opsRoll.onDone=null;
+    if(cb) cb();
+  }
+}
+// Generalisierte Kriegs-Pairing-Logik, extrahiert aus dem bisherigen STB-vs-NTL-Sonderfall — wird jetzt
+// vom festen WARZONE-Dauerkonflikt, von zusätzlichen Zufalls-Kriegen zwischen anderen Gang-Paaren UND
+// vom neuen Spieler-Angriff ("opps sliden") genutzt. Gleiche Ausschluss-Filter wie bisher.
+function triggerGangFight(gidA,rectA,gidB,rectB,maxPairs){
+  const a=[], b=[];
   for(const n of NPCS){
     if(n.kind!=='gang'||n.state==='dead') continue;
     if(n.act==='meth'||n.act==='dograce'||n.act==='dice') continue;   // gleiche Ausschluss-Filter wie startChase()
     if(n.sprayer||n.patrol==='follow') continue;
     if(n.state==='chase'||n.state==='return'||n.state==='gangfight') continue;
-    if(n.gang==='STB'&&n.homeRect===stbRect) stb.push(n);
-    else if(n.gang==='NTL'&&n.homeRect===ntlWarRect) ntl.push(n);
+    if(n.gang===gidA&&n.homeRect===rectA) a.push(n);
+    else if(n.gang===gidB&&n.homeRect===rectB) b.push(n);
   }
-  const cnt=Math.min(stb.length,ntl.length,randi(1,3));
+  const cnt=Math.min(a.length,b.length,maxPairs);
   for(let i=0;i<cnt;i++){
-    const a=stb[i], b=ntl[i];
-    a.fightTarget=b; b.fightTarget=a;
-    a.state='gangfight'; b.state='gangfight';
+    const x=a[i], y=b[i];
+    x.fightTarget=y; y.fightTarget=x;
+    x.state='gangfight'; y.state='gangfight';
+  }
+  return cnt;
+}
+let gangWarT=rand(180,300);
+function updateGangWarCheck(dt){
+  updateGangHeatDecay(dt);
+  gangWarT-=dt;
+  if(gangWarT>0) return;
+  gangWarT=rand(180,300);
+  // Dauerkonflikt STB vs NTL in der WARZONE — bewusst fester Bestandteil der Welt, bleibt bestehen
+  // und wird NICHT durch die Zufalls-Kriege unten ersetzt (Nutzer-Vorgabe).
+  const stbRect=GANGS.STB.zone;
+  const ntlWarRect=GANGS.NTL.zone.find(z=>z.warLook);
+  if(stbRect&&ntlWarRect){
+    const base=randi(1,3)+Math.round((gangHeat.STB+gangHeat.NTL)/4);
+    triggerGangFight('STB',stbRect,'NTL',ntlWarRect,Math.min(base,10));
+  }
+  // Zusätzlich (Nutzer-Vorgabe): auch zwischen ANDEREN Gang-Paaren können zufällig Kriege entstehen,
+  // nicht nur im festen STB/NTL-Sonderfall oben — 50% Chance pro Check-Intervall, zufälliges Paar.
+  if(Math.random()<0.5){
+    const gids=Object.keys(GANGS);
+    const gidA=gids[randi(0,gids.length-1)];
+    const others=gids.filter(g=>g!==gidA);
+    const gidB=others[randi(0,others.length-1)];
+    const rectA=Array.isArray(GANGS[gidA].zone)?GANGS[gidA].zone[0]:GANGS[gidA].zone;
+    const rectB=Array.isArray(GANGS[gidB].zone)?GANGS[gidB].zone[0]:GANGS[gidB].zone;
+    const heatBonus=Math.round((gangHeat[gidA]+gangHeat[gidB])/4);
+    triggerGangFight(gidA,rectA,gidB,rectB,Math.min(randi(1,3)+heatBonus,8));
   }
 }
 /* Schickt einen NPC in den Verfolgungs-/Kampf-Zustand — sowohl vom Zonen-Loiter-Trigger
@@ -6514,7 +6612,10 @@ function updatePoliceDetection(n,dt,d2){
   n.stopCD=rand(8,15);
   // Personenkontrolle (Nutzer-Vorgabe): mit offenem Strafregister ist die Kontroll-Chance deutlich höher
   // (0.2 statt 0.05) — wer schon aktenkundig ist, fällt eher auf.
-  const stopChance=player.criminalRecord.length>0?0.2:0.05;
+  let stopChance=player.criminalRecord.length>0?0.2:0.05;
+  // Nutzer-Vorgabe: Gang-Farben tragen erhöht die Kontroll-Chance zusätzlich — auffällig gekleidet
+  // fällt man der Polizei eher auf, unabhängig vom Strafregister.
+  if(player.gangOutfit) stopChance+=0.1;
   if(Math.random()<stopChance) startStopCheck(n);
 }
 // Personenkontrolle: NPC friert für die Dauer des Dialogs ein (siehe case 'stopcheck' in updateNPCs()).
@@ -6898,6 +6999,7 @@ function updateNPCs(dt){
   updateZoneStay(dt);
   updateGangAmbushCheck(dt);
   updateGangWarCheck(dt);
+  updateOpsRoll(dt);
   if(greetCD>0) greetCD-=dt;
   let reloBudget=6;                                  // max. Umsetzungen pro Frame
   for(const n of NPCS){
@@ -8000,7 +8102,10 @@ function performShot(){
   spawnParticle(mo.x,mo.y,{size:6,color:'#fff3b0',life:0.06});
   for(let i=0;i<6;i++) spawnParticle(mo.x+dvx*rand(2,10),mo.y+dvy*rand(2,10),
     {vx:dvx*rand(60,140)+rand(-20,20),vy:dvy*rand(60,140)+rand(-20,20),life:rand(.05,.12),size:randi(2,4),color:i<3?'#ffd23a':'#ff7a2a'});
-  for(let i=0;i<3;i++) spawnParticle(mo.x,mo.y,
+  // Nutzer-Vorgabe: mehr Rauch, gestaffelt nach Waffe — am meisten bei den Fully-Auto-Waffen
+  // (g17/Glock als Basis bleiben bei 3, g30/g40 etwas mehr, "arp"-Waffen am heftigsten).
+  const smokeN=/arp/.test(player.weapon)?8:(player.weapon==='g30'||player.weapon==='g40')?5:3;
+  for(let i=0;i<smokeN;i++) spawnParticle(mo.x,mo.y,
     {vx:dvx*rand(10,30)+rand(-8,8),vy:-rand(6,18),life:rand(.4,.8),size:2,color:'#9a9aa2',alpha:.7});
   // Hülse springt entgegen der Blickrichtung weg
   spawnParticle(Math.round(player.px)+4,Math.round(player.py)-26,
@@ -10169,10 +10274,17 @@ window.addEventListener('keydown',e=>{
    über den bestehenden Dialog (openDialog/advanceDialog). */
 let gangJoinOpen=false;
 function interactBoss(n){
-  if(dialog.active||gangJoinOpen) return;
+  if(dialog.active||gangJoinOpen||gangOpsOpen) return;
   const gid=n.gang;
   if(player.gang===gid){
-    openDialog(GANGS[gid].name, tArr('gangjoin.already'));
+    // Nutzer-Vorgabe: eigener Boss bietet jetzt "opps sliden" an, statt nur Flavor-Text zu zeigen —
+    // das Würfeln selbst bleibt unverändert das separate Glücksspiel-Feature (act:'dice'), hier geht
+    // es um das Auslösen eines Angriffs auf eine Rivalen-Gang.
+    closeInventory(); closePhone();
+    renderGangOpsUI(gid);
+    el('gangops-box').classList.remove('hidden');
+    gangOpsOpen=true;
+    showPanelBackdrop(closeGangOpsUI);
     return;
   }
   if(player.gang){
@@ -10221,6 +10333,64 @@ window.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&!el('gangjoin-box').classList.contains('hidden')) closeGangJoinUI();
 });
 
+/* ---------------- Gang-Basis: Angriffe auslösen ("opps sliden") ----------------
+   Am eigenen Boss, NICHT am Würfel-Ambiente (act:'dice', bleibt reines Glücksspiel-Feature) — eigener
+   Panel-Baukasten nach demselben Muster wie #gangjoin-box. Auswahl der Ziel-Gang aus einem Menü
+   (Nutzer-Vorgabe), Squad-Größe skaliert mit gangHeat statt mit dem Würfel-Ergebnis selbst (das ist
+   reines Feedback/Flavor, siehe startOpsRoll()). */
+let gangOpsOpen=false;
+function closeGangOpsUI(){ el('gangops-box').classList.add('hidden'); gangOpsOpen=false; hidePanelBackdrop(); }
+el('gangops-close').addEventListener('click', closeGangOpsUI);
+function renderGangOpsUI(gid){
+  const g=GANGS[gid];
+  el('gangops-title').textContent=g.name;
+  const box=el('gangops-content');
+  box.innerHTML='';
+  for(const line of tArr('gangjoin.already')){
+    const p=document.createElement('div');
+    p.textContent=line;
+    box.appendChild(p);
+  }
+  const dice=document.createElement('div');
+  dice.id='gangops-dice';
+  dice.className='gangops-dice';
+  dice.textContent='🎲';
+  box.appendChild(dice);
+  const colorsBtn=document.createElement('button');
+  colorsBtn.className='roll-btn';
+  colorsBtn.textContent=t(player.gangOutfit?'gangops.colorsOff':'gangops.colorsOn');
+  colorsBtn.addEventListener('click',()=>{
+    toggleGangOutfit(gid);
+    colorsBtn.textContent=t(player.gangOutfit?'gangops.colorsOff':'gangops.colorsOn');
+  });
+  box.appendChild(colorsBtn);
+  const rivals=Object.keys(GANGS).filter(k=>k!==gid);
+  for(const rid of rivals){
+    const heat=gangHeat[rid]||0;
+    const btn=document.createElement('button');
+    btn.className='roll-btn';
+    btn.textContent=t('gangops.attack',{gang:GANGS[rid].name})+(heat>0?' 🔥'+heat:'');
+    btn.addEventListener('click',()=>{
+      box.querySelectorAll('button').forEach(b=>b.disabled=true);
+      startOpsRoll(()=>{
+        const ownRect=Array.isArray(GANGS[gid].zone)?GANGS[gid].zone[0]:GANGS[gid].zone;
+        const targetRect=Array.isArray(GANGS[rid].zone)?GANGS[rid].zone[0]:GANGS[rid].zone;
+        const h=gangHeat[rid]||0;
+        const maxPairs=Math.min(12, randi(4,6)+Math.round(h/2));
+        const sent=triggerGangFight(gid,ownRect,rid,targetRect,maxPairs);
+        gangHeat[rid]=Math.min(10,(gangHeat[rid]||0)+2);
+        toast(t('gangops.result',{n:sent,gang:GANGS[rid].name}));
+        closeGangOpsUI();
+      });
+    });
+    box.appendChild(btn);
+  }
+  el('gangops-hint').textContent=t('gangops.hint');
+}
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!el('gangops-box').classList.contains('hidden')) closeGangOpsUI();
+});
+
 /* ---------------- DRIP-Outfit-System (Paket 8) ----------------
    8 Paletten-Presets für phChar (Hoodie/Body/Pants), Skin bleibt immer gleich. Kauf regeneriert
    IMAGES.player sofort neu — bewusst einfach gehalten: kein "Besitz"-Tracking, jeder Kauf kostet
@@ -10238,9 +10408,32 @@ const OUTFIT_PALETTES=[
   {id:'tracksuit',name:{de:'Trainingsanzug (Schwarz)',en:'Tracksuit (Black)'}, price:950,
    hood:'#1c1c1c',hoodD:'#0d0d0d',body:'#1c1c1c',pants:'#0a0a0a', realArt:true, imgKey:'player_tracksuit'}
 ];
+// Gang-Farben tragen (Nutzer-Vorgabe): sobald man Mitglied ist, kann man am eigenen Boss die Gang-
+// Farben tragen — kein fester OUTFIT_PALETTES-Eintrag, weil die Farbe von GANGS[player.gang].color
+// abhängt statt fest zu sein. Ausgleich: player.gangOutfit erhöht die Personenkontroll-Chance
+// (siehe updatePoliceDetection()) — auffällige Farben ziehen mehr Polizei-Aufmerksamkeit.
+function shadeHex(hex,delta){
+  const n=parseInt(hex.slice(1),16);
+  const clamp=v=>Math.max(0,Math.min(255,v));
+  const r=clamp(((n>>16)&255)+delta), g=clamp(((n>>8)&255)+delta), b=clamp((n&255)+delta);
+  return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+function toggleGangOutfit(gid){
+  if(player.gangOutfit){
+    player.gangOutfit=false;
+    applyOutfit(player.outfit||'default');
+  } else {
+    const c=GANGS[gid].color;
+    MANIFEST.player.pal={hood:c,hoodD:shadeHex(c,-60),body:c,pants:'#141414',skin:'#c99e78'};
+    MANIFEST.player.vest=!!(player.hasVest||player.hasVestMilitary);
+    IMAGES.player=phChar(MANIFEST.player);
+    player.gangOutfit=true;
+  }
+}
 function applyOutfit(id){
   const o=OUTFIT_PALETTES.find(x=>x.id===id);
   if(!o) return;
+  player.gangOutfit=false;   // jeder Shop-Outfit-Wechsel beendet das Tragen der Gang-Farben
   if(o.realArt){
     // Echtes Sprite (PixelLab-Export) statt prozeduralem Platzhalter — siehe MANIFEST/EMBEDDED.
     // Bekannte Lücke (bewusst nicht mitgelöst): die Stichschutzweste (player.hasVest) wirkt sich nur
