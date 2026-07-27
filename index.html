@@ -11843,14 +11843,16 @@ function render(time){
               ctx.drawImage(IMAGES['weapon_'+player.weapon],0,0,wv.sw,wv.sh,anchor.x,anchor.y,wv.dw,wv.dh);
             }
           } else {
-            // Rotationswinkel-Offset +Math.PI: die Waffen-Sprites (g17/g30/fullyarp/militaryarp/costumfullyarp
-            // etc.) liegen im Quellbild mit der Mündung nach LINKS — ohne den Offset würde die Mündung beim
-            // Zielen nach rechts (aimAngle≈0) fälschlich nach links zeigen. Per automatisiertem Headless-
-            // Screenshot-Test (aimAngle≈0° und ≈90°) visuell verifiziert, nicht nur geschätzt.
+            // Bugfix: g17/g30/fullyarp/militaryarp/costumfullyarp lagen im Quellbild ursprünglich mit der
+            // Mündung nach LINKS vor, alle bestehenden Waffen (z.B. g40, siehe "Sprite zeigt nach rechts"-
+            // Kommentar im Touch-Zweig oben) sind aber mit Mündung nach RECHTS gezeichnet. Statt eines
+            // Sonderfall-Rotationsoffsets nur für die 5 neuen Waffen wurden die Bilddateien selbst horizontal
+            // gespiegelt (RotateFlipX) — jetzt haben ALLE Waffen dieselbe Mündung-nach-rechts-Konvention,
+            // kein Offset mehr nötig, und der Touch-Zweig oben passt jetzt ebenfalls korrekt für alle Waffen.
             const rec=Math.round(player.shootRecoil*3);
             ctx.save();
             ctx.translate(anchor.x+wv.dw/2-rec*Math.cos(player.aimAngle), anchor.y+wv.dh/2-rec*Math.sin(player.aimAngle));
-            ctx.rotate(player.aimAngle+Math.PI);
+            ctx.rotate(player.aimAngle);
             ctx.drawImage(IMAGES['weapon_'+player.weapon],0,0,wv.sw,wv.sh,-wv.dw/2,-wv.dh/2,wv.dw,wv.dh);
             ctx.restore();
           }
