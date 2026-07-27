@@ -1405,7 +1405,12 @@ const I18N = {
       bailOffer: 'Anwalt anrufen? Sofort raus kostet extra — {amount}$.',
       bailed: 'Freigekauft: {amount}$ extra bezahlt.',
       partialBail: 'Reicht nicht für die volle Freilassung — {amount}$ bezahlt (jetzt pleite), noch {time} übrig.',
-      noMoney: 'Nicht genug Geld dafür.'
+      noMoney: 'Nicht genug Geld dafür.',
+      workoutGetReady: 'Klimmzüge... mach dich bereit.',
+      workoutNow: 'JETZT! [E] drücken!',
+      workoutHit: 'Klimmzug geschafft — 1 Minute kürzer. Noch {time}.',
+      workoutMiss: 'Verpasst — nochmal versuchen.',
+      workoutTired: 'Arme sind platt. Für heute keine Klimmzüge mehr.'
     },
     dialog: { hint: '▼ E', prompt: '[E]' },
     zone: { neutral: 'Neutral-Zone', war: 'Kriegszone — STB vs NTL' },
@@ -1743,7 +1748,12 @@ const I18N = {
       bailOffer: 'Call a lawyer? Getting out now costs extra — ${amount}.',
       bailed: 'Bailed out: paid ${amount} extra.',
       partialBail: 'Not enough for full release — paid ${amount} (now broke), {time} left.',
-      noMoney: 'Not enough cash for that.'
+      noMoney: 'Not enough cash for that.',
+      workoutGetReady: 'Pull-ups... get ready.',
+      workoutNow: 'NOW! Press [E]!',
+      workoutHit: 'Pull-up landed — 1 minute shorter. {time} left.',
+      workoutMiss: 'Missed it — try again.',
+      workoutTired: 'Arms are done. No more pull-ups for today.'
     },
     dialog: { hint: '▼ E', prompt: '[E]' },
     zone: { neutral: 'Neutral Zone', war: 'War zone — STB vs NTL' },
@@ -3024,6 +3034,10 @@ function makeInterior(type){
         {k:'scratches',x:0.2,y:3.2,w:1.2,h:1.4,c:'#5a5a62'},
         {k:'payphone',x:4.3,y:3,w:1,h:1.6,c:'#3a3a42',interactive:'jail_bail',
          label:{de:'Münztelefon',en:'Payphone'}},
+        // Nutzer-Vorgabe: kleines Minispiel während der Haft, das die Zeit ein bisschen verkürzt —
+        // siehe interactJailWorkout()/jail_workout in interactInterior().
+        {k:'workout',x:1.8,y:3.4,w:1.6,h:0.7,c:'#4a4a52',interactive:'jail_workout',
+         label:{de:'Klimmzugstange',en:'Pull-up Bar'}},
         {k:'bars',x:1.5,y:5.3,w:3,h:0.5,c:'#0a0a0c'},
         {k:'window',x:4.4,y:0.15,w:1,h:0.5,c:'#0a0e18',detail:'night'},
         {k:'lamp',x:3,y:1,w:0,h:0,c:'#c8c8d0',detail:'ceiling',glow:true,glowColor:'rgba(180,180,195,0.18)',glowR:55}
@@ -4716,6 +4730,15 @@ function drawInteriorFurniture(ctx, f, time){
       ctx.stroke();
       break;
     }
+    case 'workout':{
+      // Klimmzugstange (Knast-Minispiel, siehe interactJailWorkout()): zwei Pfosten + Querstange
+      ctx.fillStyle='#2a2a30';
+      ctx.fillRect(tx,ty+th*0.3,tw*0.12,th*0.7);
+      ctx.fillRect(tx+tw*0.88,ty+th*0.3,tw*0.12,th*0.7);
+      ctx.fillStyle='#6a6a72';
+      ctx.fillRect(tx,ty+th*0.15,tw,th*0.18);
+      break;
+    }
     default:{
       ctx.fillStyle=f.c;
       ctx.fillRect(tx,ty,tw,th);
@@ -5614,6 +5637,39 @@ function renderArrestFade(ctx){
   ctx.fillRect(0,0,cw,ch);
 }
 
+/* Knast-Minispiel (Nutzer-Vorgabe): Klimmzugstange in der Zelle (jail_cell), verkürzt die Haft ein
+   bisschen bei korrektem Timing. Max. 3 Versuche pro Haft (siehe beginCustody()), damit es die Strafe
+   nicht aushebelt — nur "ein bisschen" kürzer, kein Weg, komplett drumherum zu kommen. Reaktionsspiel
+   über denselben E-Interact wie die Bank/das Münztelefon: erster Druck startet die Wartezeit, zweiter
+   Druck während des kurzen "JETZT"-Fensters zählt als Treffer. */
+let jailWorkoutState={active:false,timer:null,deadline:0};
+function interactJailWorkout(){
+  if(jailWorkoutState.active){
+    clearTimeout(jailWorkoutState.timer);
+    jailWorkoutState.active=false;
+    const hit=Date.now()<=jailWorkoutState.deadline;
+    player.jailWorkoutTries=(player.jailWorkoutTries||0)+1;
+    if(hit){
+      const reduceMs=60000;
+      player.custodyReleaseAt=Math.max(Date.now(),player.custodyReleaseAt-reduceMs);
+      toast(t('jail.workoutHit',{time:formatCustodyRemaining(Math.max(0,player.custodyReleaseAt-Date.now()))}));
+    } else {
+      toast(t('jail.workoutMiss'));
+    }
+    return;
+  }
+  const tries=player.jailWorkoutTries||0;
+  if(tries>=3){ toast(t('jail.workoutTired')); return; }
+  toast(t('jail.workoutGetReady'));
+  const delay=rand(900,2200);
+  jailWorkoutState.timer=setTimeout(()=>{
+    jailWorkoutState.active=true;
+    jailWorkoutState.deadline=Date.now()+550;
+    toast(t('jail.workoutNow'));
+    // Sicherheitsnetz: reagiert der Spieler gar nicht, schliesst sich das Fenster nach Ablauf automatisch.
+    jailWorkoutState.timer=setTimeout(()=>{ jailWorkoutState.active=false; },550);
+  },delay);
+}
 /* ---------------- Bett-Interaktion ---------------- */
 function interactInterior(){
   if(!interior||!intInteractTarget) return;
@@ -5659,6 +5715,10 @@ function interactInterior(){
         payEarlyBail(quotedPrice);
       }
     },100);
+    return;
+  }
+  if(f.interactive==='jail_workout'){
+    interactJailWorkout();
     return;
   }
   if(f.interactive==='growshop'){
@@ -8089,6 +8149,8 @@ function beginCustody(){
   const ms=custodyDurationMs()*(player.arrestVoluntary?0.5:1);   // Sich-stellen halbiert die Zeit
   player.custodyReleaseAt=Date.now()+ms;
   player.custodyTotalMs=ms;   // Ausgangsdauer — braucht earlyBailCost() für den Restzeit-Anteil
+  player.jailWorkoutTries=0;   // Nutzer-Vorgabe: Minispiel-Versuche pro Haft begrenzt, siehe interactJailWorkout()
+  jailWorkoutState.active=false; clearTimeout(jailWorkoutState.timer);
   el('custody-title').textContent=t('police.custodyTitle');
   el('custody-overlay').classList.remove('hidden');
   // Begehbare Zelle statt Blackscreen: Verhaftung selbst hat bereits zu Schwarz überblendet (arrestFadeDir),
