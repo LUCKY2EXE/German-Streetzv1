@@ -5317,6 +5317,7 @@ function renderInterior(time){
   const p=intPlayer;
   ctx.drawImage(IMAGES.player,p.frame*32,p.dir*64,32,64,
     Math.round(p.x)-16,Math.round(p.y)-60,32,64);
+  if(player.outfit==='tracksuit') drawTracksuitStripe(Math.round(p.x)-16, Math.round(p.y)-60, p.dir);
   // Paket B: Kippe/Joint/Blunt + Flasche auch drinnen am Sprite (fehlte hier komplett)
   drawConsumables(Math.round(p.x),Math.round(p.y)-EQUIP_ANCHOR_DY,p.dir);
   // Paket 18: Sprechblasen der ambienten Interior-NPCs (Kopie aus renderBubbles(), ohne
@@ -11026,6 +11027,19 @@ const EQUIP_ANCHOR_DY=30;
 function weaponAnchor(){
   return {x:Math.round(player.px)+8, y:Math.round(player.py)-EQUIP_ANCHOR_DY};
 }
+// Nike-Seitenstreifen fuers Trainingsanzug-Outfit: weiss, an Aermel-/Beinaussenkante — als duenner Overlay
+// UEBER dem Real-Art-Sprite gezeichnet statt ins PNG gebrannt. Zwei Versuche mit automatischer Pixel-
+// Kantenerkennung im 32x64-Laufsprite lieferten nur Zick-Zack-Rauschen (die Silhouette springt zwischen
+// Lauf-Frames zu stark), darum feste, von Hand am Sprite abgelesene Koordinaten statt Pixel-Raten.
+// dir1/2 (Seitenansicht): nur die vom Betrachter abgewandte (hintere) Kante — vorne wuerde der Streifen
+// die Silhouette zerschneiden. dir0/3 (Front/Ruecken): beide Seiten, symmetrisch wie auf der Vorlage.
+function drawTracksuitStripe(bx,by,dir){
+  ctx.fillStyle='#f5f5f5';
+  const bar=(x,y1,y2)=>ctx.fillRect(bx+x,by+y1,1,y2-y1);
+  if(dir===1) bar(21,21,46);
+  else if(dir===2) bar(9,21,46);
+  else { bar(8,21,46); bar(24,21,46); }
+}
 /* Paket B: Rauchen/Trinken funktioniert jetzt auch drinnen — dort steht der Spieler auf
    intPlayer.x/y, während player.px/py die (veraltete) Außenwelt-Position behält. Ohne diesen
    Anker spawnten Rauch-Partikel drinnen an der falschen Stelle und waren nie sichtbar. */
@@ -11948,6 +11962,7 @@ function render(time){
       } else {
         ctx.drawImage(IMAGES.player, player.frame*32, player.dir*64,32,64,
                     Math.round(player.px)-16, Math.round(player.py)-60, 32,64);
+        if(player.outfit==='tracksuit') drawTracksuitStripe(Math.round(player.px)-16, Math.round(player.py)-60, player.dir);
       }
       // Kippe/Joint/Blunt + Flasche sichtbar (Rückenansicht: verdeckt) — Paket B: gemeinsame
       // Zeichnung mit renderInterior(), siehe drawConsumables()
