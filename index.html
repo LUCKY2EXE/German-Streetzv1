@@ -8227,9 +8227,16 @@ function confiscateContraband(scope){
     if(it.cat==='weapon'||i.id.startsWith('meth_')) hard=true;
     return false;
   });
-  player.inv=strip(player.inv);
-  if(player.weapon&&!player.inv.some(i=>i.id===player.weapon)) player.weapon=null;
-  if(scope==='all'){
+  // Bugfix (Nutzer-Feedback: "Haus durchsucht, ganzes Inventar weg"): das mitgefuehrte Inventar darf nur
+  // angetastet werden, wenn der Spieler auch PERSOENLICH durchsucht wird (Personenkontrolle/Verhaftung).
+  // Eine Hausdurchsuchung waehrend der Spieler woanders in der Stadt unterwegs ist (scope 'house') darf
+  // nur den Hausbestand (Stash/Safe/Kochvorgaenge) treffen — die Polizei kann nicht beschlagnahmen, was
+  // gerade gar nicht am Tatort ist.
+  if(scope!=='house'){
+    player.inv=strip(player.inv);
+    if(player.weapon&&!player.inv.some(i=>i.id===player.weapon)) player.weapon=null;
+  }
+  if(scope==='all'||scope==='house'){
     player.stash=strip(player.stash);
     // Jeder laufende Kochvorgang zählt als Fund (Bugfix: vorher inkrementierte das Löschen hier n nicht,
     // wodurch ein Raid auf ein noch nicht abgeerntetes Labor als "nichts gefunden" durchging). Bei mehreren
@@ -8353,7 +8360,12 @@ function resolveRaid(){
   // draufpacken. Einfach verpuffen lassen, exakt wie es sich vor dem Anwesenheits-Fix schon verhielt
   // (startArrest() hatte denselben Guard schon immer).
   if(player.arrested||player.dead) return;
-  const res=confiscateContraband('all');
+  // Bugfix (Nutzer-Vorgabe): eine Hausdurchsuchung trifft IMMER nur den Hausbestand (Stash/Safe/Kochvorgaenge),
+  // nie das mitgefuehrte Inventar — egal ob der Spieler dabei zuhause angetroffen wird oder nicht. Das
+  // mitgefuehrte Inventar wird ausschliesslich bei einer Personenkontrolle durchsucht (releaseFromCustody()),
+  // wenn dort illegale Items gefunden werden. Ob der Spieler zuhause angetroffen wird, entscheidet weiterhin
+  // nur ueber Verhaftung vs. Geldstrafe (Zweig weiter unten), nicht ueber den Umfang der Beschlagnahmung.
+  const res=confiscateContraband('house');
   if(res.n===0){
     // Bugfix: vorher blieb eine Vorwarnung ohne jedes Ergebnis, wenn hasMethLab/hasGrowTent zwar gesetzt
     // war, aber nichts mehr wirklich da war (z.B. Ware längst verkauft) — wirkte wie "nichts passiert".
