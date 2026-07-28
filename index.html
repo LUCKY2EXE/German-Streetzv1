@@ -1372,7 +1372,8 @@ const I18N = {
     },
     gangops: {
       attack: '{gang} angreifen',
-      result: '{n} Mitglieder ziehen los, um {gang} anzugreifen.',
+      result: '{n} Mitglieder treffen bei {gang} ein und greifen an.',
+      vanEnroute: 'Ein weißer Van rollt Richtung {gang}…',
       hint: 'Mehr Angriffe auf eine Gang lassen ihre Gegenwehr härter werden.',
       colorsOn: 'Gang-Farben tragen', colorsOff: 'Gang-Farben ablegen'
     },
@@ -1752,7 +1753,8 @@ const I18N = {
     },
     gangops: {
       attack: 'Attack {gang}',
-      result: '{n} members head out to hit {gang}.',
+      result: '{n} members arrive at {gang} and attack.',
+      vanEnroute: 'A white van is rolling toward {gang}…',
       hint: 'Attacking a gang more often makes their retaliation harsher.',
       colorsOn: 'Wear gang colors', colorsOff: 'Take off gang colors'
     },
@@ -5247,7 +5249,7 @@ function genStreetRows(){
    Aktivitäten, Hunde, Bänke, Sprechblasen, Verfolgung
    NPCs werden NICHT gespeichert — jede Sitzung neu gewürfelt.
    ===================================================================== */
-const NPCS=[], DOGS=[], BENCHES=[], PROPS=[], ACT_GROUPS=[], PARTICLES=[], BLOOD_DECALS=[];
+const NPCS=[], DOGS=[], BENCHES=[], PROPS=[], ACT_GROUPS=[], PARTICLES=[], BLOOD_DECALS=[], VANS=[];
 const TAGS=[];                     // Graffiti-Tags an Hauswänden — Gangs übersprühen sich gegenseitig
 const TAG_IMGS={};
 (function makeTagImages(){
@@ -7075,6 +7077,7 @@ function updateNPCs(dt){
   updateGangWarCheck(dt);
   updateOpsRoll(dt);
   updateActiveFights(dt);
+  updateVans(dt);
   if(greetCD>0) greetCD-=dt;
   let reloBudget=6;                                  // max. Umsetzungen pro Frame
   for(const n of NPCS){
@@ -7546,6 +7549,41 @@ function drawNPC(n){
 function drawDog(d){
   ctx.drawImage(IMAGES.dog,d.frame*24,(d.dir<0?0:16),24,16,
     Math.round(d.x)-12,Math.round(d.y)-14,24,16);
+}
+// Nutzer-Vorgabe: "opps sliden" soll ein echter Drive-by sein statt eines abstrakten Fernwirkungs-
+// Effekts — ein weisser Van faehrt sichtbar vom eigenen Gang-Haus zur Ziel-Zone, erst bei Ankunft
+// wird der eigentliche Kampf (onArrive) ausgeloest. Gleiches Array/Update/Draw/Cull-Skelett wie DOGS.
+function spawnDriveByVan(fromX,fromY,toX,toY,onArrive){
+  // Geschwindigkeit bewusst weit ueber realistischem Autotempo (Gang-Zonen koennen ueber 10000px
+  // auseinanderliegen) — soll wie ein kurzer, kinoreifer Zeitsprung wirken, nicht wie eine Echtzeit-
+  // Fahrt quer durch die ganze Karte.
+  VANS.push({isVan:true,x:fromX,y:fromY,py:fromY,tx:toX,ty:toY,speed:2200,angle:Math.atan2(toY-fromY,toX-fromX),onArrive});
+}
+function updateVans(dt){
+  for(let i=VANS.length-1;i>=0;i--){
+    const v=VANS[i];
+    const dx=v.tx-v.x, dy=v.ty-v.y, d=Math.hypot(dx,dy);
+    if(d<24){ const cb=v.onArrive; VANS.splice(i,1); if(cb) cb(); continue; }
+    v.angle=Math.atan2(dy,dx);
+    v.x+=(dx/d)*v.speed*dt; v.y+=(dy/d)*v.speed*dt;
+    v.py=v.y;   // Tiefensortierung im Draw-Loop nutzt .py (analog DOGS), muss mit der echten Y-Position mitwandern
+  }
+}
+function drawVan(v){
+  ctx.save();
+  ctx.translate(Math.round(v.x),Math.round(v.y));
+  ctx.rotate(v.angle+Math.PI/2);
+  ctx.fillStyle='rgba(0,0,0,.35)'; ctx.fillRect(-15,20,30,6);   // Schatten
+  ctx.fillStyle='#e5e3da';
+  ctx.fillRect(-14,-24,28,48);
+  ctx.fillStyle='#3a3a40';
+  ctx.fillRect(-11,-20,22,14);                                  // Windschutzscheibe
+  ctx.fillStyle='#c7c5bc';
+  ctx.fillRect(-14,-2,28,5);                                    // Seitenstreifen
+  ctx.fillStyle='#1c1c1c';
+  ctx.fillRect(-13,22,10,4); ctx.fillRect(3,22,10,4);            // Raeder hinten
+  ctx.fillRect(-13,-26,10,4); ctx.fillRect(3,-26,10,4);          // Raeder vorne
+  ctx.restore();
 }
 function renderParticles(vw,vh){
   for(const p of PARTICLES){
@@ -10484,13 +10522,20 @@ function renderGangOpsUI(gid){
     btn.addEventListener('click',()=>{
       box.querySelectorAll('button').forEach(b=>b.disabled=true);
       startOpsRoll(()=>{
+        // Nutzer-Vorgabe: "opps sliden" fahren jetzt wirklich mit einem weissen Van los, statt den
+        // Kampf sofort abstrakt aufzuloesen — triggerGangFight() laeuft erst bei Ankunft des Vans.
         const ownRect=Array.isArray(GANGS[gid].zone)?GANGS[gid].zone[0]:GANGS[gid].zone;
         const targetRect=Array.isArray(GANGS[rid].zone)?GANGS[rid].zone[0]:GANGS[rid].zone;
-        const h=gangHeat[rid]||0;
-        const maxPairs=Math.min(12, randi(4,6)+Math.round(h/2));
-        const sent=triggerGangFight(gid,ownRect,rid,targetRect,maxPairs);
-        gangHeat[rid]=Math.min(10,(gangHeat[rid]||0)+2);
-        toast(t('gangops.result',{n:sent,gang:GANGS[rid].name}));
+        const fromX=(ownRect.x0+ownRect.x1)/2*CFG.TILE, fromY=(ownRect.y0+ownRect.y1)/2*CFG.TILE;
+        const toX=(targetRect.x0+targetRect.x1)/2*CFG.TILE, toY=(targetRect.y0+targetRect.y1)/2*CFG.TILE;
+        spawnDriveByVan(fromX,fromY,toX,toY,()=>{
+          const h=gangHeat[rid]||0;
+          const maxPairs=Math.min(12, randi(4,6)+Math.round(h/2));
+          const sent=triggerGangFight(gid,ownRect,rid,targetRect,maxPairs);
+          gangHeat[rid]=Math.min(10,(gangHeat[rid]||0)+2);
+          toast(t('gangops.result',{n:sent,gang:GANGS[rid].name}));
+        });
+        toast(t('gangops.vanEnroute',{gang:GANGS[rid].name}));
         closeGangOpsUI();
       });
     });
@@ -12306,6 +12351,10 @@ function render(time){
     if(d.x+14<camX||d.x-14>camX+vw||d.y+4<camY||d.y-18>camY+vh) continue;
     list.push(d);
   }
+  for(const v of VANS){
+    if(v.x+30<camX||v.x-30>camX+vw||v.y+30<camY||v.y-30>camY+vh) continue;
+    list.push(v);
+  }
   for(const b of BENCHES){
     if(b.px+48>camX&&b.px<camX+vw&&b.baseY>camY&&b.py<camY+vh) list.push(b);
   }
@@ -12440,6 +12489,8 @@ function render(time){
       drawNPC(e);
     } else if(e.isDog){
       drawDog(e);
+    } else if(e.isVan){
+      drawVan(e);
     } else if(e.isTag){
       ctx.drawImage(TAG_IMGS[e.gang],Math.round(e.px),Math.round(e.py));
     } else if(e.isPigeon){
