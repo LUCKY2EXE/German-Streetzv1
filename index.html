@@ -7146,7 +7146,14 @@ function updateNPCs(dt){
     if(n.bubble){ n.bubble.t-=dt; if(n.bubble.t<=0) n.bubble=null; }
     if(n.bubbleCD>0) n.bubbleCD-=dt;
     const pdx=n.px-player.px, pdy=n.py-player.py, d2=pdx*pdx+pdy*pdy;
-    if(n.ambient&&d2>AMBIENT_FAR_D2&&n.state!=='chase'&&n.state!=='return'&&n.state!=='flee'){
+    // Bugfix (Nutzer-Feedback: ausgeloeste Gang-Kriege "finden nicht wirklich statt"): beide Distanz-
+    // Gates hier froren jeden NPC ein, der weiter als NPC_ACTIVE_D2 (~1500px) vom SPIELER entfernt war —
+    // exakt dasselbe Muster, das schon einmal bei Polizei-Patrouillen gefunden und per eigenem Dispatch
+    // gefixt wurde (siehe updatePoliceDispatch()-Kommentare weiter unten). triggerGangFight() waehlt
+    // Kaempfer aber aus der jeweiligen Gang-Heimatzone, die typischerweise tausende Pixel vom Spieler
+    // entfernt liegt — ohne Ausnahme blieben Kaempfe dadurch de facto komplett eingefroren (kein
+    // Schaden, keine Bewegung, kein Tod), bis der Spieler zufaellig genau dorthin lief.
+    if(n.ambient&&d2>AMBIENT_FAR_D2&&n.state!=='chase'&&n.state!=='return'&&n.state!=='flee'&&n.state!=='gangfight'){
       if(n.reloCD>0) n.reloCD-=dt;
       else if(reloBudget>0){
         reloBudget--;
@@ -7161,7 +7168,7 @@ function updateNPCs(dt){
       }
       continue;
     }
-    if(d2>NPC_ACTIVE_D2) continue;
+    if(d2>NPC_ACTIVE_D2&&n.state!=='gangfight') continue;
 
     // Waffen-Update: Glock-Verlangsamung klingt ab (siehe applyDamageToNpc()) — n.speed läuft dadurch
     // ganz normal überall dort wieder auf den Originalwert zurück, wo sonst n.speed gelesen wird
