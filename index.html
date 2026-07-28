@@ -12723,10 +12723,14 @@ function render(time){
 let gameMin = CFG.START_HOUR*60;
 let saveT = 0;
 function hour(){return (gameMin/60)%24;}
+// Bugfix (Nutzer-Feedback: "wird um 20 Uhr nicht mehr dunkel"): nightAlpha() faerbte erst ab 21 Uhr
+// voll dunkel (Uebergang 19-21 Uhr), waehrend isNight() (Gameplay-Logik: Nacht-Spawns, Sirenen, etc.)
+// schon ab 20 Uhr "Nacht" meldet — Spielwelt wirkte dadurch trotz Nacht-Zustand noch hell. Uebergaenge
+// jetzt exakt auf die isNight()-Schwellen (20 Uhr / 6 Uhr) synchronisiert.
 function nightAlpha(h){
-  if(h>=7&&h<19) return 0;
-  if(h>=19&&h<21) return (h-19)/2*0.55;
-  if(h>=5&&h<7)  return (7-h)/2*0.55;
+  if(h>=6&&h<18) return 0;
+  if(h>=18&&h<20) return (h-18)/2*0.55;
+  if(h>=4&&h<6)  return (6-h)/2*0.55;
   return 0.55;
 }
 
