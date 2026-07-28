@@ -1398,8 +1398,15 @@ const I18N = {
     phone: {
       title: 'NAVI — ZIEL WÄHLEN', off: '× NAVI AUS', hint: 'KLICK — ZIEL WÄHLEN<br>N / ESC — ZUKLAPPEN',
       started: 'Navi läuft: {name}', arrived: 'Ziel erreicht.',
-      dest: { dealer: 'DEALER (GASSE)', villa: 'REICHE TRAP', roma: 'RESTAURANT ROMA', spaeti: 'SPÄTI 24', home: 'TRAP-HAUS', station: 'BAHNHOF', ybc: 'YBC-BLOCK', btk: 'BTK-BLOCK', stb: 'STB-BLOCK', ntl: 'NTL-BLOCK', liefer: 'LIEFERUNG', corner: 'CORNER SHOP', bike: 'BIKE SHOP', armor: 'ARMOR SHOP', baustelle: 'BAUSTELLE', growshop: 'GROW SHOP', drip: 'DRIP', casino: 'EL DORADO SPIELHALLE', security: 'SECURITY-RUNDE' },
-      home: { title: 'NOKIA 3310', hint: 'KLICK — APP ÖFFNEN<br>ESC/N — SCHLIESSEN', appNavi: 'NAVI', appMessages: 'NACHRICHTEN', appFelony: 'FELONY', back: '< ZURÜCK', noMessages: 'Keine Nachrichten.', hintList: 'KLICK — AUSWÄHLEN<br>ESC/N — SCHLIESSEN' }
+      dest: { dealer: 'DEALER (GASSE)', villa: 'REICHE TRAP', roma: 'RESTAURANT ROMA', spaeti: 'SPÄTI 24', home: 'TRAP-HAUS', station: 'BAHNHOF', ybc: 'YBC-BLOCK', btk: 'BTK-BLOCK', stb: 'STB-BLOCK', ntl: 'NTL-BLOCK', liefer: 'LIEFERUNG', corner: 'CORNER SHOP', bike: 'BIKE SHOP', armor: 'ARMOR SHOP', baustelle: 'BAUSTELLE', growshop: 'GROW SHOP', drip: 'DRIP', casino: 'EL DORADO SPIELHALLE', security: 'SECURITY-RUNDE', gangwar: 'GANG-KRIEG' },
+      home: { title: 'NOKIA 3310', hint: 'KLICK — APP ÖFFNEN<br>ESC/N — SCHLIESSEN', appNavi: 'NAVI', appMessages: 'NACHRICHTEN', appFelony: 'FELONY', appGangs: 'GANGS', back: '< ZURÜCK', noMessages: 'Keine Nachrichten.', hintList: 'KLICK — AUSWÄHLEN<br>ESC/N — SCHLIESSEN' }
+    },
+    gangs: {
+      title: 'GANGS', hint: 'KLICK AUF EINEN KRIEG — NAVI-ZIEL SETZEN',
+      warzoneNote: 'STB vs NTL: Dauerkonflikt in der Kriegszone',
+      heatLabel: 'Spannung mit {gang}',
+      noFights: 'Aktuell kein laufender Krieg.',
+      fightRow: 'Krieg: {a} vs {b} — hinlaufen'
     },
     felony: {
       title: 'FELONY',
@@ -1747,8 +1754,15 @@ const I18N = {
     phone: {
       title: 'NAVI — PICK DESTINATION', off: '× NAVI OFF', hint: 'CLICK — SET DESTINATION<br>N / ESC — CLOSE',
       started: 'Navi running: {name}', arrived: 'Destination reached.',
-      dest: { dealer: 'DEALER (ALLEY)', villa: 'RICH TRAP', roma: 'RESTAURANT ROMA', spaeti: 'SPÄTI 24', home: 'TRAP HOUSE', station: 'STATION', ybc: 'YBC BLOCK', btk: 'BTK BLOCK', stb: 'STB BLOCK', ntl: 'NTL BLOCK', liefer: 'DELIVERY', corner: 'CORNER SHOP', bike: 'BIKE SHOP', armor: 'ARMOR SHOP', baustelle: 'CONSTRUCTION SITE', growshop: 'GROW SHOP', drip: 'DRIP', casino: 'EL DORADO SPIELHALLE', security: 'SECURITY ROUND' },
-      home: { title: 'NOKIA 3310', hint: 'CLICK — OPEN APP<br>ESC/N — CLOSE', appNavi: 'NAVI', appMessages: 'MESSAGES', appFelony: 'FELONY', back: '< BACK', noMessages: 'No messages.', hintList: 'CLICK — SELECT<br>ESC/N — CLOSE' }
+      dest: { dealer: 'DEALER (ALLEY)', villa: 'RICH TRAP', roma: 'RESTAURANT ROMA', spaeti: 'SPÄTI 24', home: 'TRAP HOUSE', station: 'STATION', ybc: 'YBC BLOCK', btk: 'BTK BLOCK', stb: 'STB BLOCK', ntl: 'NTL BLOCK', liefer: 'DELIVERY', corner: 'CORNER SHOP', bike: 'BIKE SHOP', armor: 'ARMOR SHOP', baustelle: 'CONSTRUCTION SITE', growshop: 'GROW SHOP', drip: 'DRIP', casino: 'EL DORADO SPIELHALLE', security: 'SECURITY ROUND', gangwar: 'GANG WAR' },
+      home: { title: 'NOKIA 3310', hint: 'CLICK — OPEN APP<br>ESC/N — CLOSE', appNavi: 'NAVI', appMessages: 'MESSAGES', appFelony: 'FELONY', appGangs: 'GANGS', back: '< BACK', noMessages: 'No messages.', hintList: 'CLICK — SELECT<br>ESC/N — CLOSE' }
+    },
+    gangs: {
+      title: 'GANGS', hint: 'CLICK A WAR — SET NAV TARGET',
+      warzoneNote: 'STB vs NTL: permanent conflict in the war zone',
+      heatLabel: 'Tension with {gang}',
+      noFights: 'No active war right now.',
+      fightRow: 'War: {a} vs {b} — head over'
     },
     felony: {
       title: 'FELONY',
@@ -6465,6 +6479,16 @@ function updateGangHeatDecay(dt){
   gangHeatDecayT=20;
   for(const k in gangHeat) if(gangHeat[k]>0) gangHeat[k]--;
 }
+// Nutzer-Vorgabe: Kriege duerfen nicht mehr unsichtbar im Hintergrund ablaufen — jeder ausgeloeste
+// Kampf traegt sich hier mit Ort + Ablaufzeit ein, damit man ihn ueber die Navi/Gangs-App finden und
+// hinlaufen kann (siehe triggerGangFight() unten, phoneDests(), renderPhone() 'gangs'-Zweig).
+let activeFights=[];
+function updateActiveFights(dt){
+  for(let i=activeFights.length-1;i>=0;i--){
+    activeFights[i].t-=dt;
+    if(activeFights[i].t<=0) activeFights.splice(i,1);
+  }
+}
 // Kurze Würfel-Animation als Feedback für "opps sliden" (Nutzer-Vorgabe) — rein Flavor, beeinflusst
 // NICHT die Squad-Größe (die kommt aus gangHeat, siehe interactBoss()/renderGangOpsUI()), damit das
 // Ergebnis vorhersehbar bleibt und nicht zusätzlich vom Zufall abhängt.
@@ -6498,10 +6522,20 @@ function triggerGangFight(gidA,rectA,gidB,rectB,maxPairs){
     else if(n.gang===gidB&&n.homeRect===rectB) b.push(n);
   }
   const cnt=Math.min(a.length,b.length,maxPairs);
+  let mx=0,my=0;
   for(let i=0;i<cnt;i++){
     const x=a[i], y=b[i];
     x.fightTarget=y; y.fightTarget=x;
     x.state='gangfight'; y.state='gangfight';
+    mx+=(x.px+y.px)/2; my+=(x.py+y.py)/2;
+  }
+  if(cnt>0){
+    mx/=cnt; my/=cnt;
+    activeFights.push({gidA,gidB,x:mx,y:my,t:50});
+    // Nutzer-Vorgabe: man muss sehen (und hinlaufen) koennen, wo gerade gekaempft wird — bestehendes
+    // navTarget-System (Navi-Pfeil + Handy) wiederverwenden statt ein neues Marker-System zu bauen.
+    // Bestehendes Navi-Ziel nicht aufdringlich ueberschreiben, falls der Spieler schon woanders hin will.
+    if(!navTarget) navTarget={x:mx,y:my,key:'gangwar'};
   }
   return cnt;
 }
@@ -7000,6 +7034,7 @@ function updateNPCs(dt){
   updateGangAmbushCheck(dt);
   updateGangWarCheck(dt);
   updateOpsRoll(dt);
+  updateActiveFights(dt);
   if(greetCD>0) greetCD-=dt;
   let reloBudget=6;                                  // max. Umsetzungen pro Frame
   for(const n of NPCS){
@@ -11420,6 +11455,9 @@ function phoneDests(){
     const hb=BUILDINGS.find(b=>b.gang===gid);
     if(hb) d.push({key:gid.toLowerCase(), x:hb.door.x, y:hb.baseY+30});
   }
+  // Nutzer-Vorgabe: laufende Gang-Kriege muessen im Navi auftauchen, damit man hinlaufen kann.
+  activeFights.forEach((f,i)=>d.push({key:'gangwar', x:f.x, y:f.y,
+    label:GANGS[f.gidA].name+' vs '+GANGS[f.gidB].name}));
   return d;
 }
 function renderPhone(){
@@ -11452,6 +11490,12 @@ function renderPhone(){
       +'<div class="app-glyph">LAW</div><div>'+t('phone.home.appFelony')+'</div>';
     felIcon.addEventListener('click',()=>{ phoneApp='felony'; renderPhone(); });
     appsEl.appendChild(felIcon);
+    const gangsIcon=document.createElement('div');
+    gangsIcon.className='phone-app-icon';
+    if(activeFights.length>0) gangsIcon.innerHTML='<div class="phone-app-badge">'+activeFights.length+'</div>';
+    gangsIcon.innerHTML+='<div class="app-glyph">GNG</div><div>'+t('phone.home.appGangs')+'</div>';
+    gangsIcon.addEventListener('click',()=>{ phoneApp='gangs'; renderPhone(); });
+    appsEl.appendChild(gangsIcon);
     return;
   }
   appsEl.classList.add('hidden');
@@ -11466,12 +11510,13 @@ function renderPhone(){
     el('phone-title').textContent=t('phone.title');
     el('phone-hint').innerHTML=t('phone.hint');
     for(const d of phoneDests()){
+      const label=d.label||t('phone.dest.'+d.key);
       const row=document.createElement('div');
-      row.className='phone-row'+(navTarget&&navTarget.key===d.key?' active':'');
-      row.textContent=t('phone.dest.'+d.key);
+      row.className='phone-row'+(navTarget&&navTarget.key===d.key&&navTarget.x===d.x&&navTarget.y===d.y?' active':'');
+      row.textContent=label;
       row.addEventListener('click',()=>{
         navTarget={x:d.x, y:d.y, key:d.key};
-        toast(t('phone.started',{name:t('phone.dest.'+d.key)}));
+        toast(t('phone.started',{name:label}));
         closePhone();
       });
       listEl.appendChild(row);
@@ -11546,6 +11591,40 @@ function renderPhone(){
       hint.className='phone-row';
       hint.textContent=t('felony.resolveHint');
       listEl.appendChild(hint);
+    }
+  } else if(phoneApp==='gangs'){
+    // Nutzer-Vorgabe: Feindlichkeit zwischen den Gangs sichtbar machen (nicht nur die kleinen
+    // 🔥-Zahlen im Angriffsmenü) + laufende Kriege zum direkten Hinlaufen anbieten.
+    el('phone-title').textContent=t('gangs.title');
+    el('phone-hint').innerHTML=t('gangs.hint');
+    const warNote=document.createElement('div');
+    warNote.className='phone-row';
+    warNote.textContent=t('gangs.warzoneNote');
+    listEl.appendChild(warNote);
+    for(const gid of Object.keys(GANGS)){
+      const row=document.createElement('div');
+      row.className='phone-row';
+      const heat=gangHeat[gid]||0;
+      row.textContent=t('gangs.heatLabel',{gang:GANGS[gid].name})+': '+(heat>0?'🔥'.repeat(heat):'—');
+      listEl.appendChild(row);
+    }
+    if(activeFights.length===0){
+      const none=document.createElement('div');
+      none.className='phone-row';
+      none.textContent=t('gangs.noFights');
+      listEl.appendChild(none);
+    } else {
+      for(const f of activeFights){
+        const row=document.createElement('div');
+        row.className='phone-row'+(navTarget&&navTarget.key==='gangwar'&&navTarget.x===f.x&&navTarget.y===f.y?' active':'');
+        row.textContent=t('gangs.fightRow',{a:GANGS[f.gidA].name,b:GANGS[f.gidB].name});
+        row.addEventListener('click',()=>{
+          navTarget={x:f.x,y:f.y,key:'gangwar'};
+          toast(t('phone.started',{name:GANGS[f.gidA].name+' vs '+GANGS[f.gidB].name}));
+          closePhone();
+        });
+        listEl.appendChild(row);
+      }
     }
   }
 }
