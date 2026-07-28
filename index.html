@@ -1377,6 +1377,13 @@ const I18N = {
       hint: 'Mehr Angriffe auf eine Gang lassen ihre Gegenwehr härter werden.',
       colorsOn: 'Gang-Farben tragen', colorsOff: 'Gang-Farben ablegen'
     },
+    gangmeth: {
+      empty: 'Nichts zum Abholen da — noch nicht genug gekocht.',
+      collected: '{n}g Meth abgeholt (Gang-Anteil: {cut}g einbehalten).',
+      stolen: '{n}g Meth von {gang} geklaut! Sie greifen dich an — bring die Ware zu deiner eigenen Gang.',
+      alreadyCarrying: 'Du trägst schon geklaute Ware — erst abliefern, bevor du mehr klaust.',
+      delivered: '{n}g geklautes Meth von {gang} erfolgreich abgeliefert.'
+    },
     cigmachine: {
       bought: 'Kippen-Packung gezogen — 25$.', noMoney: 'Zu wenig Geld für den Automaten.'
     },
@@ -1757,6 +1764,13 @@ const I18N = {
       vanEnroute: 'A white van is rolling toward {gang}…',
       hint: 'Attacking a gang more often makes their retaliation harsher.',
       colorsOn: 'Wear gang colors', colorsOff: 'Take off gang colors'
+    },
+    gangmeth: {
+      empty: 'Nothing to pick up yet — not enough cooked.',
+      collected: 'Picked up {n}g of meth (gang cut: {cut}g kept).',
+      stolen: 'Stole {n}g of meth from {gang}! They are coming for you — get it to your own gang.',
+      alreadyCarrying: 'You are already carrying stolen goods — deliver those first.',
+      delivered: 'Delivered {n}g of stolen meth from {gang} successfully.'
     },
     cigmachine: {
       bought: 'Grabbed a pack of cigarettes — $25.', noMoney: 'Not enough cash for the machine.'
@@ -5197,8 +5211,14 @@ function genBuildings(){
   // nach einer Luecke zu suchen. Mehrere Kandidaten je Gebaeude, erster freier gewinnt.
   // Kandidaten-Koordinaten bewusst NICHT auf glatten 50/100er-Werten (das sind Strassenspalten/-zeilen,
   // isRoadXY() haette sie sofort verworfen) — Endziffern 20/70 liegen sicher zwischen den Strassenrastern.
+  // Nutzer-Vorgabe: es sollen viele Blockhäuser geben, nicht nur je eines — mehrere Instanzen verteilt
+  // am Stadtrand (ausserhalb der dichten Kernstadt bei 120-860), abwechselnd beide Bild-Varianten.
   placeFirstFree('blockhaus1', [[920,70],[70,920],[920,920],[70,70],[820,70],[70,820],[920,820],[820,920]], 11,10);
   placeFirstFree('blockhaus2', [[860,860],[920,120],[120,920],[820,820],[70,120],[120,70]], 12,10);
+  placeFirstFree('blockhaus1', [[70,320],[920,320],[320,70],[320,920]], 11,10);
+  placeFirstFree('blockhaus2', [[70,520],[920,520],[520,70],[520,920]], 12,10);
+  placeFirstFree('blockhaus1', [[70,720],[920,720],[720,70],[720,920]], 11,10);
+  placeFirstFree('blockhaus2', [[170,70],[830,70],[70,170],[70,830]], 12,10);
 }
 function placeFirstFree(type,candidates,wT,hT){
   for(const [tx,ty] of candidates){
@@ -6524,6 +6544,45 @@ function updateGangHeatDecay(dt){
 // Nutzer-Vorgabe: Kriege duerfen nicht mehr unsichtbar im Hintergrund ablaufen — jeder ausgeloeste
 // Kampf traegt sich hier mit Ort + Ablaufzeit ein, damit man ihn ueber die Navi/Gangs-App finden und
 // hinlaufen kann (siehe triggerGangFight() unten, phoneDests(), renderPhone() 'gangs'-Zweig).
+// Nutzer-Vorgabe: Gang-Member "kochen fuer dich" — jeder Meth-Koch-NPC am Gang-Haus produziert passiv
+// Meth fuer SEINE Gang, bis zu einem Maximum. Eigene Gang: gegen Abgabe eines Anteils abholen. Rivalen:
+// gilt als Diebstahl — die Gang wird sofort feindlich, die Ware zaehlt erst nach erfolgreicher Lieferung
+// an die eigene Basis wirklich (siehe interactGangMethCook()).
+let gangMethStock={YBC:0,BTK:0,STB:0,NTL:0};
+const GANG_METH_CAP=20, GANG_METH_RATE=0.01, GANG_METH_CUT=0.25;
+function updateGangMethStock(dt){
+  for(const gid in gangMethStock) gangMethStock[gid]=Math.min(GANG_METH_CAP,gangMethStock[gid]+dt*GANG_METH_RATE);
+}
+function interactGangMethCook(g){
+  const gid=g.gang;
+  // Lieferung zuerst abwickeln, falls man gerade gestohlene Ware bei der EIGENEN Gang abliefert —
+  // danach ganz normal weiter mit der Abholung der eigenen, regulaeren Produktion.
+  if(player.stolenMeth&&player.gang===gid){
+    const st=player.stolenMeth; player.stolenMeth=null;
+    if(invAdd('meth_pure',st.grams)){
+      toast(t('gangmeth.delivered',{n:st.grams,gang:GANGS[st.gang].name}));
+    }
+  }
+  if(gid===player.gang){
+    const stock=gangMethStock[gid];
+    if(stock<1){ toast(t('gangmeth.empty')); return; }
+    const cut=Math.round(stock*GANG_METH_CUT), given=Math.round(stock-cut);
+    if(given<1){ toast(t('gangmeth.empty')); return; }
+    if(!invAdd('meth_pure',given)) return;
+    gangMethStock[gid]=0;
+    toast(t('gangmeth.collected',{n:given,cut}));
+  } else {
+    if(player.stolenMeth){ toast(t('gangmeth.alreadyCarrying')); return; }
+    const stock=gangMethStock[gid];
+    if(stock<1){ toast(t('gangmeth.empty')); return; }
+    player.stolenMeth={gang:gid,grams:Math.round(stock)};
+    gangMethStock[gid]=0;
+    gangHeat[gid]=Math.min(10,(gangHeat[gid]||0)+2);
+    const rect=Array.isArray(GANGS[gid].zone)?GANGS[gid].zone[0]:GANGS[gid].zone;
+    startChase(gid,rect,6);
+    toast(t('gangmeth.stolen',{n:player.stolenMeth.grams,gang:GANGS[gid].name}));
+  }
+}
 let activeFights=[];
 function updateActiveFights(dt){
   for(let i=activeFights.length-1;i>=0;i--){
@@ -7078,6 +7137,7 @@ function updateNPCs(dt){
   updateOpsRoll(dt);
   updateActiveFights(dt);
   updateVans(dt);
+  updateGangMethStock(dt);
   if(greetCD>0) greetCD-=dt;
   let reloBudget=6;                                  // max. Umsetzungen pro Frame
   for(const n of NPCS){
@@ -7654,6 +7714,7 @@ function groupDialog(g){
   if(g.type==='junkie'||g.type==='homeless'){ offerWalkupSale(g,speaker); return; }
   if(g.type==='dealer'){ openDealershopUI(); return; }   // Paket D: E am Dealer öffnet die Kauf-GUI
   if(g.type==='massbuyer'){ interactMassBuyer(g,speaker); return; }   // Gang-Life: siehe interactMassBuyer()
+  if(g.type==='meth'){ interactGangMethCook(g); return; }             // Nutzer-Vorgabe: Meth abholen/klauen
   openDialog(speaker, tArr('grp.'+g.type).slice());
 }
 
@@ -8322,6 +8383,7 @@ function damagePlayer(amount){
 function startPlayerDeath(){
   if(player.dead) return;
   player.dead=true;
+  player.stolenMeth=null;   // gestohlene, noch nicht abgelieferte Ware ist beim Tod verloren
   deathFadeDir=1;
 }
 function respawnPlayer(){
