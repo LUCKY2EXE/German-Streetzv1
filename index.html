@@ -1978,6 +1978,8 @@ const MANIFEST = {
   shop_armor:   {file:'shop_armor.png',   w:192, h:192, kind:'building'},
   shop_david:   {file:'shop_david.png',   w:192, h:192, kind:'building'},
   station:      {file:'station.png',      w:288, h:224, kind:'building'},
+  blockhaus1:   {file:'blockhaus1_sm.png', w:352, h:320, kind:'building'},
+  blockhaus2:   {file:'blockhaus2_sm.png', w:384, h:320, kind:'building'},
   house_normal1:{file:'house_normal1.png',w:160, h:160, kind:'building'},
   house_normal2:{file:'house_normal2.png',w:160, h:160, kind:'building'},
   house_small:  {file:'house_small.png',  w:128, h:128, kind:'building'},
@@ -5163,6 +5165,20 @@ function genBuildings(){
     }
   }
   genStreetRows();                                   // Stadtverdichtung: geschlossene Straßenfronten
+  // Blockhäuser (grosse Plattenbauten): rein dekorativ, deutlich groesser als alle bisherigen Gebaeude
+  // (11x10 / 12x10 Tiles vs. 9x7 bei station) — bewusst ausserhalb der dichten Stadtmitte platziert,
+  // wo areaFree() genug zusammenhaengenden freien Platz findet, statt mitten im engen Straßenraster
+  // nach einer Luecke zu suchen. Mehrere Kandidaten je Gebaeude, erster freier gewinnt.
+  // Kandidaten-Koordinaten bewusst NICHT auf glatten 50/100er-Werten (das sind Strassenspalten/-zeilen,
+  // isRoadXY() haette sie sofort verworfen) — Endziffern 20/70 liegen sicher zwischen den Strassenrastern.
+  placeFirstFree('blockhaus1', [[920,70],[70,920],[920,920],[70,70],[820,70],[70,820],[920,820],[820,920]], 11,10);
+  placeFirstFree('blockhaus2', [[860,860],[920,120],[120,920],[820,820],[70,120],[120,70]], 12,10);
+}
+function placeFirstFree(type,candidates,wT,hT){
+  for(const [tx,ty] of candidates){
+    if(areaFree(tx,ty,wT,hT)){ addBuilding(type,tx,ty); return true; }
+  }
+  return false;
 }
 
 /* Straßenzeilen: Häuser dicht an beiden Seiten jeder Straße — echtes Stadt-Gefühl.
