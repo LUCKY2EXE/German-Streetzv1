@@ -1215,6 +1215,18 @@ const I18N = {
       baggy_e_5g:  { name: 'Baggy 5g (Exotic)',  desc: '5g Exotic, fertig verpackt. Für den Straßenverkauf.' },
       baggy_e_10g: { name: 'Baggy 10g (Exotic)', desc: '10g Exotic, fertig verpackt. Für den Straßenverkauf.' },
       baggy_e_25g: { name: 'Baggy 25g (Exotic)', desc: '25g Exotic, fertig verpackt. Maximal erlaubte Menge.' },
+      baggy_md_1g: { name: 'Baggy 1g (Meth, unrein)', desc: '1g unreines Meth, fertig verpackt.' },
+      baggy_md_2g: { name: 'Baggy 2g (Meth, unrein)', desc: '2g unreines Meth, fertig verpackt.' },
+      baggy_md_3g: { name: 'Baggy 3g (Meth, unrein)', desc: '3g unreines Meth, fertig verpackt.' },
+      baggy_md_4g: { name: 'Baggy 4g (Meth, unrein)', desc: '4g unreines Meth, fertig verpackt. Maximal erlaubte Menge.' },
+      baggy_mp_1g: { name: 'Baggy 1g (Meth, rein)', desc: '1g reines Meth, fertig verpackt.' },
+      baggy_mp_2g: { name: 'Baggy 2g (Meth, rein)', desc: '2g reines Meth, fertig verpackt.' },
+      baggy_mp_3g: { name: 'Baggy 3g (Meth, rein)', desc: '3g reines Meth, fertig verpackt.' },
+      baggy_mp_4g: { name: 'Baggy 4g (Meth, rein)', desc: '4g reines Meth, fertig verpackt. Maximal erlaubte Menge.' },
+      baggy_mb_1g: { name: 'Baggy 1g (Blue Ice)', desc: '1g Blue Ice, fertig verpackt.' },
+      baggy_mb_2g: { name: 'Baggy 2g (Blue Ice)', desc: '2g Blue Ice, fertig verpackt.' },
+      baggy_mb_3g: { name: 'Baggy 3g (Blue Ice)', desc: '3g Blue Ice, fertig verpackt.' },
+      baggy_mb_4g: { name: 'Baggy 4g (Blue Ice)', desc: '4g Blue Ice, fertig verpackt. Maximal erlaubte Menge.' },
       pseudoephedrin: { name: 'Pseudoephedrin', desc: 'Packung fürs Kochen. Wird beim Start komplett verbraucht.' },
       red_phosphor: { name: 'Red Phosphor', desc: 'Packung fürs Kochen. Wird beim Start komplett verbraucht.' },
       iodine: { name: 'Jod', desc: 'Packung fürs Kochen. Wird beim Start komplett verbraucht.' },
@@ -1231,9 +1243,9 @@ const I18N = {
     },
     pack: {
       title: 'ABPACKEN', hint: 'ESC — SCHLIESSEN',
-      strain: 'Sorte wählen', step1: '1. Menge ({n}g Gras vorhanden)', step2: 'Baggies vorhanden: {n}',
+      strain: 'Sorte wählen', step1: '1. Menge ({n}g vorhanden)', step2: 'Baggies vorhanden: {n}',
       packBtn: 'PACKEN', done: '{n}g verpackt.',
-      needWeed: 'Nicht genug Gras.', needBaggies: 'Keine Baggies mehr.'
+      needWeed: 'Nicht genug vorhanden.', needBaggies: 'Keine Baggies mehr.'
     },
     growshop: {
       title: 'GROW SHOP', hint: 'ESC — SCHLIESSEN',
@@ -1582,6 +1594,18 @@ const I18N = {
       baggy_e_5g:  { name: 'Baggy 5g (Exotic)',  desc: '5g exotic, pre-packed. Ready for street sale.' },
       baggy_e_10g: { name: 'Baggy 10g (Exotic)', desc: '10g exotic, pre-packed. Ready for street sale.' },
       baggy_e_25g: { name: 'Baggy 25g (Exotic)', desc: '25g exotic, pre-packed. Maximum allowed amount.' },
+      baggy_md_1g: { name: 'Baggy 1g (Meth, dirty)', desc: '1g dirty meth, pre-packed.' },
+      baggy_md_2g: { name: 'Baggy 2g (Meth, dirty)', desc: '2g dirty meth, pre-packed.' },
+      baggy_md_3g: { name: 'Baggy 3g (Meth, dirty)', desc: '3g dirty meth, pre-packed.' },
+      baggy_md_4g: { name: 'Baggy 4g (Meth, dirty)', desc: '4g dirty meth, pre-packed. Maximum allowed amount.' },
+      baggy_mp_1g: { name: 'Baggy 1g (Meth, pure)', desc: '1g pure meth, pre-packed.' },
+      baggy_mp_2g: { name: 'Baggy 2g (Meth, pure)', desc: '2g pure meth, pre-packed.' },
+      baggy_mp_3g: { name: 'Baggy 3g (Meth, pure)', desc: '3g pure meth, pre-packed.' },
+      baggy_mp_4g: { name: 'Baggy 4g (Meth, pure)', desc: '4g pure meth, pre-packed. Maximum allowed amount.' },
+      baggy_mb_1g: { name: 'Baggy 1g (Blue Ice)', desc: '1g Blue Ice, pre-packed.' },
+      baggy_mb_2g: { name: 'Baggy 2g (Blue Ice)', desc: '2g Blue Ice, pre-packed.' },
+      baggy_mb_3g: { name: 'Baggy 3g (Blue Ice)', desc: '3g Blue Ice, pre-packed.' },
+      baggy_mb_4g: { name: 'Baggy 4g (Blue Ice)', desc: '4g Blue Ice, pre-packed. Maximum allowed amount.' },
       pseudoephedrin: { name: 'Pseudoephedrine', desc: 'Pack for cooking. Fully consumed when a cook starts.' },
       red_phosphor: { name: 'Red Phosphorus', desc: 'Pack for cooking. Fully consumed when a cook starts.' },
       iodine: { name: 'Iodine', desc: 'Pack for cooking. Fully consumed when a cook starts.' },
@@ -1598,9 +1622,9 @@ const I18N = {
     },
     pack: {
       title: 'PACK UP', hint: 'ESC — CLOSE',
-      strain: 'Choose strain', step1: '1. Amount ({n}g weed available)', step2: 'Baggies available: {n}',
+      strain: 'Choose strain', step1: '1. Amount ({n}g available)', step2: 'Baggies available: {n}',
       packBtn: 'PACK', done: '{n}g packed.',
-      needWeed: 'Not enough weed.', needBaggies: 'No baggies left.'
+      needWeed: 'Not enough available.', needBaggies: 'No baggies left.'
     },
     growshop: {
       title: 'GROW SHOP', hint: 'ESC — CLOSE',
@@ -9005,7 +9029,7 @@ const ITEMS={
                if(interior&&interior.type==='house_trap') interior.furniture.push(makePotFurniture(player.growPots-1));
                toast(t('items.plant_pot.installed',{n:player.growPots})); saveGame(); return true;
              } },
-  baggies: { icon:'baggy', cat:'tool', weight:0.5, use(){ openPackUI(); return false; } },
+  baggies: { icon:'baggy_empty', cat:'tool', weight:0.5, use(){ openPackUI(); return false; } },
   scale:   { icon:'scale', cat:'tool', weight:400,
              use(){ toast(t('items.scale.desc')); return false; } },
   baggy_1g:  { icon:'baggy', cat:'drug', weight:1.1,  use(){ toast(t('items.baggy_1g.desc')); return false; } },
@@ -9025,6 +9049,20 @@ const ITEMS={
   baggy_e_5g:  { icon:'baggy', cat:'drug', weight:5.1,  use(){ toast(t('items.baggy_e_5g.desc')); return false; } },
   baggy_e_10g: { icon:'baggy', cat:'drug', weight:10.1, use(){ toast(t('items.baggy_e_10g.desc')); return false; } },
   baggy_e_25g: { icon:'baggy', cat:'drug', weight:25.1, use(){ toast(t('items.baggy_e_25g.desc')); return false; } },
+  // Nutzer-Vorgabe: Meth auch verpackbar, aber gecappt auf max. 4g pro Baggy (siehe PACK_GRAM_OPTIONS_METH) —
+  // eigene IDs pro Qualitaetsstufe (md=dirty, mp=pure, mb=blue), eigenes Icon (baggy_meth, Kristall statt Gras).
+  baggy_md_1g: { icon:'baggy_meth', cat:'drug', weight:1.1, use(){ toast(t('items.baggy_md_1g.desc')); return false; } },
+  baggy_md_2g: { icon:'baggy_meth', cat:'drug', weight:2.1, use(){ toast(t('items.baggy_md_2g.desc')); return false; } },
+  baggy_md_3g: { icon:'baggy_meth', cat:'drug', weight:3.1, use(){ toast(t('items.baggy_md_3g.desc')); return false; } },
+  baggy_md_4g: { icon:'baggy_meth', cat:'drug', weight:4.1, use(){ toast(t('items.baggy_md_4g.desc')); return false; } },
+  baggy_mp_1g: { icon:'baggy_meth', cat:'drug', weight:1.1, use(){ toast(t('items.baggy_mp_1g.desc')); return false; } },
+  baggy_mp_2g: { icon:'baggy_meth', cat:'drug', weight:2.1, use(){ toast(t('items.baggy_mp_2g.desc')); return false; } },
+  baggy_mp_3g: { icon:'baggy_meth', cat:'drug', weight:3.1, use(){ toast(t('items.baggy_mp_3g.desc')); return false; } },
+  baggy_mp_4g: { icon:'baggy_meth', cat:'drug', weight:4.1, use(){ toast(t('items.baggy_mp_4g.desc')); return false; } },
+  baggy_mb_1g: { icon:'baggy_meth', cat:'drug', weight:1.1, use(){ toast(t('items.baggy_mb_1g.desc')); return false; } },
+  baggy_mb_2g: { icon:'baggy_meth', cat:'drug', weight:2.1, use(){ toast(t('items.baggy_mb_2g.desc')); return false; } },
+  baggy_mb_3g: { icon:'baggy_meth', cat:'drug', weight:3.1, use(){ toast(t('items.baggy_mb_3g.desc')); return false; } },
+  baggy_mb_4g: { icon:'baggy_meth', cat:'drug', weight:4.1, use(){ toast(t('items.baggy_mb_4g.desc')); return false; } },
   // Meth-Labor (Paket 11): Chemikalien werden direkt am Kochstart verbraucht, nicht per Inventar-Klick
   pseudoephedrin:{ icon:'chem_ps', cat:'tool', weight:300,
              use(){ toast(t('items.pseudoephedrin.desc')); return false; } },
@@ -9627,6 +9665,28 @@ function makeItemIcons(){
   x.fillStyle='#5ac93a';
   x.beginPath(); x.ellipse(10,14,1.6,2.2,0.2,0,7); x.fill();
   ITEM_ICONS.baggy=c.toDataURL();
+  // Nutzer-Vorgabe: leere Baggies (Werkzeug/Rohstoff fuers Pack-UI) duerfen NICHT wie schon befuellt
+  // aussehen — gleiche Tuete, aber ohne die beiden Gras-Ellipsen. Fertig verpackte baggy_Ng behalten
+  // weiterhin ICON_ICONS.baggy (korrekt mit Gras).
+  c=mkCanvas(24,24); x=c.getContext('2d');
+  x.fillStyle='rgba(225,235,230,.3)';
+  x.fillRect(6,7,12,15);
+  x.strokeStyle='rgba(255,255,255,.45)'; x.lineWidth=1;
+  x.strokeRect(6.5,7.5,11,14);
+  x.fillStyle='#d8d0b8';
+  x.fillRect(5,5,14,3);
+  ITEM_ICONS.baggy_empty=c.toDataURL();
+  // Meth-Baggy (Nutzer-Vorgabe: Meth auch verpackbar) — gleiche Tuete, kleiner Kristall-Akzent statt Gras.
+  c=mkCanvas(24,24); x=c.getContext('2d');
+  x.fillStyle='rgba(225,235,230,.3)';
+  x.fillRect(6,7,12,15);
+  x.strokeStyle='rgba(255,255,255,.45)'; x.lineWidth=1;
+  x.strokeRect(6.5,7.5,11,14);
+  x.fillStyle='#d8d0b8';
+  x.fillRect(5,5,14,3);
+  x.fillStyle='#bfe6f0';
+  x.beginPath(); x.moveTo(11,19); x.lineTo(9.5,14); x.lineTo(12,10); x.lineTo(13.5,14); x.closePath(); x.fill();
+  ITEM_ICONS.baggy_meth=c.toDataURL();
 }
 makeItemIcons();
 
@@ -10916,22 +10976,34 @@ function renderBlackjackTable(){
    verbraucht n Gramm Gras + 1 Baggie, erzeugt genau 1 baggy_{n}g. Erzeugtes Item wird über das
    bereits geprüfte invAdd() angelegt, BEVOR Rohstoffe abgezogen werden (kein Verlust bei vollem Inventar). */
 const PACK_GRAM_OPTIONS=[1,3,5,10,25];
+// Nutzer-Vorgabe: Meth soll auch verpackbar sein, aber gecappt auf max. 4g pro Baggy (Gras bleibt bis
+// 25g) — eigene, kleinere Options-Liste statt PACK_GRAM_OPTIONS fuer Meth-Sorten.
+const PACK_GRAM_OPTIONS_METH=[1,2,3,4];
+const METH_PACK_TIERS=['meth_dirty','meth_pure','meth_blue'];
+const PACK_STRAINS=[...ROLL_STRAINS,...METH_PACK_TIERS];
+function packGramOptionsFor(strain){ return METH_PACK_TIERS.includes(strain) ? PACK_GRAM_OPTIONS_METH : PACK_GRAM_OPTIONS; }
 /* Paket D (Baggy-Parität): Sorten-Baggys — 'weed'→baggy_5g, 'weed_premium'→baggy_p_5g,
-   'weed_exotic'→baggy_e_5g. Preis pro Gramm kommt aus WEED_PRICE_PER_GRAM (Standard: 50$/g). */
+   'weed_exotic'→baggy_e_5g. Preis pro Gramm kommt aus WEED_PRICE_PER_GRAM (Standard: 50$/g).
+   Meth-Sorten -> baggy_md/mp/mb_Ng, Preis aus METH_PRICE_PER_GRAM statt WEED_PRICE_PER_GRAM. */
 function baggyId(strain,g){
   return strain==='weed_premium' ? 'baggy_p_'+g+'g'
        : strain==='weed_exotic'  ? 'baggy_e_'+g+'g'
+       : strain==='meth_dirty'   ? 'baggy_md_'+g+'g'
+       : strain==='meth_pure'    ? 'baggy_mp_'+g+'g'
+       : strain==='meth_blue'    ? 'baggy_mb_'+g+'g'
        : 'baggy_'+g+'g';
 }
-function baggyPricePerG(strain){ return WEED_PRICE_PER_GRAM[strain]||50; }
+function baggyPricePerG(strain){
+  return METH_PACK_TIERS.includes(strain) ? (METH_PRICE_PER_GRAM[strain]||50) : (WEED_PRICE_PER_GRAM[strain]||50);
+}
 let packOpen=false;
 let packState={strain:'weed', grams:1};
 function openPackUI(){
   if(dialog.active) return;
   closeInventory(); closePhone();
-  const st=ROLL_STRAINS.find(s=>invCount(s)>0)||'weed';   // Paket D: Sorte mit Bestand vorwählen
+  const st=PACK_STRAINS.find(s=>invCount(s)>0)||'weed';   // Paket D: Sorte mit Bestand vorwählen
   packState.strain=st;
-  packState.grams=[...PACK_GRAM_OPTIONS].reverse().find(g=>g<=invCount(st))||PACK_GRAM_OPTIONS[0];
+  packState.grams=[...packGramOptionsFor(st)].reverse().find(g=>g<=invCount(st))||packGramOptionsFor(st)[0];
   el('pack-title').textContent=t('pack.title');
   el('pack-hint').textContent=t('pack.hint');
   renderPack();
@@ -10950,14 +11022,14 @@ function renderPack(){
   const l0=document.createElement('div'); l0.className='roll-step-label'; l0.textContent=t('pack.strain');
   s0.appendChild(l0);
   const o0=document.createElement('div'); o0.className='roll-options';
-  for(const sid of ROLL_STRAINS){
+  for(const sid of PACK_STRAINS){
     const b=document.createElement('button');
     b.className='roll-btn'+(packState.strain===sid?' active':'');
     b.textContent=itemName(sid)+' ('+invCount(sid)+'g)';
     b.disabled=invCount(sid)<=0;
     b.addEventListener('click',()=>{
       packState.strain=sid;
-      packState.grams=[...PACK_GRAM_OPTIONS].reverse().find(g=>g<=invCount(sid))||PACK_GRAM_OPTIONS[0];
+      packState.grams=[...packGramOptionsFor(sid)].reverse().find(g=>g<=invCount(sid))||packGramOptionsFor(sid)[0];
       renderPack();
     });
     o0.appendChild(b);
@@ -10967,7 +11039,7 @@ function renderPack(){
   const l1=document.createElement('div'); l1.className='roll-step-label'; l1.textContent=t('pack.step1',{n:haveWeed});
   s1.appendChild(l1);
   const o1=document.createElement('div'); o1.className='roll-options';
-  for(const g of PACK_GRAM_OPTIONS){
+  for(const g of packGramOptionsFor(packState.strain)){
     const b=document.createElement('button');
     b.className='roll-btn'+(packState.grams===g?' active':'');
     b.textContent=g+'g';
@@ -11216,7 +11288,9 @@ function walkupSellPrice(tier,grams){
 function offerWalkupSale(g,speaker){
   if(g.saleCD>0){ openDialog(speaker,[t('walkup.wait')]); return; }
   const cands=[];
-  for(const s of ROLL_STRAINS) for(const gr of WALKUP_BAGGY_SIZES)
+  // Meth-Baggies (Nutzer-Vorgabe) zaehlen hier ebenfalls als 'baggy' — PACK_STRAINS statt ROLL_STRAINS,
+  // damit frisch verpackte baggy_md/mp/mb_Ng auch an Laufkunden verkauft werden koennen.
+  for(const s of PACK_STRAINS) for(const gr of WALKUP_BAGGY_SIZES)
     if(invCount(baggyId(s,gr))>0) cands.push({kind:'baggy',strain:s,size:gr});
   for(const tier of WALKUP_SELL_TIERS) if(invCount(tier)>0) cands.push({kind:'meth',tier});
   if(!cands.length){ openDialog(speaker,[t('walkup.nothing')]); return; }
