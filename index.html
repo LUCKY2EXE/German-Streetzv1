@@ -12247,9 +12247,21 @@ function render(time){
             // gespiegelt (RotateFlipX) — jetzt haben ALLE Waffen dieselbe Mündung-nach-rechts-Konvention,
             // kein Offset mehr nötig, und der Touch-Zweig oben passt jetzt ebenfalls korrekt für alle Waffen.
             const rec=Math.round(player.shootRecoil*3);
+            // Nutzer-Vorgabe: Waffe darf beim Zielen nie ueber den Kopf hinausragen (steile Winkel
+            // klammern) und muss beim Zielen nach links sauber GESPIEGELT werden statt einfach
+            // durchzurotieren — sonst sitzt der Griff/Aufsatz beim Rotieren durch die linke Halbebene
+            // "verkehrt" und die Muendung kann optisch bis ueber den Kopf wandern.
+            const maxTilt=Math.PI*0.39;                   // ~70°, verhindert fast-senkrechtes Hochzielen
+            const maxSin=Math.sin(maxTilt);
+            let vert=Math.sin(player.aimAngle);
+            if(vert>maxSin) vert=maxSin; else if(vert<-maxSin) vert=-maxSin;
+            const facingLeft=Math.cos(player.aimAngle)<0;
+            const horiz=(facingLeft?-1:1)*Math.sqrt(Math.max(0,1-vert*vert));
+            const drawAngle=Math.atan2(vert,horiz);
             ctx.save();
-            ctx.translate(anchor.x+wv.dw/2-rec*Math.cos(player.aimAngle), anchor.y+wv.dh/2-rec*Math.sin(player.aimAngle));
-            ctx.rotate(player.aimAngle);
+            ctx.translate(anchor.x+wv.dw/2-rec*Math.cos(drawAngle), anchor.y+wv.dh/2-rec*Math.sin(drawAngle));
+            if(facingLeft){ ctx.rotate(drawAngle+Math.PI); ctx.scale(-1,1); }
+            else { ctx.rotate(drawAngle); }
             ctx.drawImage(IMAGES['weapon_'+player.weapon],0,0,wv.sw,wv.sh,-wv.dw/2,-wv.dh/2,wv.dw,wv.dh);
             ctx.restore();
           }
