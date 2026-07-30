@@ -6184,12 +6184,18 @@ function gangHouseCluster(b,gid,rect,withBoss,withDograce){
     addGroup('massbuyer',gid,bx,by-6);
     used++;
   }
-  // Meth-Labor hinterm Haus (halb vom Dach verdeckt, Rauch steigt drüber auf)
+  // Meth-Labor hinterm Haus (halb vom Dach verdeckt, Rauch steigt drüber auf) — das hier ist die
+  // AMBIENTE Gang-Produktion (siehe interactGangMethCook()), nicht die eigene Koch-Station des Spielers.
   const mx=b.px+b.w*0.30, my=b.py-14;
   placeMethLab(mx,my);
   makeNpc('gang',key,mx+26,my,{gang:gid,hp:30,state:'act',act:'meth',dir:1,homeRect:rect});
   addGroup('meth',gid,mx,my-6);
   used++;
+  // Nutzer-Vorgabe: eigene, kostenlose Koch-Station VOR dem Haus, sobald man Mitglied dieser Gang ist —
+  // eigenständig von player.methCooks/hasMethLab (dem teuren Privat-Labor), siehe interactGangCook().
+  const ocx=b.door.x-150, ocy=b.baseY+30;
+  addProp('prop_meth', ocx, ocy, {meth:true, emitT:0});
+  addGroup('owncook',gid,ocx,ocy-10);
   // Würfelrunde links vor dem Haus (Tür-Korridor bleibt frei)
   const dx0=b.door.x-78, dy0=b.baseY+26;
   addProp('prop_dice',dx0-8,dy0-6);
@@ -7138,6 +7144,7 @@ function updateNPCs(dt){
   updateActiveFights(dt);
   updateVans(dt);
   updateGangMethStock(dt);
+  updateGangCook(dt);
   if(greetCD>0) greetCD-=dt;
   let reloBudget=6;                                  // max. Umsetzungen pro Frame
   for(const n of NPCS){
@@ -7722,6 +7729,11 @@ function groupDialog(g){
   if(g.type==='dealer'){ openDealershopUI(); return; }   // Paket D: E am Dealer öffnet die Kauf-GUI
   if(g.type==='massbuyer'){ interactMassBuyer(g,speaker); return; }   // Gang-Life: siehe interactMassBuyer()
   if(g.type==='meth'){ interactGangMethCook(g); return; }             // Nutzer-Vorgabe: Meth abholen/klauen
+  if(g.type==='owncook'){                                             // Nutzer-Vorgabe: eigene Koch-Station
+    if(g.gang!==player.gang){ openDialog(speaker,[t('massbuyer.notMember')]); return; }
+    interactGangCook();
+    return;
+  }
   openDialog(speaker, tArr('grp.'+g.type).slice());
 }
 
@@ -9363,6 +9375,72 @@ function updateMethCooks(dt){
     else if(cook.phase==='destillation'){ cook.phase='kristallisierung'; cook.phaseT=0; }
     else if(cook.phase==='kristallisierung'){ cook.phase='ready'; cook.phaseT=0; }
   }
+}
+// Nutzer-Vorgabe: eigene Koch-Station vor der eigenen Gang-Basis, unabhaengig vom teuren Privat-Labor —
+// 1:1 dieselbe Phasen-Logik wie interactMethCook()/updateMethCooks()/explodeMethCook(), aber bewusst
+// dupliziert statt generalisiert (eigenes player.gangCook-Objekt statt Array-Slot), damit das bezahlte
+// methCooks/methLabSlots/hasMethLab-System (inkl. Save/Load-Kappung auf methLabSlots) unangetastet bleibt.
+function interactGangCook(){
+  const cook=player.gangCook;
+  if(!cook){
+    if(invCount('pseudoephedrin')<=0||invCount('red_phosphor')<=0||invCount('iodine')<=0||invCount('acetone')<=0){
+      toast(t('methlab.needChemicals'));
+      return;
+    }
+    invRemove('pseudoephedrin',1); invRemove('red_phosphor',1); invRemove('iodine',1); invRemove('acetone',1);
+    player.gangCook={phase:'prep',phaseT:0,reactionWindow:false,reactionT:0,quality:null};
+    toast(t('methlab.started'));
+    saveGame();
+    return;
+  }
+  if(cook.phase==='reduktion'&&cook.reactionWindow){
+    const rt=cook.reactionT;
+    cook.quality = rt<2 ? 'meth_blue' : rt<5 ? 'meth_pure' : 'meth_dirty';
+    cook.phase='mischen'; cook.phaseT=0; cook.reactionWindow=false;
+    if(player.hasGasmask){ toast(t('methlab.gasBlocked')); }
+    else { damagePlayer(6); toast(t('methlab.gas')); }
+    saveGame();
+    return;
+  }
+  if(cook.phase==='ready'){
+    if(!invAdd(cook.quality,4)) return;
+    toast(t('methlab.harvested',{n:4,name:itemName(cook.quality)}));
+    JobSystem.addXp('meth',JobSystem.jobs.meth.xp);
+    player.gangCook=null;
+    saveGame();
+    return;
+  }
+  const dur=METH_PHASE_DURATION[cook.phase]||1;
+  const sec=Math.max(0,Math.ceil(dur-cook.phaseT));
+  toast(t('methlab.progress',{phase:t('methlab.'+METH_PHASE_LABEL_KEY[cook.phase]),sec}));
+}
+function explodeGangCook(){
+  damagePlayer(player.hasLabCoat?8:16);
+  addShake(0.5);
+  for(let i=0;i<10;i++) spawnParticle(player.px+rand(-10,10),player.py-rand(10,30),
+    {vy:-rand(15,35),vx:rand(-20,20),life:rand(.3,.6),size:3,color:i<5?'#ff6a1a':'#c03434'});
+  toast(t('methlab.explosion'));
+  player.gangCook=null;
+  addHeat(POLICE_CFG.heatPerExplosion);
+  logCrime('methExplosion');
+  saveGame();
+}
+function updateGangCook(dt){
+  const cook=player.gangCook;
+  if(!cook||cook.phase==='ready') return;
+  if(cook.phase==='reduktion'&&cook.reactionWindow){
+    cook.reactionT+=dt;
+    if(cook.reactionT>=METH_PHASE_DURATION.reactionWindow) explodeGangCook();
+    return;
+  }
+  cook.phaseT+=dt;
+  const dur=METH_PHASE_DURATION[cook.phase];
+  if(cook.phaseT<dur) return;
+  if(cook.phase==='prep'){ cook.phase='reduktion'; cook.phaseT=0; }
+  else if(cook.phase==='reduktion'){ cook.reactionWindow=true; cook.reactionT=0; toast(t('methlab.readyPrompt')); }
+  else if(cook.phase==='mischen'){ cook.phase='destillation'; cook.phaseT=0; }
+  else if(cook.phase==='destillation'){ cook.phase='kristallisierung'; cook.phaseT=0; }
+  else if(cook.phase==='kristallisierung'){ cook.phase='ready'; cook.phaseT=0; }
 }
 // Paket E: Messer aus dem Start-Inventar gestrichen — Waffen gibt's jetzt regulär im Armor Shop.
 // Neustart beginnt mit Fäusten; Alt-Saves behalten ihr Messer (Load-Filter prüft nur ITEMS-Existenz).
