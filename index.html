@@ -207,6 +207,19 @@ canvas#game{
   animation: bob 1s steps(2) infinite;
 }
 @keyframes bob{ 50%{ transform: translateY(3px); } }
+#dialog-flee{
+  position: absolute;
+  left: 12px;
+  bottom: 6px;
+  font-family: inherit;
+  font-size: 8px;
+  padding: 7px 12px;
+  background: rgba(255,69,69,.18);
+  border: 1px solid #ff4545;
+  color: #ff4545;
+  cursor: pointer;
+}
+#dialog-flee:active{ transform: translateY(1px); background: rgba(255,69,69,.3); }
 
 /* ---------- Interaktions-Prompt ---------- */
 #prompt{
@@ -888,6 +901,9 @@ canvas#game{
   <button id="dialog-close" class="panel-close-btn" title="Schließen">✕</button>
   <div id="dialog-speaker">???</div>
   <div id="dialog-text"></div>
+  <!-- Personenkontrolle (Nutzer-Vorgabe): Weglaufen statt die Kontrolle abzuwarten — nur waehrend
+       eines aktiven Stopcheck-Dialogs sichtbar (siehe startStopCheck()/fleeStopCheck()). -->
+  <button id="dialog-flee" class="hidden">WEGRENNEN</button>
   <div id="dialog-hint">&#9660; E</div>
 </div>
 
@@ -1392,6 +1408,8 @@ const I18N = {
       // Personenkontrolle (Nutzer-Vorgabe): eigene, schärfere Ansprache, wenn der Spieler schon offene
       // Straftaten im Register hat — siehe startStopCheck().
       stopGreetingFelony: 'Stehenbleiben! Personenkontrolle — Sie stehen bei uns im Register.',
+      fleeBtn: 'WEGRENNEN',
+      fled: 'Du reißt dich los und rennst weg!',
       clean: 'Alles sauber. Verschwinde.',
       foundMinor: 'Was haben wir denn da… weg damit. {fine}$ Owi. Und jetzt ab mit dir.',
       foundHard: 'Das reicht. Du kommst mit.',
@@ -1781,6 +1799,8 @@ const I18N = {
     police: {
       stopGreeting: 'Check. Open the bag, hands where I can see them.',
       stopGreetingFelony: 'Stop right there! ID check — you\'re already in our system.',
+      fleeBtn: 'RUN',
+      fled: 'You break free and run!',
       clean: 'All clear. Move along.',
       foundMinor: 'What do we have here… confiscated. ${fine} fine. Now get out of here.',
       foundHard: 'That is enough. You are coming with us.',
@@ -2092,7 +2112,7 @@ const MANIFEST = {
   prop_scaffold:  {file:'prop_scaffold.png',   w:44, h:66, kind:'prop'},
   prop_cone:      {file:'prop_cone.png',       w:14, h:16, kind:'prop'},
   prop_cigmachine:{file:'prop_cigmachine.png', w:20, h:32, kind:'prop'},
-  prop_atm:{file:'prop_atm.png', w:26, h:40, kind:'prop'},
+  prop_atm:{file:'ATM.png', w:34, h:40, kind:'prop'},
   weapon_knife:  {file:'weapon_knife.png',  w:18, h:82, kind:'weapon'},
   weapon_fully_draco:{file:'weapon_fully_draco.png', w:64, h:35, kind:'weapon'},
   weapon_semi_glock:{file:'weapon_semi_glock.png', w:56, h:39, kind:'weapon'},
@@ -2849,6 +2869,28 @@ function phProp(key,def){
     x.strokeStyle='#3a0d0d';
     x.lineWidth=1;
     x.strokeRect(2.5,2.5,15,27);
+  } else if(key==='prop_atm'){
+    // Geldautomat (Karten-Kloning, Nutzer-Vorgabe): dunkles Gehaeuse, gruen leuchtender Screen,
+    // Kartenschlitz, Tastenfeld, Geldausgabe-Schlitz unten.
+    x.fillStyle='#2a2e34';
+    x.fillRect(2,2,22,36);
+    x.fillStyle='#1a1c20';
+    x.fillRect(2,2,22,4);
+    x.fillStyle='#1a2a33';
+    x.fillRect(5,8,16,10);
+    x.fillStyle='#39ff64';
+    x.fillRect(7,10,12,3);
+    x.fillStyle='#2a4a55';
+    x.fillRect(7,14,12,2);
+    x.fillStyle='#111';
+    x.fillRect(6,20,14,2);
+    x.fillStyle='#3a3a3a';
+    for(let ky=0;ky<3;ky++) for(let kx=0;kx<3;kx++){ x.fillRect(6+kx*5,24+ky*4,3,3); }
+    x.fillStyle='#111';
+    x.fillRect(6,36,14,2);
+    x.strokeStyle='#0d0f12';
+    x.lineWidth=1;
+    x.strokeRect(2.5,2.5,21,35);
   }
   return c;
 }
@@ -4721,6 +4763,28 @@ function drawInteriorFurniture(ctx, f, time){
       ctx.fillRect(tx+tw*0.3,ty+th*0.86,tw*0.4,th*0.14);
       break;
     }
+    // Karten-Kloning (Nutzer-Vorgabe): aufgeklapptes Laptop-Gehaeuse mit leuchtendem Screen —
+    // gleiches Prinzip wie 'tv' oben (dunkles Gehaeuse + heller Screen-Insatz).
+    case 'laptop':{
+      ctx.fillStyle='#2a2a2a';
+      ctx.fillRect(tx,ty+th*0.35,tw,th*0.65);
+      ctx.fillStyle='#1a1a1a';
+      ctx.fillRect(tx+tw*0.08,ty,tw*0.84,th*0.4);
+      ctx.fillStyle='rgba(90,170,220,0.9)';
+      ctx.fillRect(tx+tw*0.14,ty+th*0.05,tw*0.72,th*0.28);
+      ctx.fillStyle='#111';
+      ctx.fillRect(tx+tw*0.15,ty+th*0.42,tw*0.7,th*0.5);
+      break;
+    }
+    case 'skimmer':{
+      ctx.fillStyle='#3a3a42';
+      ctx.fillRect(tx,ty,tw,th);
+      ctx.fillStyle='#151518';
+      ctx.fillRect(tx+tw*0.15,ty+th*0.35,tw*0.7,th*0.22);
+      ctx.fillStyle='#39ff64';
+      ctx.fillRect(tx+tw*0.2,ty+th*0.65,tw*0.25,th*0.18);
+      break;
+    }
     case 'rug':{
       ctx.fillStyle=f.c;
       ctx.fillRect(tx,ty,tw,th);
@@ -6240,8 +6304,10 @@ function resolveAtm(){
   if(invCount('loaded_card')<=0) return;
   invRemove('loaded_card',1);
   closeAtmUI();
-  // Nutzer-Vorgabe: 60% Auszahlung 1,5k-10k, 40% Alarm -> sofortige Festnahme (severity 5, ~50 Min Haft,
-  // siehe CRIME_CATALOG.cardFraudCaught) — gleiches "sofort unausweichlich"-Muster wie resolveStopSearch().
+  // Nutzer-Vorgabe: 60% Auszahlung 1,5k-10k, 40% Alarm. Fehlschlag ist NICHT mehr sofort/unausweichlich —
+  // landet nur im Strafregister (Felony-App, severity 5, ~50 Min Haft bei tatsächlicher Verhaftung) plus
+  // Heat-Anstieg (heatPerFraud, extra dafür reserviert, siehe POLICE_CFG). Die Polizei kommt danach ganz
+  // normal über das Chase-System — der Spieler kann fliehen statt garantiert verhaftet zu werden.
   if(Math.random()<0.6){
     const cash=randi(1500,10000);
     player.money+=cash;
@@ -6250,7 +6316,7 @@ function resolveAtm(){
   } else {
     toast(t('atm.caught'));
     logCrime('cardFraudCaught');
-    startArrest();
+    addHeat(POLICE_CFG.heatPerFraud);
   }
 }
 
@@ -6992,18 +7058,41 @@ function updatePoliceDetection(n,dt,d2){
   if(Math.random()<stopChance) startStopCheck(n);
 }
 // Personenkontrolle: NPC friert für die Dauer des Dialogs ein (siehe case 'stopcheck' in updateNPCs()).
+// Nutzer-Vorgabe: Weglaufen statt die Kontrolle abzuwarten — sonst gibt's keine Möglichkeit, einer
+// Durchsuchung (und damit potenziell einer Festnahme mit aufsummierter Haftzeit aus dem ganzen
+// bisherigen Strafregister) zu entgehen. stopCheckNpc markiert den aktiven Kontroll-Versuch; wird er
+// per fleeStopCheck() VOR dem Dialog-Ende auf null gesetzt, überspringt das Interval unten die
+// resolveStopSearch() komplett — normales Durchklicken/Schließen des Dialogs löst weiterhin ganz normal
+// die Durchsuchung aus (kein neuer Weg, ihr auszuweichen außer der Flucht).
+let stopCheckNpc=null;
 function startStopCheck(n){
   n.state='stopcheck';
+  stopCheckNpc=n;
   // Nutzer-Vorgabe: schärfere "Stehenbleiben"-Ansprache, wenn schon offene Straftaten im Register stehen.
   const greeting=player.criminalRecord.length>0?'police.stopGreetingFelony':'police.stopGreeting';
   openDialog(t('speakers.police'),[t(greeting)]);
+  el('dialog-flee').textContent=t('police.fleeBtn');
+  el('dialog-flee').classList.remove('hidden');
   const checkStop=setInterval(()=>{
     if(!dialog.active){
       clearInterval(checkStop);
-      resolveStopSearch(n);
+      if(stopCheckNpc===n){ stopCheckNpc=null; resolveStopSearch(n); }
     }
   },100);
 }
+function fleeStopCheck(){
+  if(!stopCheckNpc) return;
+  const n=stopCheckNpc;
+  stopCheckNpc=null;
+  closeDialog();
+  toast(t('police.fled'));
+  // Nutzer-Vorgabe: Weglaufen ist kein Freifahrtschein — echte Verfolgung (gleiche Funktion wie beim
+  // normalen Verdachts-Chase), Heat 20 reicht sicher für 1 Stern (Schwelle 10), damit der Chase nicht
+  // sofort wegen player.heat<=0 in npcPoliceChase() abbricht.
+  addHeat(20);
+  enterPoliceChase(n);
+}
+el('dialog-flee').addEventListener('pointerdown',e=>{ e.preventDefault(); e.stopPropagation(); fleeStopCheck(); });
 function resolveStopSearch(n){
   const res=confiscateContraband('search');   // nur Inventar — die Kontrolle findet auf der Straße statt, nicht am Safe
   if(res.n===0){
@@ -9091,6 +9180,7 @@ function closeDialog(){
   dialog.active=false;
   clearInterval(dialog.timer);
   el('dialog-box').classList.add('hidden');
+  el('dialog-flee').classList.add('hidden');
 }
 el('dialog-box').addEventListener('pointerdown',e=>{ e.stopPropagation(); advanceDialog(); });
 // Bugfix: eigener pointerdown-Handler (nicht click) + stopPropagation, sonst würde der Klick auf den
