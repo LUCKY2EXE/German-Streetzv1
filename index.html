@@ -535,6 +535,29 @@ canvas#game{
 #stash-hint{ margin-top: 6px; font-size: 7px; color: #8f8d85; text-align: center; }
 @media (max-width: 700px){ #stash-columns{ flex-direction: column; gap: 10px; } }
 
+/* Panzerschrank: eigenes Panel, aber .stash-col/.stash-grid (oben) direkt mitgenutzt — bewusst kein
+   Upgrade-Zeile-Aequivalent, feste Kapazitaet (EXTRASAFE_SLOTS), daher kein grosses max-height nötig. */
+#extrasafe-box{
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  width: min(640px,94vw);
+  max-height: 86vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 3px solid #d8d5cc;
+  outline: 3px solid #000;
+  padding: 14px 16px;
+  z-index: 47;
+  box-shadow: 0 6px 0 rgba(0,0,0,.55);
+}
+#extrasafe-title{ font-size: 11px; margin-bottom: 10px; text-shadow: 1px 1px 0 #000; }
+#extrasafe-columns{ display: flex; gap: 18px; }
+#extrasafe-desc{ min-height: 2.2em; margin-top: 8px; font-size: 8px; line-height: 1.7; color: #cfcdc6; }
+#extrasafe-hint{ margin-top: 6px; font-size: 7px; color: #8f8d85; text-align: center; }
+@media (max-width: 700px){ #extrasafe-columns{ flex-direction: column; gap: 10px; } }
+
 /* ---------- Roll-UI: Joint selber drehen ---------- */
 #roll-box{
   position: fixed;
@@ -999,6 +1022,26 @@ canvas#game{
   <div id="stash-hint"></div>
 </div>
 
+<!-- Panzerschrank (Nutzer-Vorgabe): zweites, unabhaengiges Lager, das confiscateContraband() nie
+     sieht — gleiches Klick-verschiebt-1-Stueck-Muster wie die Kiste oben, aber ohne Upgrade-Zeile
+     (feste Kapazitaet, EXTRASAFE_SLOTS). -->
+<div id="extrasafe-box" class="hidden">
+  <button id="extrasafe-close" class="panel-close-btn" title="Schließen">✕</button>
+  <div id="extrasafe-title">PANZERSCHRANK</div>
+  <div id="extrasafe-columns">
+    <div class="stash-col">
+      <div class="stash-col-label" id="extrasafe-inv-label">INVENTAR</div>
+      <div id="extrasafe-inv-grid" class="stash-grid"></div>
+    </div>
+    <div class="stash-col">
+      <div class="stash-col-label" id="extrasafe-safe-label">PANZERSCHRANK</div>
+      <div id="extrasafe-safe-grid" class="stash-grid"></div>
+    </div>
+  </div>
+  <div id="extrasafe-desc"></div>
+  <div id="extrasafe-hint"></div>
+</div>
+
 <!-- Roll-UI: Joint selber drehen (Menge, Tabak-Mix, Zermahlen, Rollen) -->
 <div id="roll-box" class="hidden">
   <button id="roll-close" class="panel-close-btn" title="Schließen">✕</button>
@@ -1319,6 +1362,10 @@ const I18N = {
       upgraded: 'Safe ausgebaut — Stufe {lvl}, {cap} Slots.',
       noMoney: 'Zu wenig Geld für den Ausbau.'
     },
+    extrasafe: {
+      title: 'PANZERSCHRANK', hint: 'KLICK — 1 STÜCK VERSCHIEBEN<br>ESC — SCHLIESSEN',
+      safe: 'PANZERSCHRANK'
+    },
     kiosk: {
       title: 'SPÄTI 24', titleCorner: '24/7 CORNER SHOP', hint: 'ESC — SCHLIESSEN',
       bought: '{name} gekauft — {price}$.', noMoney: 'Zu wenig Geld.'
@@ -1329,7 +1376,8 @@ const I18N = {
     },
     armor: {
       title: 'ARMOR SHOP', hint: 'ESC — SCHLIESSEN',
-      bought: '{name} gekauft — {price}$.', noMoney: 'Zu wenig Geld.', alreadyOwned: 'Hast du schon.'
+      bought: '{name} gekauft — {price}$.', noMoney: 'Zu wenig Geld.', alreadyOwned: 'Hast du schon.',
+      extraSafe: 'Panzerschrank (raubsicheres Zweit-Lager)'
     },
     dripshop: {
       title: 'DRIP', hint: 'ESC — SCHLIESSEN',
@@ -1746,6 +1794,10 @@ const I18N = {
       upgraded: 'Safe upgraded — level {lvl}, {cap} slots.',
       noMoney: 'Not enough cash for the upgrade.'
     },
+    extrasafe: {
+      title: 'STRONGBOX', hint: 'CLICK — MOVE 1 ITEM<br>ESC — CLOSE',
+      safe: 'STRONGBOX'
+    },
     kiosk: {
       title: 'SPÄTI 24', titleCorner: '24/7 CORNER SHOP', hint: 'ESC — CLOSE',
       bought: 'Bought {name} — ${price}.', noMoney: 'Not enough cash.'
@@ -1756,7 +1808,8 @@ const I18N = {
     },
     armor: {
       title: 'ARMOR SHOP', hint: 'ESC — CLOSE',
-      bought: 'Bought {name} — ${price}.', noMoney: 'Not enough cash.', alreadyOwned: 'Already have it.'
+      bought: 'Bought {name} — ${price}.', noMoney: 'Not enough cash.', alreadyOwned: 'Already have it.',
+      extraSafe: 'Strongbox (raid-proof extra storage)'
     },
     dripshop: {
       title: 'DRIP', hint: 'ESC — CLOSE',
@@ -3265,6 +3318,9 @@ function makeInterior(type){
       // Ecke unten-rechts (x11-14/y7-9), >50px von Herd/Luke/Kiste entfernt (siehe deren Kommentare).
       if(player.hasLaptop) I.furniture.push(makeLaptopFurniture());
       if(player.hasSkimmer) I.furniture.push(makeSkimmerFurniture());
+      // Panzerschrank (Nutzer-Vorgabe): rechte Wand, freier Bereich (>100px von jeder anderen
+      // interaktiven Stelle — Kiste/Stove/Bett/Luke/Laptop/Skimmer alle deutlich weiter weg).
+      if(player.hasExtraSafe) I.furniture.push(makeExtraSafeFurniture());
       break;
     }
     /* ===== GEFÄNGNISZELLE (Custody, siehe enterJailCell()) ===== */
@@ -3819,7 +3875,7 @@ function makeInterior(type){
   const SOLID=new Set(['shelf','counter','fridge','fridge_wall','stove','wardrobe',
     'workbench','metalshelf','booth','kitchen','bar','pillar','pillar_big','roof_pillar',
     'ticketmachine','info','info_counter','display','display_big','weaponwall','vestdisplay',
-    'toolwall','bike_wall','bikestand','crate','box','trashcan','counter_glass','glass',
+    'toolwall','bike_wall','bikestand','crate','box','safe','trashcan','counter_glass','glass',
     'wall_glass','schedule_board','bench_broken','bench_detailed','bike_rack','sign_stand','sofa',
     'cookstation','mixtank','still','clothes_rack','changing_booth','toilet','payphone','bars']);
   for(const f of I.furniture){
@@ -4783,6 +4839,19 @@ function drawInteriorFurniture(ctx, f, time){
       ctx.fillRect(tx+tw*0.15,ty+th*0.35,tw*0.7,th*0.22);
       ctx.fillStyle='#39ff64';
       ctx.fillRect(tx+tw*0.2,ty+th*0.65,tw*0.25,th*0.18);
+      break;
+    }
+    // Panzerschrank (Nutzer-Vorgabe): dunkler Korpus + helle Tuer-Einfassung + Zahlenschloss-Dial+Griff.
+    case 'safe':{
+      ctx.fillStyle='#232328';
+      ctx.fillRect(tx+1,ty+1,tw-2,th-2);
+      ctx.strokeStyle='#4a4a52';
+      ctx.lineWidth=2;
+      ctx.strokeRect(tx+tw*0.1,ty+th*0.1,tw*0.8,th*0.8);
+      ctx.fillStyle='#c9a86a';
+      ctx.beginPath(); ctx.arc(tx+tw*0.65,ty+th*0.5,tw*0.12,0,7); ctx.fill();
+      ctx.fillStyle='#111';
+      ctx.fillRect(tx+tw*0.25,ty+th*0.42,tw*0.15,th*0.16);
       break;
     }
     case 'rug':{
@@ -6028,6 +6097,10 @@ function interactInterior(){
   }
   if(f.interactive==='stash'){
     openStashUI();
+    return;
+  }
+  if(f.interactive==='extrasafe'){
+    openExtraSafeUI();
     return;
   }
   if(f.interactive==='kioskshop'){
@@ -8220,6 +8293,9 @@ const player={
   hasMethLab:false, hasLabCoat:false, hasGasmask:false, methLabSlots:0, methCooks:[],
   // Karten-Kloning (Nutzer-Vorgabe): Laptop + Skimmer als einfache Flags, analog hasMethLab.
   hasLaptop:false, hasSkimmer:false,
+  // Panzerschrank (Nutzer-Vorgabe): zweites, unabhaengiges Lager, das confiscateContraband() nie
+  // referenziert — dadurch immun gegen Hausdurchsuchung UND Personen-Konfiszierung bei Verhaftung.
+  hasExtraSafe:false, extraSafe:[],
   // Casino (Paket 17): Spin dauert nur ~1-2 Echtzeit-Sekunden, bewusst kein Save/Load-Eintrag
   slotSpin:null,
   // DRIP-Outfit (Paket 8): aktuell getragenes Paletten-Preset, siehe OUTFIT_PALETTES/applyOutfit()
@@ -8391,14 +8467,16 @@ const CRIME_CATALOG={
   // dealing/assault); wird man dabei per Alarm geschnappt, ist das schwerer (severity:4, wie methExplosion).
   shopRobbery:      {severity:3},
   shopRobberyCaught:{severity:4},
-  // Nutzer-Vorgabe: Karten-Kloning/ATM — Fehlschlag (40%) bedeutet sofortige Festnahme mit ~50 Min Haft.
-  cardFraudCaught:  {severity:5},
+  // Nutzer-Vorgabe (Korrektur): Karten-Kloning/ATM-Fehlschlag ist milder als ein Juwelier-Alarm —
+  // nur noch 20 Min Haft (severity 3, wie dealing/shopRobbery), nicht mehr 50 Min.
+  cardFraudCaught:  {severity:3},
   killGang:      {severity:6},
   killCivilian:  {severity:8},
   killCop:       {severity:12}
 };
 // Zwangsaufenthalt-Basiszeit (Sekunden) pro Schwere-Stufe — 1=5 Min, 12=8 Std, dazwischen ×2/×3 gestaffelt.
-// Stufe 5 (50 Min) neu: liegt bewusst zwischen 4 (40 Min) und 6 (2 Std) fuer cardFraudCaught.
+// Stufe 5 (50 Min): liegt bewusst zwischen 4 (40 Min) und 6 (2 Std) fuer schwerere Faelle wie einen
+// Juwelier-Alarm (cardFraudCaught nutzt inzwischen die mildere Stufe 3, siehe CRIME_CATALOG).
 const CUSTODY_TIME_BY_SEVERITY={1:300, 2:600, 3:1200, 4:2400, 5:3000, 6:7200, 8:14400, 12:28800};
 function logCrime(key){
   if(!CRIME_CATALOG[key]) return;
@@ -9328,6 +9406,9 @@ const SLOT_CAP_G_BASE=1000;
 const STACK_MAX=99;                           // Stück-Limit pro Slot für Nicht-Drogen
 const SAFE_UPGRADE_SLOTS=8;                   // Safe-Ausbau: +8 Slots pro Stufe (16→24→32→40)
 const SAFE_UPGRADE_PRICES=[1000,2500,5000];   // Platzhalter-Preise Stufe 1-3, leicht anpassbar
+// Panzerschrank (Nutzer-Vorgabe): eigenes, kleineres Zweit-Lager — bewusst KEIN Ausbau von
+// player.stash, damit confiscateContraband() es nie sieht (siehe Kommentar am hasExtraSafe-Feld).
+const EXTRASAFE_SLOTS=12;   // Platzhalter, leicht anpassbar
 const GROW_POTS_MAX=4;
 // Verstreute Topf-Positionen auf dem grünen Zelt-Untergrund (x5-7.4/y5.8-8.1) statt einer geraden Reihe —
 // geteilt zwischen makeInterior() und dem Sofort-Sync beim Platzieren.
@@ -9361,6 +9442,11 @@ function makeLaptopFurniture(){
 }
 function makeSkimmerFurniture(){
   return {k:'skimmer',x:13,y:7.6,w:0.6,h:0.5,c:'#2a2a3a',detail:'skim'};
+}
+// Panzerschrank (Nutzer-Vorgabe): rechte Wand oben, weit weg von jeder anderen interaktiven Stelle.
+function makeExtraSafeFurniture(){
+  return {k:'safe',x:13,y:2,w:1,h:1,c:'#2a2a30',detail:'locked',interactive:'extrasafe',
+    label:{de:'Panzerschrank',en:'Strongbox'}};
 }
 const METHLAB_PRICE=5000;
 function buyMethLab(){
@@ -10332,6 +10418,33 @@ function stashRemove(id,n){
   if(stashOpen) renderStash();
   return true;
 }
+/* Panzerschrank (Nutzer-Vorgabe): 1:1-Kopie von stashCount/Add/Remove, aber auf player.extraSafe —
+   bewusst eigene Funktionen statt das Stash-System zu parametrisieren, gleiche Begründung wie oben
+   (das bestehende, ueberall verdrahtete System soll unangetastet bleiben). */
+function extraSafeCount(id){ const it=player.extraSafe.find(i=>i.id===id); return it?it.n:0; }
+function extraSafeAdd(id,n){
+  n=n||1;
+  const it=player.extraSafe.find(i=>i.id===id);
+  if(it){
+    if(!slotFits(id,it.n,n)){ toast(t('inv.full')); return false; }
+    it.n+=n;
+  } else {
+    if(player.extraSafe.length>=EXTRASAFE_SLOTS){ toast(t('inv.full')); return false; }
+    if(!slotFits(id,0,n)){ toast(t('inv.full')); return false; }
+    player.extraSafe.push({id,n});
+  }
+  if(extraSafeOpen) renderExtraSafe();
+  return true;
+}
+function extraSafeRemove(id,n){
+  n=n||1;
+  const it=player.extraSafe.find(i=>i.id===id);
+  if(!it||it.n<n) return false;
+  it.n-=n;
+  if(it.n<=0) player.extraSafe.splice(player.extraSafe.indexOf(it),1);
+  if(extraSafeOpen) renderExtraSafe();
+  return true;
+}
 function itemName(id){ return t('items.'+id+'.name'); }
 /* Waffe ausrüsten/ablegen: ein Hand-Slot, unabhängig vom Inventar-Slot des Items selbst.
    Zweiter Klick auf die bereits ausgerüstete Waffe legt sie wieder ab. */
@@ -10954,7 +11067,10 @@ const ARMOR_ITEMS=[
   // "nur halbautomatisch"-Regel oben (militaryarp ist auto:true), da explizit als Armor-Shop-Exklusiv gewünscht.
   {id:'militaryarp', price:60000, n:1},
   // Paket 2: Military-Weste, stärkerer Schutz als vest_stab, gleiche Owned-Sperre wie diese.
-  {id:'vest_military', price:4500, n:1}
+  {id:'vest_military', price:4500, n:1},
+  // Panzerschrank (Nutzer-Vorgabe): reiner Möbel-Freischalter, kein ITEMS-Katalog-Eintrag/invAdd nötig —
+  // gleiches Muster wie grow_tent (g.tent) im Grow-Shop, siehe buyArmorItem()/renderArmor() unten.
+  {id:'extra_safe', price:60000, safe:true}
 ];
 let armorOpen=false;
 function openArmorUI(){
@@ -10975,13 +11091,14 @@ function renderArmor(){
     const row=document.createElement('div');
     row.className='shop-row';
     // Paket E: Waffen sind Toggle-Equip-Items — Zweitkauf wäre sinnlos, daher gleiche owned-Sperre wie die Weste
-    const owned=(g.id==='vest_stab'&&player.hasVest)||(g.id==='vest_military'&&player.hasVestMilitary)||(ITEMS[g.id].cat==='weapon'&&invCount(g.id)>0);
+    // Panzerschrank: eigener owned-Zweig (g.safe), kein ITEMS-Eintrag vorhanden — sonst crasht ITEMS[g.id].cat.
+    const owned=g.safe?player.hasExtraSafe:((g.id==='vest_stab'&&player.hasVest)||(g.id==='vest_military'&&player.hasVestMilitary)||(ITEMS[g.id].cat==='weapon'&&invCount(g.id)>0));
     const img=document.createElement('img');
-    img.src=ITEM_ICONS[ITEMS[g.id].icon];
+    img.src=ITEM_ICONS[g.safe?ITEMS.vest_military.icon:ITEMS[g.id].icon];   // geliehenes Icon, kein eigenes nötig
     img.alt='';
     const name=document.createElement('div');
     name.className='shop-row-name';
-    name.textContent=itemName(g.id)+(g.n>1?' ×'+g.n:'');
+    name.textContent=g.safe?t('armor.extraSafe'):itemName(g.id)+(g.n>1?' ×'+g.n:'');
     const price=document.createElement('div');
     price.className='shop-row-price';
     price.textContent=g.price+'$';
@@ -10994,6 +11111,17 @@ function renderArmor(){
   }
 }
 function buyArmorItem(g){
+  if(g.safe){
+    // Panzerschrank: reiner Flag-Kauf, kein invAdd/ITEMS-Eintrag — gleiches Muster wie buyGrowshopItem()s g.tent-Zweig.
+    if(player.hasExtraSafe){ toast(t('armor.alreadyOwned')); return; }
+    if(player.money<g.price){ toast(t('armor.noMoney')); return; }
+    player.money-=g.price;
+    player.hasExtraSafe=true;
+    toast(t('armor.bought',{name:t('armor.extraSafe'),price:g.price}));
+    saveGame();
+    renderArmor();
+    return;
+  }
   if(player.money<g.price){ toast(t('armor.noMoney')); return; }
   if(!invAdd(g.id,g.n||1)) return;   // Geld erst NACH erfolgreichem invAdd abbuchen
   player.money-=g.price;
@@ -11770,6 +11898,7 @@ window.addEventListener('keydown',e=>{
    in die jeweils andere Richtung — reuse der invAdd/invRemove-Prüflogik über stashAdd/stashRemove,
    damit auch hier nie Geld/Item verloren geht (Slot-/Gewichtslimit wird vor dem Verschieben geprüft). */
 let stashOpen=false;
+let extraSafeOpen=false;
 function openStashUI(){
   if(dialog.active) return;
   closeInventory(); closePhone();
@@ -11782,7 +11911,10 @@ function openStashUI(){
 }
 function closeStashUI(){ el('stash-box').classList.add('hidden'); stashOpen=false; hidePanelBackdrop(); }
 el('stash-close').addEventListener('click', closeStashUI);
-function renderStashGrid(gridEl,arr,slots,onMove){
+// descId optional (Default 'stash-desc') — Panzerschrank-Panel reicht 'extrasafe-desc' durch,
+// sonst wuerde der Hover-Text immer ins (dann unsichtbare) Kisten-Panel geschrieben.
+function renderStashGrid(gridEl,arr,slots,onMove,descId){
+  descId=descId||'stash-desc';
   gridEl.innerHTML='';
   for(let i=0;i<slots;i++){
     const slot=document.createElement('div');
@@ -11800,7 +11932,7 @@ function renderStashGrid(gridEl,arr,slots,onMove){
         cnt.textContent=it.n;
         slot.appendChild(cnt);
       }
-      slot.addEventListener('pointerenter',()=>{ el('stash-desc').textContent=itemName(it.id)+' — '+t('items.'+it.id+'.desc',{n:it.n}); });
+      slot.addEventListener('pointerenter',()=>{ el(descId).textContent=itemName(it.id)+' — '+t('items.'+it.id+'.desc',{n:it.n}); });
       slot.addEventListener('click',()=>onMove(it.id));
     }
     gridEl.appendChild(slot);
@@ -11846,6 +11978,40 @@ function buySafeUpgrade(){
 el('stash-upgrade-btn').addEventListener('click',buySafeUpgrade);
 window.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&!el('stash-box').classList.contains('hidden')) closeStashUI();
+});
+/* Panzerschrank (Nutzer-Vorgabe): 1:1-Muster von openStashUI/closeStashUI/renderStash, aber ohne
+   den Upgrade-Zeile-Block (feste Kapazitaet) — renderStashGrid() ist bereits generisch/parametrisiert
+   und wird hier direkt mitgenutzt, keine eigene Kopie davon nötig. */
+function openExtraSafeUI(){
+  if(dialog.active) return;
+  closeInventory(); closePhone();
+  el('extrasafe-title').textContent=t('extrasafe.title');
+  el('extrasafe-hint').innerHTML=t('extrasafe.hint');
+  renderExtraSafe();
+  el('extrasafe-box').classList.remove('hidden');
+  extraSafeOpen=true;
+  showPanelBackdrop(closeExtraSafeUI);
+}
+function closeExtraSafeUI(){ el('extrasafe-box').classList.add('hidden'); extraSafeOpen=false; hidePanelBackdrop(); }
+el('extrasafe-close').addEventListener('click', closeExtraSafeUI);
+function renderExtraSafe(){
+  el('extrasafe-inv-label').textContent=t('stash.yourInv');
+  el('extrasafe-safe-label').textContent=t('extrasafe.safe');
+  renderStashGrid(el('extrasafe-inv-grid'),player.inv,INV_SLOTS,(id)=>{
+    if(!extraSafeAdd(id,1)) return;
+    invRemove(id,1);
+    saveGame();
+    renderExtraSafe();
+  },'extrasafe-desc');
+  renderStashGrid(el('extrasafe-safe-grid'),player.extraSafe,EXTRASAFE_SLOTS,(id)=>{
+    if(!invAdd(id,1)) return;
+    extraSafeRemove(id,1);
+    saveGame();
+    renderExtraSafe();
+  },'extrasafe-desc');
+}
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!el('extrasafe-box').classList.contains('hidden')) closeExtraSafeUI();
 });
 
 /* ---------------- Buyer-Call-System (Paket 4c, ab Paket 11/12 auch für Meth) ----------------
@@ -13649,6 +13815,7 @@ function saveGame(){
       hasMethLab:player.hasMethLab, hasLabCoat:player.hasLabCoat, hasGasmask:player.hasGasmask,
       methLabSlots:player.methLabSlots, methCooks:player.methCooks,
       hasLaptop:player.hasLaptop, hasSkimmer:player.hasSkimmer,
+      hasExtraSafe:player.hasExtraSafe, extraSafe:player.extraSafe,
       outfit:player.outfit,
       hasVest:player.hasVest, hasVestMilitary:player.hasVestMilitary, tutorialsSeen:player.tutorialsSeen,
       timesArrested:player.timesArrested,
@@ -13816,6 +13983,8 @@ function startGame(fresh){
     player.safeLevel=Math.max(0,Math.min(SAFE_UPGRADE_PRICES.length,s.safeLevel|0));
     player.hasMethLab=!!s.hasMethLab; player.hasLabCoat=!!s.hasLabCoat; player.hasGasmask=!!s.hasGasmask;
     player.hasLaptop=!!s.hasLaptop; player.hasSkimmer=!!s.hasSkimmer;
+    player.hasExtraSafe=!!s.hasExtraSafe;
+    player.extraSafe=Array.isArray(s.extraSafe)?s.extraSafe.filter(i=>i&&ITEMS[i.id]&&i.n>0):[];
     // Parallel-Küche-Migration: neue Saves haben methLabSlots/methCooks (Array), alte Saves (vor dieser
     // Erweiterung) hatten nur ein einzelnes methCook-Objekt/null — das wandert 1:1 in Slot 0, damit
     // laufende Kochvorgänge aus alten Spielständen nicht verloren gehen.
@@ -13883,6 +14052,7 @@ function startGame(fresh){
     player.hasMethLab=false; player.hasLabCoat=false; player.hasGasmask=false;
     player.methLabSlots=0; player.methCooks=[];
     player.hasLaptop=false; player.hasSkimmer=false;
+    player.hasExtraSafe=false; player.extraSafe=[];
     player.hasVest=false; player.hasVestMilitary=false; player.tutorialsSeen={};
     applyOutfit('default');
     for(const k in JobSystem.levels) JobSystem.levels[k]={xp:0,lvl:1,introSeen:false,cooldownUntil:0};   // neues Spiel: Job-Level zurücksetzen
