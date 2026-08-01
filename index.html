@@ -1310,6 +1310,7 @@ const I18N = {
       diamond:{ name: 'Diamant', desc: 'Rohware — beim Dealer verhehlen oder beim Juwelier zu Schmuck verarbeiten.' },
       chain:{ name: 'Kette', desc: 'Klicken: anlegen.', installed: 'Kette angelegt.', already: 'Trägst du schon.' },
       watch:{ name: 'Uhr', desc: 'Klicken: anlegen.', installed: 'Uhr angelegt.', already: 'Trägst du schon.' },
+      grillz:{ name: 'Grillz', desc: 'Klicken: anlegen.', installed: 'Grillz angelegt.', already: 'Trägst du schon.' },
       baggies: { name: 'Baggies', desc: 'Leere Tütchen zum Verpacken. Klicken öffnet das Verpacken-Menü.' },
       scale:   { name: 'Feinwaage', desc: 'Zum Abwiegen beim Verpacken. Klicken öffnet das Verpacken-Menü.' },
       baggy_1g:  { name: 'Baggy 1g',  desc: '1g fertig verpackt. Für den Straßenverkauf.' },
@@ -1761,6 +1762,7 @@ const I18N = {
       diamond:{ name: 'Diamond', desc: 'Raw goods — fence it at the Dealer or have the Jeweler set it into jewelry.' },
       chain:{ name: 'Chain', desc: 'Click: put on.', installed: 'Chain put on.', already: 'Already wearing it.' },
       watch:{ name: 'Watch', desc: 'Click: put on.', installed: 'Watch put on.', already: 'Already wearing it.' },
+      grillz:{ name: 'Grillz', desc: 'Click: put on.', installed: 'Grillz put on.', already: 'Already wearing it.' },
       baggies: { name: 'Baggies', desc: 'Empty bags for packing. Click opens the packing menu.' },
       scale:   { name: 'Scale', desc: 'For weighing while packing. Click opens the packing menu.' },
       baggy_1g:  { name: 'Baggy 1g',  desc: '1g pre-packed. Ready for street sale.' },
@@ -2219,6 +2221,11 @@ const MANIFEST = {
   // Zusaetzliche Deko an jeder Koch-Station im Labor (Nutzer-Vorgabe), rein optisch.
   lab_flask_deco: {file:'meth_zubehoer_a.png', w:48, h:48, kind:'prop'},
   lab_canister_deco: {file:'meth_zubehoer_b.png', w:48, h:48, kind:'prop'},
+  // Nutzer-Vorgabe: dieselben 3 Ausbaustufen-Bilder (schon beim Dealer als Kauf-Icon genutzt, siehe
+  // ITEM_ICONS.methlab_slot1/2/3) zusaetzlich als echte Optik der Koch-Stationen selbst im Labor.
+  meth_station1: {file:'meth_slot1_icon.png', w:48, h:48, kind:'prop'},
+  meth_station2: {file:'meth_slot2_icon.png', w:48, h:48, kind:'prop'},
+  meth_station3: {file:'meth_slot3_icon.png', w:48, h:48, kind:'prop'},
   prop_dice: {file:'prop_dice.png',  w:16, h:12, kind:'prop'},
   prop_trash:{file:'prop_trash.png', w:26, h:18, kind:'prop'},
   prop_lamp: {file:'prop_lamp.png',  w:18, h:56, kind:'prop'},
@@ -5095,25 +5102,11 @@ function drawInteriorFurniture(ctx, f, time){
         ctx.drawImage(IMAGES.meth_ready,tx,ty,tw,th);
         break;
       }
-      // Dunkle Herdplatte mit 3 Flammen + Thermometer — zentrale Interaktions-Station
-      ctx.fillStyle='#2a2a2e';
-      ctx.fillRect(tx,ty,tw,th);
-      ctx.fillStyle='#1a1a1c';
-      ctx.fillRect(tx+2,ty+2,tw-4,th*0.4);
-      const flameX=[tx+tw*0.22,tx+tw*0.5,tx+tw*0.78];
-      for(const fx of flameX){
-        const flick=0.7+0.3*Math.sin(time/70+fx);
-        ctx.fillStyle='rgba(255,140,40,'+flick.toFixed(2)+')';
-        ctx.beginPath();
-        ctx.moveTo(fx,ty+th*0.85); ctx.lineTo(fx-3,ty+th*0.55); ctx.lineTo(fx,ty+th*0.35); ctx.lineTo(fx+3,ty+th*0.55);
-        ctx.closePath();
-        ctx.fill();
-      }
-      // Thermometer seitlich
-      ctx.fillStyle='#c8d4dc';
-      ctx.fillRect(tx+tw-6,ty+th*0.1,3,th*0.6);
-      ctx.fillStyle='#c03434';
-      ctx.beginPath(); ctx.ellipse(tx+tw-4.5,ty+th*0.78,3,3,0,0,7); ctx.fill();
+      // Nutzer-Vorgabe: dieselben 3 Ausbaustufen-Bilder wie beim Dealer-Kauf-Icon, je nach Slot-Index
+      // (0→Bild1, 1→Bild2, 2+→Bild3 — Stufe 4/5 nutzen bewusst dasselbe Bild wie Stufe 3, keine eigene
+      // 4./5. Grafik vorhanden, gleiches Wiederverwendungs-Muster wie beim Dealer).
+      const stationImg=['meth_station1','meth_station2','meth_station3'][Math.min(f.slotIndex,2)];
+      ctx.drawImage(IMAGES[stationImg],tx,ty,tw,th);
       break;
     }
     case 'mixtank':{
@@ -8482,8 +8475,8 @@ const player={
   // Panzerschrank (Nutzer-Vorgabe): zweites, unabhaengiges Lager, das confiscateContraband() nie
   // referenziert — dadurch immun gegen Hausdurchsuchung UND Personen-Konfiszierung bei Verhaftung.
   hasExtraSafe:false, extraSafe:[],
-  // Juwelier (Nutzer-Vorgabe): Ketten/Uhren als einfache Flags, analog hasLaptop/hasSkimmer.
-  hasChain:false, hasWatch:false,
+  // Juwelier (Nutzer-Vorgabe): Ketten/Uhren/Grillz als einfache Flags, analog hasLaptop/hasSkimmer.
+  hasChain:false, hasWatch:false, hasGrillz:false,
   // Kosmetik (Nutzer-Vorgabe): Accessoires als einfache Flags, permanent + frei kombinierbar.
   hasSunglasses:false, hasHat:false, hasTattoo:false,
   // Casino (Paket 17): Spin dauert nur ~1-2 Echtzeit-Sekunden, bewusst kein Save/Load-Eintrag
@@ -9829,6 +9822,13 @@ const ITEMS={
                player.hasWatch=true;
                toast(t('items.watch.installed')); saveGame(); return true;
              } },
+  // Grillz (Nutzer-Vorgabe): drittes Juwelier-Cosmetic, gleiches Muster wie chain/watch.
+  grillz:{ icon:'grillz', cat:'tool', weight:20,
+             use(){
+               if(player.hasGrillz){ toast(t('items.grillz.already')); return false; }
+               player.hasGrillz=true;
+               toast(t('items.grillz.installed')); saveGame(); return true;
+             } },
   baggies: { icon:'baggy_empty', cat:'tool', weight:0.5, use(){ openPackUI(); return false; } },
   scale:   { icon:'scale', cat:'tool', weight:400,
              use(){ toast(t('items.scale.desc')); return false; } },
@@ -10614,6 +10614,13 @@ function makeItemIcons(){
   x.beginPath(); x.moveTo(12,12); x.lineTo(12,9); x.stroke();
   x.beginPath(); x.moveTo(12,12); x.lineTo(14,13); x.stroke();
   ITEM_ICONS.watch=c.toDataURL();
+  // Grillz: goldene Zahnreihe (kleine Rechtecke), Nutzer-Vorgabe.
+  c=mkCanvas(24,24); x=c.getContext('2d');
+  x.fillStyle='#f5c542';
+  x.fillRect(4,10,16,7);
+  x.fillStyle='#c9a227';
+  for(let i=0;i<5;i++) x.fillRect(4+i*3.2,10,0.6,7);
+  ITEM_ICONS.grillz=c.toDataURL();
 }
 makeItemIcons();
 
@@ -11109,9 +11116,10 @@ window.addEventListener('keydown',e=>{
    verarbeiten — beide Wege erzeugen absichtlich dasselbe Item (gleicher hasChain/hasWatch-Flag). */
 const JEWELER_ITEMS=[
   {id:'chain', price:2500, n:1},
-  {id:'watch', price:4000, n:1}
+  {id:'watch', price:4000, n:1},
+  {id:'grillz', price:1800, n:1}
 ];
-const JEWELRY_CRAFT_RECIPES={ chain:{diamonds:3,fee:500}, watch:{diamonds:4,fee:800} };
+const JEWELRY_CRAFT_RECIPES={ chain:{diamonds:3,fee:500}, watch:{diamonds:4,fee:800}, grillz:{diamonds:2,fee:300} };
 let jewelershopOpen=false;
 function openJewelerUI(){
   if(dialog.active) return;
@@ -11132,7 +11140,7 @@ function renderJewelerShop(){
     const row=document.createElement('div');
     row.className='shop-row';
     // Ketten/Uhren sind Einmal-Cosmetics wie Laptop/Skimmer — Zweitkauf waere sinnlos.
-    const owned=(g.id==='chain'&&player.hasChain)||(g.id==='watch'&&player.hasWatch);
+    const owned=(g.id==='chain'&&player.hasChain)||(g.id==='watch'&&player.hasWatch)||(g.id==='grillz'&&player.hasGrillz);
     const img=document.createElement('img');
     img.src=ITEM_ICONS[ITEMS[g.id].icon];
     img.alt='';
@@ -11153,7 +11161,7 @@ function renderJewelerShop(){
   // Extra-Zeile-Technik wie der Meth-Labor-Slot-Kauf im Dealer-Shop (renderDealershop()).
   for(const id in JEWELRY_CRAFT_RECIPES){
     const r=JEWELRY_CRAFT_RECIPES[id];
-    const owned=id==='chain'?player.hasChain:player.hasWatch;
+    const owned=id==='chain'?player.hasChain:id==='watch'?player.hasWatch:player.hasGrillz;
     const row=document.createElement('div');
     row.className='shop-row';
     const img=document.createElement('img');
@@ -12663,12 +12671,24 @@ function drawJewelryAccessories(bx,by,dir){
   // y36-46): Kette sitzt am Hals-Kragen (Kopf-/Torso-Grenze), Uhr am Handgelenk (unteres Arm-Ende).
   // Bugfix: vorher bei y19 (mitten im Gesicht) bzw. y33 (Schulter statt Handgelenk) — beides zu hoch.
   if(player.hasChain){
+    // Nutzer-Feedback: soll sichtbar UM den Hals haengen, nicht nur ein flacher Balken am Kragen —
+    // zwei kurze Segmente am Hals-Kragen (y32, die Kette selbst) + ein Anhaenger, der 3px in den
+    // Torso hineinhaengt (y33-36), damit sich "haengt um den Hals" auch bei dieser Sprite-Groesse liest.
     ctx.fillStyle='#f5c542';
-    ctx.fillRect(bx+13,by+32,6,2);
+    ctx.fillRect(bx+12,by+32,3,1);
+    ctx.fillRect(bx+17,by+32,3,1);
+    ctx.fillRect(bx+15,by+33,2,4);
   }
   if(player.hasWatch){
     ctx.fillStyle='#f5c542';
     ctx.fillRect(bx+24,by+44,3,2);
+  }
+  if(player.hasGrillz){
+    if(dir!==3){
+      // Grillz (Nutzer-Vorgabe): kleiner Gold-Akzent im Mundbereich, knapp unter den Augen (y21-24).
+      ctx.fillStyle='#f5c542';
+      ctx.fillRect(bx+13,by+25,6,2);
+    }
   }
 }
 // Kosmetik (Nutzer-Vorgabe): Sonnenbrille/Hut/Tattoo als render-time Overlay, gleiches Prinzip wie
@@ -14316,7 +14336,7 @@ function saveGame(){
       methLabSlots:player.methLabSlots, methCooks:player.methCooks,
       hasLaptop:player.hasLaptop, hasSkimmer:player.hasSkimmer,
       hasExtraSafe:player.hasExtraSafe, extraSafe:player.extraSafe,
-      hasChain:player.hasChain, hasWatch:player.hasWatch,
+      hasChain:player.hasChain, hasWatch:player.hasWatch, hasGrillz:player.hasGrillz,
       hasSunglasses:player.hasSunglasses, hasHat:player.hasHat, hasTattoo:player.hasTattoo,
       outfit:player.outfit,
       hasVest:player.hasVest, hasVestMilitary:player.hasVestMilitary, tutorialsSeen:player.tutorialsSeen,
@@ -14494,7 +14514,7 @@ function startGame(fresh){
     player.hasLaptop=!!s.hasLaptop; player.hasSkimmer=!!s.hasSkimmer;
     player.hasExtraSafe=!!s.hasExtraSafe;
     player.extraSafe=Array.isArray(s.extraSafe)?s.extraSafe.filter(i=>i&&ITEMS[i.id]&&i.n>0):[];
-    player.hasChain=!!s.hasChain; player.hasWatch=!!s.hasWatch;
+    player.hasChain=!!s.hasChain; player.hasWatch=!!s.hasWatch; player.hasGrillz=!!s.hasGrillz;
     player.hasSunglasses=!!s.hasSunglasses; player.hasHat=!!s.hasHat; player.hasTattoo=!!s.hasTattoo;
     // Parallel-Küche-Migration: neue Saves haben methLabSlots/methCooks (Array), alte Saves (vor dieser
     // Erweiterung) hatten nur ein einzelnes methCook-Objekt/null — das wandert 1:1 in Slot 0, damit
@@ -14564,7 +14584,7 @@ function startGame(fresh){
     player.methLabSlots=0; player.methCooks=[];
     player.hasLaptop=false; player.hasSkimmer=false;
     player.hasExtraSafe=false; player.extraSafe=[];
-    player.hasChain=false; player.hasWatch=false;
+    player.hasChain=false; player.hasWatch=false; player.hasGrillz=false;
     player.hasSunglasses=false; player.hasHat=false; player.hasTattoo=false;
     player.hasVest=false; player.hasVestMilitary=false; player.tutorialsSeen={};
     applyOutfit('default');
