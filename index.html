@@ -2226,6 +2226,10 @@ const MANIFEST = {
   meth_station1: {file:'meth_slot1_icon.png', w:48, h:48, kind:'prop'},
   meth_station2: {file:'meth_slot2_icon.png', w:48, h:48, kind:'prop'},
   meth_station3: {file:'meth_slot3_icon.png', w:48, h:48, kind:'prop'},
+  // Grillz (Nutzer-Vorgabe): echtes Bild statt Gold-Balken, auf Mundgroesse zugeschnitten/transparent
+  // gemacht (Original als *_original_backup.png gesichert) — w/h hier sind nur Platzhalter-Fallback-
+  // Groesse, die tatsaechliche Zielgroesse am Charakter wird in drawJewelryAccessories() explizit gesetzt.
+  grillz: {file:'Grillz.png', w:24, h:14, kind:'prop'},
   prop_dice: {file:'prop_dice.png',  w:16, h:12, kind:'prop'},
   prop_trash:{file:'prop_trash.png', w:26, h:18, kind:'prop'},
   prop_lamp: {file:'prop_lamp.png',  w:18, h:56, kind:'prop'},
@@ -12680,15 +12684,17 @@ function drawJewelryAccessories(bx,by,dir){
     ctx.fillRect(bx+15,by+33,2,4);
   }
   if(player.hasWatch){
+    // Nutzer-Feedback: bessere Optik als ein reiner Gold-Block — dunkles Armband quer ueber dem
+    // Handgelenk + goldenes Zifferblatt mittig drauf, liest sich dadurch klarer als "Uhr".
+    ctx.fillStyle='#1a1a1a';
+    ctx.fillRect(bx+22,by+43,5,3);
     ctx.fillStyle='#f5c542';
-    ctx.fillRect(bx+24,by+44,3,2);
+    ctx.fillRect(bx+23,by+44,3,2);
   }
   if(player.hasGrillz){
-    if(dir!==3){
-      // Grillz (Nutzer-Vorgabe): kleiner Gold-Akzent im Mundbereich, knapp unter den Augen (y21-24).
-      ctx.fillStyle='#f5c542';
-      ctx.fillRect(bx+13,by+25,6,2);
-    }
+    // Nutzer-Vorgabe: echtes Bild statt Gold-Balken, auf Mundgroesse skaliert (Gesicht x9-23/y16-29,
+    // Mundbereich direkt unter den Augen bei y21-24) — sieht dadurch wie ein tatsaechlicher Mund aus.
+    ctx.drawImage(IMAGES.grillz,bx+11,by+24,10,5);
   }
 }
 // Kosmetik (Nutzer-Vorgabe): Sonnenbrille/Hut/Tattoo als render-time Overlay, gleiches Prinzip wie
