@@ -1392,7 +1392,9 @@ const I18N = {
     },
     dripshop: {
       title: 'DRIP', hint: 'ESC — SCHLIESSEN',
-      free: 'Standard', worn: 'GETRAGEN', bought: '{name}-Outfit angezogen.', noMoney: 'Zu wenig Geld.'
+      free: 'Standard', worn: 'GETRAGEN', bought: '{name}-Outfit angezogen.', noMoney: 'Zu wenig Geld.',
+      sunglasses: 'Sonnenbrille', hat: 'Hut', tattoo: 'Tattoo',
+      owned: 'Hast du schon.', boughtAccessory: '{name} gekauft.'
     },
     casino: {
       title: 'EL DORADO SPIELHALLE', hint: 'ESC — SCHLIESSEN',
@@ -1847,7 +1849,9 @@ const I18N = {
     },
     dripshop: {
       title: 'DRIP', hint: 'ESC — CLOSE',
-      free: 'Default', worn: 'WORN', bought: 'Put on the {name} outfit.', noMoney: 'Not enough cash.'
+      free: 'Default', worn: 'WORN', bought: 'Put on the {name} outfit.', noMoney: 'Not enough cash.',
+      sunglasses: 'Sunglasses', hat: 'Hat', tattoo: 'Tattoo',
+      owned: 'Already have it.', boughtAccessory: 'Bought {name}.'
     },
     casino: {
       title: 'EL DORADO SPIELHALLE', hint: 'ESC — CLOSE',
@@ -5799,6 +5803,7 @@ function renderInterior(time){
     Math.round(p.x)-16,Math.round(p.y)-60,32,64);
   if(player.outfit==='tracksuit') drawTracksuitStripe(Math.round(p.x)-16, Math.round(p.y)-60, p.dir);
   if(player.hasChain||player.hasWatch) drawJewelryAccessories(Math.round(p.x)-16, Math.round(p.y)-60, p.dir);
+  if(player.hasSunglasses||player.hasHat||player.hasTattoo) drawPlayerAccessories(Math.round(p.x)-16, Math.round(p.y)-60, p.dir);
   // Paket B: Kippe/Joint/Blunt + Flasche auch drinnen am Sprite (fehlte hier komplett)
   drawConsumables(Math.round(p.x),Math.round(p.y)-EQUIP_ANCHOR_DY,p.dir);
   // Paket 18: Sprechblasen der ambienten Interior-NPCs (Kopie aus renderBubbles(), ohne
@@ -8479,6 +8484,8 @@ const player={
   hasExtraSafe:false, extraSafe:[],
   // Juwelier (Nutzer-Vorgabe): Ketten/Uhren als einfache Flags, analog hasLaptop/hasSkimmer.
   hasChain:false, hasWatch:false,
+  // Kosmetik (Nutzer-Vorgabe): Accessoires als einfache Flags, permanent + frei kombinierbar.
+  hasSunglasses:false, hasHat:false, hasTattoo:false,
   // Casino (Paket 17): Spin dauert nur ~1-2 Echtzeit-Sekunden, bewusst kein Save/Load-Eintrag
   slotSpin:null,
   // DRIP-Outfit (Paket 8): aktuell getragenes Paletten-Preset, siehe OUTFIT_PALETTES/applyOutfit()
@@ -11711,6 +11718,12 @@ const OUTFIT_PALETTES=[
   {id:'purple',   name:{de:'Lila',en:'Purple'},           price:1100, hood:'#5a2a8a',hoodD:'#3e1c60',body:'#7a3aae',pants:'#1e1030'},
   {id:'gold',     name:{de:'Gold-Akzent',en:'Gold Accent'},price:15000,hood:'#8a6a1a',hoodD:'#5e4810',body:'#c9a227',pants:'#2a2210'},
   {id:'pink',     name:{de:'Pink',en:'Pink'},             price:1200, hood:'#c93a8a',hoodD:'#8a2660',body:'#e85aae',pants:'#3a1428'},
+  // Kosmetik (Nutzer-Vorgabe, Markennamen laut eigenem Backlog geklärt): reine Farbvarianten, kein Logo
+  // technisch darstellbar auf dieser Sprite-Groesse — hoodD wird als Kapuzen-Schatten UND Aermel-Farbe
+  // gerendert, liest sich dadurch als Akzent-Streifen. Preis leicht ueber der Normal-Spanne (800-1200)
+  // fuer Marken-Flair, deutlich unter dem einzigen echten Premium-Preset "gold" (15000).
+  {id:'nike',     name:{de:'Nike-Trainingsanzug',en:'Nike Tracksuit'}, price:1400, hood:'#111111',hoodD:'#c0302a',body:'#151515',pants:'#0a0a0a'},
+  {id:'lv',       name:{de:'LV-Style',en:'LV Style'},     price:1500, hood:'#5a3a22',hoodD:'#c9a227',body:'#6b4a2e',pants:'#2a1c10'},
   // Nike-Trainingsanzug (schwarz, Nutzer-Assets aus PixLab): echtes Sprite statt Farbpalette.
   {id:'tracksuit',name:{de:'Trainingsanzug (Schwarz)',en:'Tracksuit (Black)'}, price:950,
    hood:'#1c1c1c',hoodD:'#0d0d0d',body:'#1c1c1c',pants:'#0a0a0a', realArt:true, imgKey:'player_tracksuit'}
@@ -11787,6 +11800,28 @@ function renderDripshop(){
     row.appendChild(swatch); row.appendChild(name); row.appendChild(price); row.appendChild(btn);
     box.appendChild(row);
   }
+  // Kosmetik (Nutzer-Vorgabe): Accessoires als Extra-Zeilen unterhalb der Outfit-Liste — permanent
+  // + kombinierbar, daher eigenes Owned-Modell (nicht "aktiv getragen" wie bei den Outfits oben),
+  // gleiche Flag-Kauf-Technik wie grow_tent im Grow-Shop (kein ITEMS-Eintrag, kein invAdd).
+  for(const a of ACCESSORY_ITEMS){
+    const row=document.createElement('div');
+    row.className='shop-row';
+    const swatch=document.createElement('div');
+    swatch.style.cssText='width:22px;height:22px;flex-shrink:0;border:1px solid rgba(255,255,255,.3);background:'+a.color;
+    const name=document.createElement('div');
+    name.className='shop-row-name';
+    name.textContent=t('dripshop.'+a.id);
+    const price=document.createElement('div');
+    price.className='shop-row-price';
+    price.textContent=a.price+'$';
+    const btn=document.createElement('button');
+    const owned=player[a.flag];
+    btn.textContent=owned?t('dripshop.owned'):'+';
+    btn.disabled=owned||player.money<a.price;
+    btn.addEventListener('click',()=>buyAccessory(a));
+    row.appendChild(swatch); row.appendChild(name); row.appendChild(price); row.appendChild(btn);
+    box.appendChild(row);
+  }
 }
 function buyOutfit(o){
   if(player.outfit===o.id) return;
@@ -11794,6 +11829,20 @@ function buyOutfit(o){
   player.money-=o.price;
   applyOutfit(o.id);
   toast(t('dripshop.bought',{name:o.name[currentLang]||o.name.de}));
+  saveGame();
+  renderDripshop();
+}
+const ACCESSORY_ITEMS=[
+  {id:'sunglasses', price:600,  flag:'hasSunglasses', color:'#111111'},
+  {id:'hat',         price:500,  flag:'hasHat',         color:'#141414'},
+  {id:'tattoo',       price:400,  flag:'hasTattoo',       color:'#3a6bdb'}
+];
+function buyAccessory(a){
+  if(player[a.flag]){ toast(t('dripshop.owned')); return; }
+  if(player.money<a.price){ toast(t('dripshop.noMoney')); return; }
+  player.money-=a.price;
+  player[a.flag]=true;
+  toast(t('dripshop.boughtAccessory',{name:t('dripshop.'+a.id)}));
   saveGame();
   renderDripshop();
 }
@@ -12610,13 +12659,38 @@ function drawTracksuitStripe(bx,by,dir){
 // wie die Boss-Goldkette (phBoss()) — kein fotorealistischer Schmuck nötig auf dieser Sprite-Groesse.
 function drawJewelryAccessories(bx,by,dir){
   if(dir===3) return;   // von hinten nicht sichtbar, gleiches Prinzip wie drawConsumables()
+  // Koordinaten aus phChar() abgelesen (Kopf y8-33, Gesicht y16-29, Torso ab y34, Arme x5-8/x24-27
+  // y36-46): Kette sitzt am Hals-Kragen (Kopf-/Torso-Grenze), Uhr am Handgelenk (unteres Arm-Ende).
+  // Bugfix: vorher bei y19 (mitten im Gesicht) bzw. y33 (Schulter statt Handgelenk) — beides zu hoch.
   if(player.hasChain){
     ctx.fillStyle='#f5c542';
-    ctx.fillRect(bx+13,by+19,6,2);
+    ctx.fillRect(bx+13,by+32,6,2);
   }
   if(player.hasWatch){
     ctx.fillStyle='#f5c542';
-    ctx.fillRect(bx+23,by+33,3,2);
+    ctx.fillRect(bx+24,by+44,3,2);
+  }
+}
+// Kosmetik (Nutzer-Vorgabe): Sonnenbrille/Hut/Tattoo als render-time Overlay, gleiches Prinzip wie
+// drawJewelryAccessories()/drawTracksuitStripe() oben — funktioniert dadurch unabhaengig vom aktiven
+// Outfit (Palette ODER realArt), nicht in phChar() gebacken. Alle drei permanent + frei kombinierbar
+// (nicht ueberlappende Koerperbereiche: Augen-Linie / ueber der Kapuze / Arm).
+function drawPlayerAccessories(bx,by,dir){
+  if(player.hasHat){
+    // Ueber der Kapuze (Kopf beginnt bei y8, Kapuzen-Schatten y8-12) — aus jeder Richtung sichtbar.
+    ctx.fillStyle='#141414';
+    ctx.fillRect(bx+7,by+5,18,4);
+  }
+  if(dir===3) return;   // Sonnenbrille/Tattoo von hinten nicht sichtbar (Gesicht/Vorderarm verdeckt)
+  if(player.hasSunglasses){
+    // Auf Augen-Hoehe (Gesicht x9-23/y16-29, Augen bei y21-24 in phChar()).
+    ctx.fillStyle='#111111';
+    ctx.fillRect(bx+10,by+21,13,3);
+  }
+  if(player.hasTattoo){
+    // Kleiner farbiger Punkt am linken Ärmel (Arm x5-8/y36-46 in phChar()).
+    ctx.fillStyle='#3a6bdb';
+    ctx.fillRect(bx+6,by+40,2,2);
   }
 }
 /* Paket B: Rauchen/Trinken funktioniert jetzt auch drinnen — dort steht der Spieler auf
@@ -13542,7 +13616,10 @@ function render(time){
   for(const p of PROPS){
     if(!p.flat) continue;
     if(p.px+24<camX||p.px>camX+vw||p.py+16<camY||p.py>camY+vh) continue;
-    ctx.drawImage(IMAGES[p.type],Math.round(p.px),Math.round(p.py));
+    // Bugfix (RIESIGER ATM, gleiche Ursache): explizit auf MANIFEST-Groesse skalieren statt nativer
+    // Bildaufloesung — siehe Kommentar bei der isBench||isProp-Zeichnung weiter unten.
+    const pdef=MANIFEST[p.type];
+    if(pdef) ctx.drawImage(IMAGES[p.type],Math.round(p.px),Math.round(p.py),pdef.w,pdef.h);
   }
   // Blutflecken: auf dem Boden, bevor NPCs/Spieler darüber laufen
   renderBloodDecals(vw,vh);
@@ -13609,6 +13686,7 @@ function render(time){
                     Math.round(player.px)-16, Math.round(player.py)-60, 32,64);
         if(player.outfit==='tracksuit') drawTracksuitStripe(Math.round(player.px)-16, Math.round(player.py)-60, player.dir);
         if(player.hasChain||player.hasWatch) drawJewelryAccessories(Math.round(player.px)-16, Math.round(player.py)-60, player.dir);
+        if(player.hasSunglasses||player.hasHat||player.hasTattoo) drawPlayerAccessories(Math.round(player.px)-16, Math.round(player.py)-60, player.dir);
       }
       // Kippe/Joint/Blunt + Flasche sichtbar (Rückenansicht: verdeckt) — Paket B: gemeinsame
       // Zeichnung mit renderInterior(), siehe drawConsumables()
@@ -13729,11 +13807,16 @@ function render(time){
       // Typo/Datendrift zwischen einem addProp()-Aufruf und dem MANIFEST-Key wuerde hier bei JEDEM Frame
       // werfen (die Bank/das Prop bleibt ja dauerhaft im Array) und render() ab diesem Punkt fuer immer
       // einfrieren lassen, statt nur einmal. Fehlendes Bild wird jetzt uebersprungen statt zu crashen.
-      const img=IMAGES[e.type];
-      if(img) ctx.drawImage(img, Math.round(e.px), Math.round(e.py));
+      // Bugfix (RIESIGER ATM): drawImage ohne Ziel-Groesse zeichnet ein echtes Bild in seiner nativen
+      // Pixelgroesse — bei Platzhaltern (Canvas exakt in MANIFEST-Groesse erzeugt) unsichtbar, bei einem
+      // echten Asset mit abweichender nativer Aufloesung (z.B. ATM.png, 1149x1369px direkt aus der KI-
+      // Bildgenerierung) aber ein riesiges/falsch skaliertes Sprite. Jetzt immer explizit auf die in
+      // MANIFEST hinterlegte Ziel-Groesse skaliert, unabhaengig von der tatsaechlichen Bildaufloesung.
+      const img=IMAGES[e.type], def=MANIFEST[e.type];
+      if(img&&def) ctx.drawImage(img, Math.round(e.px), Math.round(e.py), def.w, def.h);
     } else {
-      const img=IMAGES[e.type];
-      if(img) ctx.drawImage(img, e.px, e.py);
+      const img=IMAGES[e.type], def=MANIFEST[e.type];
+      if(img&&def) ctx.drawImage(img, e.px, e.py, def.w, def.h);
     }
   }
   renderParticles(vw,vh);
@@ -14234,6 +14317,7 @@ function saveGame(){
       hasLaptop:player.hasLaptop, hasSkimmer:player.hasSkimmer,
       hasExtraSafe:player.hasExtraSafe, extraSafe:player.extraSafe,
       hasChain:player.hasChain, hasWatch:player.hasWatch,
+      hasSunglasses:player.hasSunglasses, hasHat:player.hasHat, hasTattoo:player.hasTattoo,
       outfit:player.outfit,
       hasVest:player.hasVest, hasVestMilitary:player.hasVestMilitary, tutorialsSeen:player.tutorialsSeen,
       timesArrested:player.timesArrested,
@@ -14411,6 +14495,7 @@ function startGame(fresh){
     player.hasExtraSafe=!!s.hasExtraSafe;
     player.extraSafe=Array.isArray(s.extraSafe)?s.extraSafe.filter(i=>i&&ITEMS[i.id]&&i.n>0):[];
     player.hasChain=!!s.hasChain; player.hasWatch=!!s.hasWatch;
+    player.hasSunglasses=!!s.hasSunglasses; player.hasHat=!!s.hasHat; player.hasTattoo=!!s.hasTattoo;
     // Parallel-Küche-Migration: neue Saves haben methLabSlots/methCooks (Array), alte Saves (vor dieser
     // Erweiterung) hatten nur ein einzelnes methCook-Objekt/null — das wandert 1:1 in Slot 0, damit
     // laufende Kochvorgänge aus alten Spielständen nicht verloren gehen.
@@ -14480,6 +14565,7 @@ function startGame(fresh){
     player.hasLaptop=false; player.hasSkimmer=false;
     player.hasExtraSafe=false; player.extraSafe=[];
     player.hasChain=false; player.hasWatch=false;
+    player.hasSunglasses=false; player.hasHat=false; player.hasTattoo=false;
     player.hasVest=false; player.hasVestMilitary=false; player.tutorialsSeen={};
     applyOutfit('default');
     for(const k in JobSystem.levels) JobSystem.levels[k]={xp:0,lvl:1,introSeen:false,cooldownUntil:0};   // neues Spiel: Job-Level zurücksetzen
