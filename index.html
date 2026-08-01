@@ -1308,7 +1308,9 @@ const I18N = {
       blank_card: { name: 'Blanko-Karte', desc: 'Am Laptop im Trap-Haus zu einer geladenen Karte aufladen.' },
       loaded_card:{ name: 'Geladene Karte', desc: 'Am Geldautomaten einsetzen — 60% Auszahlung, 40% Alarm.' },
       diamond:{ name: 'Diamant', desc: 'Rohware — beim Dealer verhehlen oder beim Juwelier zu Schmuck verarbeiten.' },
-      chain:{ name: 'Kette', desc: 'Klicken: anlegen.', installed: 'Kette angelegt.', already: 'Trägst du schon.' },
+      chain:{ name: 'Kette (Gold)', desc: 'Klicken: anlegen.', installed: 'Kette angelegt.', already: 'Trägst du schon.' },
+      chain_diamond:{ name: 'Kette (Diamant)', desc: 'Klicken: anlegen.', installed: 'Diamant-Kette angelegt.', already: 'Trägst du schon.' },
+      chain_king:{ name: 'Kette (Iced-Out King)', desc: 'Klicken: anlegen.', installed: 'Iced-Out-King-Chain angelegt.', already: 'Trägst du schon.' },
       watch:{ name: 'Uhr', desc: 'Klicken: anlegen.', installed: 'Uhr angelegt.', already: 'Trägst du schon.' },
       grillz:{ name: 'Grillz', desc: 'Klicken: anlegen.', installed: 'Grillz angelegt.', already: 'Trägst du schon.' },
       baggies: { name: 'Baggies', desc: 'Leere Tütchen zum Verpacken. Klicken öffnet das Verpacken-Menü.' },
@@ -1451,7 +1453,13 @@ const I18N = {
       bought: '{name} gekauft — {price}$.',
       sellDiamonds: 'Diamanten verhehlen ({n})',
       sellBtn: 'VERKAUFEN',
-      diamondsSold: '{n} Diamanten verhehlt — {amount}$.'
+      diamondsSold: '{n} Diamanten verhehlt — {amount}$.',
+      hireRunnerLabel: 'Runner anheuern'
+    },
+    runner: {
+      hired: 'Runner angeheuert — verkauft ab jetzt automatisch aus deinem Bestand.',
+      sold: 'Runner hat {n}g {product} verkauft — {pay}$.',
+      caught: 'Dein Runner wurde erwischt! Heat gestiegen, Ware/Cash unberührt.'
     },
     weapon: {
       reloading: 'Nachladen…', reloaded: 'Magazin voll nachgeladen.', magFull: 'Magazin ist schon voll.',
@@ -1497,7 +1505,7 @@ const I18N = {
     },
     gangops: {
       attack: '{gang} angreifen',
-      result: '{n} Mitglieder treffen bei {gang} ein und greifen an.',
+      result: '{n} Mitglieder von dir spawnen direkt bei dir und greifen {gang} an.',
       vanEnroute: 'Ein weißer Van rollt Richtung {gang}…',
       hint: 'Mehr Angriffe auf eine Gang lassen ihre Gegenwehr härter werden.',
       colorsOn: 'Gang-Farben tragen', colorsOff: 'Gang-Farben ablegen'
@@ -1533,7 +1541,8 @@ const I18N = {
       title: 'JUWELIER', hint: 'Ketten, Uhren — kaufen oder aus Diamanten verarbeiten lassen.',
       craftLabel: '{name} aus Diamanten ({n}💎 + {fee}$)',
       needDiamonds: 'Nicht genug Diamanten.',
-      crafted: '{name} aus Diamanten gefertigt.'
+      crafted: '{name} aus Diamanten gefertigt.',
+      wear: 'TRAGEN', worn: 'GETRAGEN'
     },
     carding: {
       title: 'LAPTOP', hint: 'Blanko-Karte gegen Bares zu einer geladenen Karte machen.',
@@ -1760,7 +1769,9 @@ const I18N = {
       blank_card: { name: 'Blank Card', desc: 'Load it at the laptop in the trap house into a loaded card.' },
       loaded_card:{ name: 'Loaded Card', desc: 'Use it at an ATM — 60% payout, 40% alarm.' },
       diamond:{ name: 'Diamond', desc: 'Raw goods — fence it at the Dealer or have the Jeweler set it into jewelry.' },
-      chain:{ name: 'Chain', desc: 'Click: put on.', installed: 'Chain put on.', already: 'Already wearing it.' },
+      chain:{ name: 'Chain (Gold)', desc: 'Click: put on.', installed: 'Chain put on.', already: 'Already wearing it.' },
+      chain_diamond:{ name: 'Chain (Diamond)', desc: 'Click: put on.', installed: 'Diamond chain put on.', already: 'Already wearing it.' },
+      chain_king:{ name: 'Chain (Iced-Out King)', desc: 'Click: put on.', installed: 'Iced-out king chain put on.', already: 'Already wearing it.' },
       watch:{ name: 'Watch', desc: 'Click: put on.', installed: 'Watch put on.', already: 'Already wearing it.' },
       grillz:{ name: 'Grillz', desc: 'Click: put on.', installed: 'Grillz put on.', already: 'Already wearing it.' },
       baggies: { name: 'Baggies', desc: 'Empty bags for packing. Click opens the packing menu.' },
@@ -1926,7 +1937,13 @@ const I18N = {
       bought: 'Bought {name} — ${price}.',
       sellDiamonds: 'Fence diamonds ({n})',
       sellBtn: 'SELL',
-      diamondsSold: 'Fenced {n} diamonds — ${amount}.'
+      diamondsSold: 'Fenced {n} diamonds — ${amount}.',
+      hireRunnerLabel: 'Hire a runner'
+    },
+    runner: {
+      hired: 'Runner hired — sells off your stock automatically from now on.',
+      sold: 'Runner sold {n}g of {product} — ${pay}.',
+      caught: 'Your runner got caught! Heat went up, product/cash untouched.'
     },
     walkup: {
       offerJunkie:   'Got {n}g of {product} for me? I will pay ${price}, cash, right now.',
@@ -1950,7 +1967,7 @@ const I18N = {
     },
     gangops: {
       attack: 'Attack {gang}',
-      result: '{n} members arrive at {gang} and attack.',
+      result: '{n} of your members spawn right beside you and attack {gang}.',
       vanEnroute: 'A white van is rolling toward {gang}…',
       hint: 'Attacking a gang more often makes their retaliation harsher.',
       colorsOn: 'Wear gang colors', colorsOff: 'Take off gang colors'
@@ -1986,7 +2003,8 @@ const I18N = {
       title: 'JEWELER', hint: 'Chains, watches — buy them or have them set from diamonds.',
       craftLabel: '{name} from diamonds ({n}💎 + ${fee})',
       needDiamonds: 'Not enough diamonds.',
-      crafted: '{name} set from diamonds.'
+      crafted: '{name} set from diamonds.',
+      wear: 'WEAR', worn: 'WORN'
     },
     carding: {
       title: 'LAPTOP', hint: 'Turn a blank card into a loaded card for cash.',
@@ -2230,6 +2248,10 @@ const MANIFEST = {
   // gemacht (Original als *_original_backup.png gesichert) — w/h hier sind nur Platzhalter-Fallback-
   // Groesse, die tatsaechliche Zielgroesse am Charakter wird in drawJewelryAccessories() explizit gesetzt.
   grillz: {file:'Grillz.png', w:24, h:14, kind:'prop'},
+  // Ketten-Stile (Nutzer-Vorgabe): 2 weitere Ketten-Bilder, gleiche Zuschnitt/Transparenz-Behandlung wie
+  // Grillz.png — w/h nur Platzhalter-Fallback, echte Zielgroesse steht in drawJewelryAccessories().
+  chain_diamond: {file:'chain_diamond.png', w:16, h:20, kind:'prop'},
+  chain_king:    {file:'chain_king.png',    w:16, h:22, kind:'prop'},
   prop_dice: {file:'prop_dice.png',  w:16, h:12, kind:'prop'},
   prop_trash:{file:'prop_trash.png', w:26, h:18, kind:'prop'},
   prop_lamp: {file:'prop_lamp.png',  w:18, h:56, kind:'prop'},
@@ -3757,12 +3779,12 @@ function makeInterior(type){
       // Koch-Stationen (Paket 11, erweitert): eine pro gekauftem Slot, siehe METHLAB_SLOT_POS/
       // makeCookstationFurniture()/buyMethlabSlot() — ersetzt die früher einzelne, hartcodierte Station.
       // Nutzer-Vorgabe: zusaetzlich 2 reine Deko-Requisiten direkt neben jeder Station (rechts daneben,
-      // uebereinander gestapelt — passt bei allen 5 Slot-Positionen, auch den engeren an der rechten Wand).
+      // uebereinander gestapelt — Offsets an die kleinere 1.3x1.0-Stationsgroesse angepasst.
       for(let i=0;i<player.methLabSlots;i++){
         const p=METHLAB_SLOT_POS[i];
         I.furniture.push(makeCookstationFurniture(i));
-        I.furniture.push({k:'lab_flask_deco',x:p.x+2.1,y:p.y+0.1,w:0.6,h:0.6,c:'#cfe3ea'});
-        I.furniture.push({k:'lab_canister_deco',x:p.x+2.1,y:p.y+0.9,w:0.6,h:0.6,c:'#5a5a62'});
+        I.furniture.push({k:'lab_flask_deco',x:p.x+1.3,y:p.y+0.02,w:0.45,h:0.45,c:'#cfe3ea'});
+        I.furniture.push({k:'lab_canister_deco',x:p.x+1.3,y:p.y+0.53,w:0.45,h:0.45,c:'#5a5a62'});
       }
       // Bewusst kein I.exits — sonst würde die Rückweg-Erkennungszone exitInterior() auslösen und
       // direkt nach draußen springen statt zurück ins Trap-Haus (intTargetBuilding zeigt weiterhin dorthin).
@@ -5799,7 +5821,7 @@ function renderInterior(time){
   ctx.drawImage(IMAGES.player,p.frame*32,p.dir*64,32,64,
     Math.round(p.x)-16,Math.round(p.y)-60,32,64);
   if(player.outfit==='tracksuit') drawTracksuitStripe(Math.round(p.x)-16, Math.round(p.y)-60, p.dir);
-  if(player.hasChain||player.hasWatch) drawJewelryAccessories(Math.round(p.x)-16, Math.round(p.y)-60, p.dir);
+  if(player.wornChain||player.hasWatch) drawJewelryAccessories(Math.round(p.x)-16, Math.round(p.y)-60, p.dir);
   if(player.hasSunglasses||player.hasHat||player.hasTattoo) drawPlayerAccessories(Math.round(p.x)-16, Math.round(p.y)-60, p.dir);
   // Paket B: Kippe/Joint/Blunt + Flasche auch drinnen am Sprite (fehlte hier komplett)
   drawConsumables(Math.round(p.x),Math.round(p.y)-EQUIP_ANCHOR_DY,p.dir);
@@ -6320,7 +6342,8 @@ let zoneStay={key:null,t:0,triggered:false,gid:null,rect:null};
 let lastNight=null;                // Tag/Nacht-Wechsel erkennen
 let greetCD=0;                     // global: max. ein Gruß alle paar Sekunden
 let lastSpawnHour=-1;              // Gebäude-Leben: volle Stunde erkennen
-const MAX_NPCS=520;                // Obergrenze gegen unbegrenztes Wachstum
+const MAX_NPCS=750;                // Obergrenze gegen unbegrenztes Wachstum (Nutzer-Vorgabe: Stadt komplett
+                                    // füllen -> Deckel proportional zur höheren genNPCs()-Basisdichte angehoben)
 const PIGEONS=[], RATS=[], TRASH_PROPS=[], RAT_SPOTS=[];
 let critterT=0;
 
@@ -6539,7 +6562,7 @@ function resolveAtm(){
 function genBenches(){
   const isWalk=tv=>tv===T.SIDEWALK||tv===T.SIDEWALK2;
   let placed=0;
-  for(let tries=0;tries<14000&&placed<64;tries++){
+  for(let tries=0;tries<20000&&placed<90;tries++){   // Nutzer-Vorgabe: mehr Baenke -> mehr sitzende Zivilisten
     const inner=tries<7000;                        // Innenstadt bevorzugen
     const tx=inner?randi(392,606):randi(90,908);
     const ty=inner?randi(392,606):randi(90,908);
@@ -6741,7 +6764,11 @@ function genNPCs(){
   genStreetFurniture();
 
   // Zivilisten: nur neutral, Innenstadt bevorzugt ("crazy belebt")
-  const civCount=randi(165,200);   // Nutzer-Vorgabe: generell mehr NPCs, +~15-20% ggü. vorher
+  // Nutzer-Vorgabe ("Stadt komplett füllen"): weitere +~35-40% oben auf die bereits erhöhten 165-200 —
+  // siehe MAX_NPCS-Anhebung (520->750) weiter unten, damit die hoehere Dichte nicht sofort gegen die
+  // Wachstums-Bremse (doorSpawns()) läuft. Keine O(n²)-NPC-Schleifen im Code gefunden (triggerGangFight/
+  // updateAmbientGangClash nutzen bereits Grob-Raster-Buckets) — reine Anzahl-Erhöhung ist perf-unkritisch.
+  const civCount=randi(230,280);
   for(let i=0;i<civCount;i++){
     const s=Math.random()<0.65 ? neutralSpot(392,606,392,606) : neutralSpot(80,920,80,920);
     if(!s) continue;
@@ -6772,8 +6799,8 @@ function genNPCs(){
   for(const gid of gangIds){
     const zones=Array.isArray(GANGS[gid].zone)?GANGS[gid].zone:[GANGS[gid].zone];
     const houses=BUILDINGS.filter(bb=>bb.gang===gid);
-    // Nutzer-Vorgabe: generell mehr Gang-Mitglieder, +~15-20% ggü. vorher (nicht verdoppelt).
-    const total = gid==='NTL' ? randi(58,115) : randi(35,46);
+    // Nutzer-Vorgabe ("Stadt komplett füllen"): weitere +~35-40% oben auf die bereits erhöhten Werte.
+    const total = gid==='NTL' ? randi(80,150) : randi(48,64);
     let used=0, bossDone=false;
     for(const b of houses){
       const btx=b.px/CFG.TILE, bty=b.py/CFG.TILE;
@@ -6794,7 +6821,7 @@ function genNPCs(){
         else if(r<0.34){ m.state='act'; }            // lungern ohne Aktivität
       }
     }
-    const stray=randi(5,7);                          // 5–7 pro Gang in neutralen Zonen
+    const stray=randi(8,12);                          // Nutzer-Vorgabe: mehr Streuner pro Gang in neutralen Zonen
     for(let i=0;i<stray;i++){
       const s=neutralSpot(150,850,150,850);
       if(!s) continue;
@@ -7150,9 +7177,9 @@ function updateActiveFights(dt){
     if(activeFights[i].t<=0) activeFights.splice(i,1);
   }
 }
-// Kurze Würfel-Animation als Feedback für "opps sliden" (Nutzer-Vorgabe) — rein Flavor, beeinflusst
-// NICHT die Squad-Größe (die kommt aus gangHeat, siehe interactBoss()/renderGangOpsUI()), damit das
-// Ergebnis vorhersehbar bleibt und nicht zusätzlich vom Zufall abhängt.
+// Würfel-Animation für "opps sliden" (Nutzer-Vorgabe) — opsRoll.val ist jetzt NICHT mehr reines
+// Flavor: die gewürfelte Zahl bestimmt direkt die Anzahl an Backup-NPCs (siehe spawnGangBackup()
+// im renderGangOpsUI()-Klick-Handler weiter unten).
 let opsRoll={active:false,t:0,dur:1.1,val:1,onDone:null};
 function startOpsRoll(onDone){ opsRoll={active:true,t:0,dur:1.1,val:randi(1,6),onDone}; }
 function updateOpsRoll(dt){
@@ -7200,6 +7227,37 @@ function triggerGangFight(gidA,rectA,gidB,rectB,maxPairs){
   }
   return cnt;
 }
+// "Opps sliden" (Nutzer-Vorgabe): Backup soll SOFORT beim Spieler auftauchen statt erst per Van
+// anzureisen — die Wuerfelzahl (opsRoll.val) bestimmt direkt, wie viele eigene Gang-NPCs mitkaempfen.
+// Nutzt makeNpc() (garantiert alle Felder, die render()/update() erwarten — kein Tag-artiger
+// Absturz möglich) + dieselbe fightTarget/state='gangfight'-Paarung wie triggerGangFight() oben,
+// nur ortsgebunden am Spieler statt an zwei Heimat-Rects.
+function spawnGangBackup(gid,rid,count){
+  const ownRect=Array.isArray(GANGS[gid].zone)?GANGS[gid].zone[0]:GANGS[gid].zone;
+  const ptx=Math.floor(player.px/CFG.TILE), pty=Math.floor(player.py/CFG.TILE);
+  const enemies=NPCS.filter(n=>n.kind==='gang'&&n.gang===rid&&n.state!=='dead'&&
+    Math.hypot(n.px-player.px,n.py-player.py)<500);
+  const spawned=[];
+  for(let i=0;i<count;i++){
+    const spot=freeSpot(ptx-3,ptx+3,pty-3,pty+3,20)||{px:player.px+rand(-24,24),py:player.py+rand(-24,24)};
+    const n=makeNpc('gang',gid,spot.px,spot.py,{gang:gid,hp:30,state:'act',homeRect:ownRect,wanderR:200});
+    n.tempT=rand(90,140);   // despawnt wie andere temporaere NPCs, aber nie solange sichtbar (updateTempNpcs())
+    spawned.push(n);
+  }
+  const pairs=Math.min(spawned.length,enemies.length);
+  let mx=0,my=0;
+  for(let i=0;i<pairs;i++){
+    const x=spawned[i], y=enemies[i];
+    x.fightTarget=y; y.fightTarget=x;
+    x.state='gangfight'; y.state='gangfight';
+    mx+=(x.px+y.px)/2; my+=(x.py+y.py)/2;
+  }
+  if(pairs>0){
+    mx/=pairs; my/=pairs;
+    activeFights.push({gidA:gid,gidB:rid,x:mx,y:my,t:50});
+  }
+  return {total:spawned.length, fighting:pairs};
+}
 let gangWarT=rand(180,300);
 function updateGangWarCheck(dt){
   updateGangHeatDecay(dt);
@@ -7225,6 +7283,43 @@ function updateGangWarCheck(dt){
     const rectB=Array.isArray(GANGS[gidB].zone)?GANGS[gidB].zone[0]:GANGS[gidB].zone;
     const heatBonus=Math.round((gangHeat[gidA]+gangHeat[gidB])/4);
     triggerGangFight(gidA,rectA,gidB,rectB,Math.min(randi(1,3)+heatBonus,8));
+  }
+}
+// Nutzer-Vorgabe: Gang-NPCs sollen generell aggressiver sein, auch auf der gewoehnlichen Strasse —
+// bisher gab es AUSSER dem Warzone-Timer/Zufalls-Paar oben und dem manuellen "Opps sliden" keine
+// spontane Gang-vs-Gang-Aggression. Bewusst als Timer-Scan (alle 10-18s), NICHT als O(n²)-Pruefung
+// pro Frame ueber alle 450-600 NPCs — Grobraster-Buckets, nur NPCs im selben Bucket werden verglichen.
+let ambientClashT=rand(10,18);
+function updateAmbientGangClash(dt){
+  ambientClashT-=dt;
+  if(ambientClashT>0) return;
+  ambientClashT=rand(10,18);
+  const CELL=220;
+  const buckets=new Map();
+  for(const n of NPCS){
+    if(n.kind!=='gang'||n.state==='dead') continue;
+    // Gleiche Ausschluss-Filter wie triggerGangFight()/startChase(), plus 'flee' (Panik zaehlt nicht als frei).
+    if(n.act==='meth'||n.act==='dograce'||n.act==='dice') continue;
+    if(n.sprayer||n.patrol==='follow') continue;
+    if(n.state==='chase'||n.state==='return'||n.state==='gangfight'||n.state==='flee') continue;
+    const tx=Math.floor(n.px/CFG.TILE), ty=Math.floor(n.py/CFG.TILE);
+    const z=zoneAt(tx,ty);
+    if(z&&(z.id==='WAR'||(z.rect&&z.rect.warLook))) continue;   // Warzone hat schon ihren eigenen, staerkeren Mechanismus
+    const key=Math.floor(n.px/CELL)+'_'+Math.floor(n.py/CELL);
+    if(!buckets.has(key)) buckets.set(key,[]);
+    buckets.get(key).push(n);
+  }
+  for(const arr of buckets.values()){
+    if(arr.length<2) continue;
+    for(let i=0;i<arr.length;i++) for(let j=i+1;j<arr.length;j++){
+      const a=arr[i], b=arr[j];
+      if(a.gang===b.gang) continue;
+      if(Math.random()>=0.04) continue;
+      if(triggerGangFight(a.gang,a.homeRect,b.gang,b.homeRect,1)>0){
+        gangHeat[a.gang]=Math.min(10,(gangHeat[a.gang]||0)+1);
+        gangHeat[b.gang]=Math.min(10,(gangHeat[b.gang]||0)+1);
+      }
+    }
   }
 }
 /* Schickt einen NPC in den Verfolgungs-/Kampf-Zustand — sowohl vom Zonen-Loiter-Trigger
@@ -7311,6 +7406,11 @@ function updatePoliceDetection(n,dt,d2){
   // Nutzer-Vorgabe: Gang-Farben tragen erhöht die Kontroll-Chance zusätzlich — auffällig gekleidet
   // fällt man der Polizei eher auf, unabhängig vom Strafregister.
   if(player.gangOutfit) stopChance+=0.1;
+  // Nutzer-Vorgabe: nachts deutlich aufmerksamer — Multiplikator statt fixem Zuschlag, damit das
+  // Verhältnis Vorstrafen/keine-Vorstrafen erhalten bleibt. Sicherheits-Clamp gegen den Extremfall
+  // (Vorstrafen+Gang-Farben+Nacht = 0.54/Versuch) direkt danach.
+  if(isNight()) stopChance*=1.8;
+  stopChance=Math.min(stopChance,0.5);
   if(Math.random()<stopChance) startStopCheck(n);
 }
 // Personenkontrolle: NPC friert für die Dauer des Dialogs ein (siehe case 'stopcheck' in updateNPCs()).
@@ -7414,7 +7514,9 @@ function updatePoliceDispatch(dt){
   policeDispatchT-=dt;
   if(policeDispatchT>0) return;
   policeDispatchT=POLICE_CFG.dispatchCheckT;
-  const target=POLICE_CFG.dispatchTargetByStars[stars]||stars;
+  // Nutzer-Vorgabe: nachts ziehen dieselben Fahndungssterne deutlich mehr Verfolger nach —
+  // bei 5 Sternen landet das zusammen mit den 16 Ambient-Patrouillen genau am maxTotalPolice-Deckel.
+  const target=Math.ceil((POLICE_CFG.dispatchTargetByStars[stars]||stars)*(isNight()?POLICE_CFG.nightDispatchMult:1));
   if(countActivePolice()>=target) return;
   if(countTotalPolice()>=POLICE_CFG.maxTotalPolice) return;
   for(let tries=0;tries<12;tries++){
@@ -7717,6 +7819,7 @@ function updateNPCs(dt){
   updateZoneStay(dt);
   updateGangAmbushCheck(dt);
   updateGangWarCheck(dt);
+  updateAmbientGangClash(dt);
   updateOpsRoll(dt);
   updateActiveFights(dt);
   updateVans(dt);
@@ -8479,10 +8582,15 @@ const player={
   // Panzerschrank (Nutzer-Vorgabe): zweites, unabhaengiges Lager, das confiscateContraband() nie
   // referenziert — dadurch immun gegen Hausdurchsuchung UND Personen-Konfiszierung bei Verhaftung.
   hasExtraSafe:false, extraSafe:[],
-  // Juwelier (Nutzer-Vorgabe): Ketten/Uhren/Grillz als einfache Flags, analog hasLaptop/hasSkimmer.
-  hasChain:false, hasWatch:false, hasGrillz:false,
+  // Juwelier (Nutzer-Vorgabe): Uhr/Grillz als einfache Flags, analog hasLaptop/hasSkimmer.
+  // Ketten (Nutzer-Vorgabe): 3 einzeln besitzbare Stile statt einem Flag — wornChain bestimmt,
+  // welcher Stil gerade sichtbar getragen wird (siehe drawJewelryAccessories()/wearChain()).
+  hasChainGold:false, hasChainDiamond:false, hasChainKing:false, wornChain:null,
+  hasWatch:false, hasGrillz:false,
   // Kosmetik (Nutzer-Vorgabe): Accessoires als einfache Flags, permanent + frei kombinierbar.
   hasSunglasses:false, hasHat:false, hasTattoo:false,
+  // Runner (Nutzer-Vorgabe): passiver Verkaufs-Service, gleiche einfache Flag-Technik wie hasMethLab.
+  hasRunner:false,
   // Casino (Paket 17): Spin dauert nur ~1-2 Echtzeit-Sekunden, bewusst kein Save/Load-Eintrag
   slotSpin:null,
   // DRIP-Outfit (Paket 8): aktuell getragenes Paletten-Preset, siehe OUTFIT_PALETTES/applyOutfit()
@@ -8595,6 +8703,7 @@ const POLICE_CFG={
   heatPerCopKilled: 50,        // deutlich härtere Eskalation als ein normaler Kill
   heatPerExplosion: 30,
   heatPerDeal: 12,
+  heatPerRunnerCaught: 8,      // Runner bewegt pro Zyklus weniger Ware als ein bewusster Deal -> unter heatPerDeal(12)
   heatPerGunOutPerSec: 0.5,
   decayPerSec: 2,
   coolDelay: 6,                // Sekunden ohne neue Tat, bevor Decay einsetzt
@@ -8619,6 +8728,7 @@ const POLICE_CFG={
   dispatchRingMin: 320,        // Spawn-Ring um den Spieler: nah genug für sofortige Präsenz, nicht direkt drauf
   dispatchRingMax: 520,
   dispatchTargetByStars: {1:1, 2:2, 3:3, 4:4, 5:5},   // aktive Verfolger, die bei X Sternen unterwegs sein sollen
+  nightDispatchMult: 1.5,      // Nutzer-Vorgabe: nachts ziehen dieselben Sterne deutlich mehr Verfolger nach
   maxTotalPolice: 24,          // Deckel gegen unbegrenztes Nachspawnen — 16 Ambient (spawnPolicePatrols) +
                                 // bis zu 5 Dispatch-Verfolger + Puffer, siehe spawnPolicePatrols()
   // Tempo-Tuning (Nutzer-Feedback: Cops fühlten sich zu schnell an) — vorher hartcodiert 1.5/1.7/3.1
@@ -8650,7 +8760,10 @@ const CRIME_CATALOG={
   fraud:         {severity:2},
   assault:       {severity:3},
   dealing:       {severity:3},
-  methExplosion: {severity:4},
+  // Nutzer-Vorgabe: Explosion soll 2h Haft bedeuten, nicht 40min — eigene Stufe 7 statt severity:4
+  // wiederzuverwenden, weil 4 bewusst mit shopRobberyCaught/jewelryHeist geteilt wird (siehe deren
+  // Kommentare) und Stufe 6 (killGang/Totschlag) eine Explosion nicht mit Totschlag gleichsetzen soll.
+  methExplosion: {severity:7},
   // Nutzer-Vorgabe: ausraubbare Laeden — erfolgreicher Raub zaehlt als eigene Straftat (severity:3, wie
   // dealing/assault); wird man dabei per Alarm geschnappt, ist das schwerer (severity:4, wie methExplosion).
   shopRobbery:      {severity:3},
@@ -8670,7 +8783,7 @@ const CRIME_CATALOG={
 // Zwangsaufenthalt-Basiszeit (Sekunden) pro Schwere-Stufe — 1=5 Min, 12=8 Std, dazwischen ×2/×3 gestaffelt.
 // Stufe 5 (50 Min): liegt bewusst zwischen 4 (40 Min) und 6 (2 Std) fuer schwerere Faelle wie einen
 // Juwelier-Alarm (cardFraudCaught nutzt inzwischen die mildere Stufe 3, siehe CRIME_CATALOG).
-const CUSTODY_TIME_BY_SEVERITY={1:300, 2:600, 3:1200, 4:2400, 5:3000, 6:7200, 8:14400, 12:28800};
+const CUSTODY_TIME_BY_SEVERITY={1:300, 2:600, 3:1200, 4:2400, 5:3000, 6:7200, 7:7200, 8:14400, 12:28800};
 function logCrime(key){
   if(!CRIME_CATALOG[key]) return;
   player.criminalRecord.push({key, time:Math.round(gameMin)});
@@ -9614,13 +9727,13 @@ const SAFE_UPGRADE_PRICES=[1000,2500,5000];   // Platzhalter-Preise Stufe 1-3, l
 // player.stash, damit confiscateContraband() es nie sieht (siehe Kommentar am hasExtraSafe-Feld).
 const EXTRASAFE_SLOTS=12;   // Platzhalter, leicht anpassbar
 const GROW_POTS_MAX=4;
-// Verstreute Topf-Positionen auf dem grünen Zelt-Untergrund (x5-7.4/y5.8-8.1) statt einer geraden Reihe —
-// geteilt zwischen makeInterior() und dem Sofort-Sync beim Platzieren.
-const GROW_POT_POS=[{x:5.1,y:5.95},{x:6.5,y:6.05},{x:5.3,y:7.15},{x:6.3,y:6.9}];
+// Nutzer-Vorgabe: kleiner + enger beieinander (wie die Meth-Koch-Stationen) statt breit verstreut —
+// bleibt bei 4 Töpfen, nur kompakter innerhalb des grünen Zelt-Untergrunds (x5-7.4/y5.8-8.1) geclustert.
+const GROW_POT_POS=[{x:5.3,y:6.0},{x:6.0,y:6.05},{x:5.4,y:6.75},{x:6.0,y:6.7}];
 function makePotFurniture(i){
   const pot=player.pots[i]||{state:'empty'};
   const p=GROW_POT_POS[i];
-  return {k:'pot',x:p.x,y:p.y,w:0.8,h:0.8,c:'#6a4a2e',
+  return {k:'pot',x:p.x,y:p.y,w:0.6,h:0.6,c:'#6a4a2e',
     interactive:'pot',potIndex:i,potState:pot.state,
     label:{de:'Topf '+(i+1),en:'Pot '+(i+1)}};
 }
@@ -9670,23 +9783,26 @@ function buyMethLab(){
 // siehe player.methCooks/updateMethCooks(). Preise sind eine einfache, leicht anpassbare Liste statt
 // einer Formel; Länge davon (+1 für die im Basis-Labor enthaltene Station 0) begrenzt zugleich die
 // maximale Stationszahl auf METHLAB_SLOT_POS.length (Platz im Raum, siehe case 'meth_lab').
-// Feste Positionen für Koch-Stationen im 16x12-Laborraum (case 'meth_lab'), kollisionsfrei zu
-// Regal(x2-4/y2-5)/Mixtank(x11-12.6/y2-4)/Destille(x11-13/y5.5-7.7)/Treppe(x2-4/y9-10.5). Slot 0 ist
-// die bisherige, immer vorhandene Position. Länge = 1 + METHLAB_SLOT_PRICES.length (siehe oben).
+// Nutzer-Vorgabe: 8 weitere Stationen (5->13), dafür kleiner + enger gepackt statt über den ganzen
+// Raum verteilt — 3x4-Raster in der freien Mitte (x4.2-10.15/y2-6.9), kollisionsfrei zu
+// Regal(x2-4/y2-5)/Mixtank(x11-12.6/y2-4)/Destille(x11-13/y5.5-7.7)/Treppe(x2-4/y9-10.5), plus 1
+// zusätzlicher Slot rechts neben dem Mixtank. Slot 0 ist die bisherige, immer vorhandene Position.
+// Länge = 1 + METHLAB_SLOT_PRICES.length (siehe unten).
 const METHLAB_SLOT_POS=[
-  {x:7,   y:2},     // Slot 1 — bestehende Position, im Basis-Labor enthalten
-  {x:4,   y:5.3},   // Slot 2
-  {x:7.5, y:5.3},   // Slot 3
-  {x:13,  y:2.2},   // Slot 4
-  {x:13,  y:8.5}     // Slot 5
+  {x:4.2,y:2.0}, {x:6.3,y:2.0}, {x:8.4,y:2.0},
+  {x:4.2,y:3.3}, {x:6.3,y:3.3}, {x:8.4,y:3.3},
+  {x:4.2,y:4.6}, {x:6.3,y:4.6}, {x:8.4,y:4.6},
+  {x:4.2,y:5.9}, {x:6.3,y:5.9}, {x:8.4,y:5.9},
+  {x:13.2,y:2.2}
 ];
 function makeCookstationFurniture(i){
   const p=METHLAB_SLOT_POS[i];
-  return {k:'cookstation',x:p.x,y:p.y,w:2,h:1.5,c:'#2a2a2e',
+  return {k:'cookstation',x:p.x,y:p.y,w:1.3,h:1.0,c:'#2a2a2e',
     interactive:'cookstation',slotIndex:i,
     label:{de:'Koch-Station '+(i+1),en:'Cook station '+(i+1)}};
 }
-const METHLAB_SLOT_PRICES=[10000,15000,20000,25000];
+// Preise Slot 2-13 (Slot 1 gratis) — Fortsetzung der bestehenden +5000-Reihe, Platzhalter/leicht anpassbar.
+const METHLAB_SLOT_PRICES=[10000,15000,20000,25000,30000,35000,40000,45000,50000,55000,60000,65000];
 function nextMethlabSlotPrice(){
   const idx=player.methLabSlots-1;
   return (idx>=0&&idx<METHLAB_SLOT_PRICES.length) ? METHLAB_SLOT_PRICES[idx] : null;
@@ -9816,9 +9932,23 @@ const ITEMS={
   // gleiches use()-Muster wie laptop_carding/skimmer (einmalig, permanent, player.hasX-Flag).
   chain:{ icon:'chain', cat:'tool', weight:50,
              use(){
-               if(player.hasChain){ toast(t('items.chain.already')); return false; }
-               player.hasChain=true;
+               if(player.hasChainGold){ toast(t('items.chain.already')); return false; }
+               player.hasChainGold=true; player.wornChain='gold';
                toast(t('items.chain.installed')); saveGame(); return true;
+             } },
+  // Ketten-Stile (Nutzer-Vorgabe): 2 weitere, unabhaengig besitzbare Stile — gleiches use()-Muster wie
+  // chain oben, Kauf/Verarbeitung installiert automatisch UND setzt ihn sofort als getragen (wornChain).
+  chain_diamond:{ icon:'chain_diamond', cat:'tool', weight:60,
+             use(){
+               if(player.hasChainDiamond){ toast(t('items.chain_diamond.already')); return false; }
+               player.hasChainDiamond=true; player.wornChain='diamond';
+               toast(t('items.chain_diamond.installed')); saveGame(); return true;
+             } },
+  chain_king:{ icon:'chain_king', cat:'tool', weight:70,
+             use(){
+               if(player.hasChainKing){ toast(t('items.chain_king.already')); return false; }
+               player.hasChainKing=true; player.wornChain='king';
+               toast(t('items.chain_king.installed')); saveGame(); return true;
              } },
   watch:{ icon:'watch', cat:'tool', weight:80,
              use(){
@@ -10312,6 +10442,9 @@ function makeItemIcons(){
   ITEM_ICONS.fullyarp='german_streetz_assets/fullyarp.png';
   ITEM_ICONS.militaryarp='german_streetz_assets/militaryarp.png';
   ITEM_ICONS.costumfullyarp='german_streetz_assets/costumfullyarp.png';
+  // Ketten-Stile (Nutzer-Vorgabe): echte Bilder statt Canvas-Icon, gleiches Muster wie die Waffen oben.
+  ITEM_ICONS.chain_diamond='german_streetz_assets/chain_diamond.png';
+  ITEM_ICONS.chain_king='german_streetz_assets/chain_king.png';
   // Meth-Labor-Slot-Icons (Nutzer-Vorgabe): echte Bilder je Ausbaustufe statt geliehenem Gasmasken-Icon.
   ITEM_ICONS.methlab_slot1='german_streetz_assets/meth_slot1_icon.png';
   ITEM_ICONS.methlab_slot2='german_streetz_assets/meth_slot2_icon.png';
@@ -11015,6 +11148,27 @@ function renderDealershop(){
     row.appendChild(img); row.appendChild(name); row.appendChild(priceEl); row.appendChild(btn);
     box.appendChild(row);
   }
+  // Runner (Nutzer-Vorgabe): passiver Verkaufs-Service, gleiche Extra-Zeile-Technik wie der Methlabor-
+  // Slot-Kauf oben — nur sichtbar solange noch nicht angeheuert.
+  if(!player.hasRunner){
+    const row=document.createElement('div');
+    row.className='shop-row';
+    const img=document.createElement('img');
+    img.src=ITEM_ICONS.baggy;
+    img.alt='';
+    const name=document.createElement('div');
+    name.className='shop-row-name';
+    name.textContent=t('dealer.hireRunnerLabel');
+    const priceEl=document.createElement('div');
+    priceEl.className='shop-row-price';
+    priceEl.textContent=RUNNER_HIRE_PRICE+'$';
+    const btn=document.createElement('button');
+    btn.textContent='+';
+    btn.disabled=player.money<RUNNER_HIRE_PRICE;
+    btn.addEventListener('click',hireRunner);
+    row.appendChild(img); row.appendChild(name); row.appendChild(priceEl); row.appendChild(btn);
+    box.appendChild(row);
+  }
   // Juwelier (Nutzer-Vorgabe): Diamanten aus dem Ueberfall beim Dealer als Hehler verkaufen — gleiche
   // Extra-Zeile-Technik wie der Methlabor-Slot-Kauf oben, nur sichtbar wenn ueberhaupt Diamanten da sind.
   if(invCount('diamond')>0){
@@ -11120,10 +11274,27 @@ window.addEventListener('keydown',e=>{
    verarbeiten — beide Wege erzeugen absichtlich dasselbe Item (gleicher hasChain/hasWatch-Flag). */
 const JEWELER_ITEMS=[
   {id:'chain', price:2500, n:1},
+  // Ketten-Stile (Nutzer-Vorgabe): 2 weitere, teurere Stile — Preise Platzhalter, leicht anpassbar.
+  {id:'chain_diamond', price:6000, n:1},
+  {id:'chain_king', price:12000, n:1},
   {id:'watch', price:4000, n:1},
   {id:'grillz', price:1800, n:1}
 ];
 const JEWELRY_CRAFT_RECIPES={ chain:{diamonds:3,fee:500}, watch:{diamonds:4,fee:800}, grillz:{diamonds:2,fee:300} };
+// Ketten-Stile (Nutzer-Vorgabe): welches ITEMS-Item / welcher hasChainX-Flag gehört zu welchem
+// wornChain-Wert — gemeinsam genutzt von renderJewelerShop() und wearChain().
+const CHAIN_STYLE_BY_ID={chain:'gold', chain_diamond:'diamond', chain_king:'king'};
+function chainOwnedByStyle(style){
+  return style==='gold'?player.hasChainGold:style==='diamond'?player.hasChainDiamond:player.hasChainKing;
+}
+// Erlaubt das Zurueckwechseln zwischen bereits gekauften/verarbeiteten Stilen (alle 3 sind permanent
+// besitzbar, aber nur einer gleichzeitig sichtbar — siehe drawJewelryAccessories()).
+function wearChain(style){
+  if(!chainOwnedByStyle(style)||player.wornChain===style) return;
+  player.wornChain=style;
+  saveGame();
+  renderJewelerShop();
+}
 let jewelershopOpen=false;
 function openJewelerUI(){
   if(dialog.active) return;
@@ -11144,7 +11315,8 @@ function renderJewelerShop(){
     const row=document.createElement('div');
     row.className='shop-row';
     // Ketten/Uhren sind Einmal-Cosmetics wie Laptop/Skimmer — Zweitkauf waere sinnlos.
-    const owned=(g.id==='chain'&&player.hasChain)||(g.id==='watch'&&player.hasWatch)||(g.id==='grillz'&&player.hasGrillz);
+    const chainStyle=CHAIN_STYLE_BY_ID[g.id];
+    const owned=chainStyle?chainOwnedByStyle(chainStyle):(g.id==='watch'&&player.hasWatch)||(g.id==='grillz'&&player.hasGrillz);
     const img=document.createElement('img');
     img.src=ITEM_ICONS[ITEMS[g.id].icon];
     img.alt='';
@@ -11155,9 +11327,18 @@ function renderJewelerShop(){
     price.className='shop-row-price';
     price.textContent=g.price+'$';
     const btn=document.createElement('button');
-    btn.textContent=owned?t('armor.alreadyOwned'):'+';
-    btn.disabled=owned||player.money<g.price;
-    btn.addEventListener('click',()=>buyJewelerItem(g));
+    // Ketten-Stile (Nutzer-Vorgabe, "waehlbar"): einmal besitzen, danach jederzeit zurueckwechselbar —
+    // owned+Ketten-Stil zeigt statt "bereits vorhanden" einen aktiven TRAGEN/GETRAGEN-Button.
+    if(chainStyle&&owned){
+      const worn=player.wornChain===chainStyle;
+      btn.textContent=worn?t('jeweler.worn'):t('jeweler.wear');
+      btn.disabled=worn;
+      btn.addEventListener('click',()=>wearChain(chainStyle));
+    } else {
+      btn.textContent=owned?t('armor.alreadyOwned'):'+';
+      btn.disabled=owned||player.money<g.price;
+      btn.addEventListener('click',()=>buyJewelerItem(g));
+    }
     row.appendChild(img); row.appendChild(name); row.appendChild(price); row.appendChild(btn);
     box.appendChild(row);
   }
@@ -11165,7 +11346,7 @@ function renderJewelerShop(){
   // Extra-Zeile-Technik wie der Meth-Labor-Slot-Kauf im Dealer-Shop (renderDealershop()).
   for(const id in JEWELRY_CRAFT_RECIPES){
     const r=JEWELRY_CRAFT_RECIPES[id];
-    const owned=id==='chain'?player.hasChain:id==='watch'?player.hasWatch:player.hasGrillz;
+    const owned=id==='chain'?player.hasChainGold:id==='watch'?player.hasWatch:player.hasGrillz;
     const row=document.createElement('div');
     row.className='shop-row';
     const img=document.createElement('img');
@@ -11178,9 +11359,18 @@ function renderJewelerShop(){
     price.className='shop-row-price';
     price.textContent=invCount('diamond')+'💎';
     const btn=document.createElement('button');
-    btn.textContent=owned?t('armor.alreadyOwned'):'+';
-    btn.disabled=owned||invCount('diamond')<r.diamonds||player.money<r.fee;
-    btn.addEventListener('click',()=>craftJewelry(id));
+    // Gold-Kette (Nutzer-Vorgabe): gleiche TRAGEN/GETRAGEN-Umschaltung wie beim Kauf oben, damit man
+    // nach Verarbeitung auch wieder von Diamant/King zurueck auf Gold wechseln kann.
+    if(id==='chain'&&owned){
+      const worn=player.wornChain==='gold';
+      btn.textContent=worn?t('jeweler.worn'):t('jeweler.wear');
+      btn.disabled=worn;
+      btn.addEventListener('click',()=>wearChain('gold'));
+    } else {
+      btn.textContent=owned?t('armor.alreadyOwned'):'+';
+      btn.disabled=owned||invCount('diamond')<r.diamonds||player.money<r.fee;
+      btn.addEventListener('click',()=>craftJewelry(id));
+    }
     row.appendChild(img); row.appendChild(name); row.appendChild(price); row.appendChild(btn);
     box.appendChild(row);
   }
@@ -11194,7 +11384,9 @@ function buyJewelerItem(g){
   renderJewelerShop();
 }
 function craftJewelry(id){
-  const owned=id==='chain'?player.hasChain:player.hasWatch;
+  // Bugfix: vorher 2-Wege-Ternary ohne Grillz-Fall — craftJewelry('grillz') prüfte faelschlich
+  // player.hasWatch statt player.hasGrillz (gleicher 3-Wege-Fix wie in renderJewelerShop() oben).
+  const owned=id==='chain'?player.hasChainGold:id==='watch'?player.hasWatch:player.hasGrillz;
   if(owned){ toast(t('armor.alreadyOwned')); return; }
   const r=JEWELRY_CRAFT_RECIPES[id];
   if(invCount('diamond')<r.diamonds){ toast(t('jeweler.needDiamonds')); return; }
@@ -11692,20 +11884,11 @@ function renderGangOpsUI(gid){
     btn.addEventListener('click',()=>{
       box.querySelectorAll('button').forEach(b=>b.disabled=true);
       startOpsRoll(()=>{
-        // Nutzer-Vorgabe: "opps sliden" fahren jetzt wirklich mit einem weissen Van los, statt den
-        // Kampf sofort abstrakt aufzuloesen — triggerGangFight() laeuft erst bei Ankunft des Vans.
-        const ownRect=Array.isArray(GANGS[gid].zone)?GANGS[gid].zone[0]:GANGS[gid].zone;
-        const targetRect=Array.isArray(GANGS[rid].zone)?GANGS[rid].zone[0]:GANGS[rid].zone;
-        const fromX=(ownRect.x0+ownRect.x1)/2*CFG.TILE, fromY=(ownRect.y0+ownRect.y1)/2*CFG.TILE;
-        const toX=(targetRect.x0+targetRect.x1)/2*CFG.TILE, toY=(targetRect.y0+targetRect.y1)/2*CFG.TILE;
-        spawnDriveByVan(fromX,fromY,toX,toY,()=>{
-          const h=gangHeat[rid]||0;
-          const maxPairs=Math.min(12, randi(4,6)+Math.round(h/2));
-          const sent=triggerGangFight(gid,ownRect,rid,targetRect,maxPairs);
-          gangHeat[rid]=Math.min(10,(gangHeat[rid]||0)+2);
-          toast(t('gangops.result',{n:sent,gang:GANGS[rid].name}));
-        }, true);
-        toast(t('gangops.vanEnroute',{gang:GANGS[rid].name}));
+        // Nutzer-Vorgabe: Backup spawnt jetzt SOFORT direkt beim Spieler statt erst per Van
+        // anzureisen — die Wuerfelzahl (opsRoll.val) bestimmt direkt die Anzahl mitkaempfender NPCs.
+        spawnGangBackup(gid,rid,opsRoll.val);
+        gangHeat[rid]=Math.min(10,(gangHeat[rid]||0)+2);
+        toast(t('gangops.result',{n:opsRoll.val,gang:GANGS[rid].name}));
         closeGangOpsUI();
       });
     });
@@ -12253,6 +12436,54 @@ function baggyId(strain,g){
 function baggyPricePerG(strain){
   return METH_PACK_TIERS.includes(strain) ? (METH_PRICE_PER_GRAM[strain]||50) : (WEED_PRICE_PER_GRAM[strain]||50);
 }
+/* Runner (Nutzer-Vorgabe): passiver Verkaufs-Service beim Dealer — kein sichtbarer, laufender NPC
+   (Pathing/Kollision wäre unverhältnismäßig aufwändig für einen reinen Hintergrund-Mechanismus),
+   sondern ein unsichtbarer Timer nach dem Vorbild von gangMethStock: alle RUNNER_INTERVAL Sekunden
+   verkauft der Runner automatisch EINE Ladung vorhandener Ware (Baggies ODER rohes Meth) mit Rabatt
+   (er behält eine Marge), zählt aber als eigene Straftat (Runner kann geschnappt werden). */
+const RUNNER_HIRE_PRICE=8000, RUNNER_INTERVAL=240, RUNNER_DISCOUNT=0.45, RUNNER_CAUGHT_CHANCE=0.15;
+let runnerT=RUNNER_INTERVAL;
+function hireRunner(){
+  if(player.hasRunner) return;
+  if(player.money<RUNNER_HIRE_PRICE){ toast(t('dealer.noMoney')); return; }
+  player.money-=RUNNER_HIRE_PRICE;
+  player.hasRunner=true;
+  runnerT=RUNNER_INTERVAL;
+  toast(t('runner.hired'));
+  saveGame();
+  renderDealershop();
+}
+function updateRunner(dt){
+  if(!player.hasRunner) return;
+  runnerT-=dt;
+  if(runnerT>0) return;
+  runnerT=RUNNER_INTERVAL;
+  const cands=[];
+  for(const s of PACK_STRAINS) for(const gr of packGramOptionsFor(s))
+    if(invCount(baggyId(s,gr))>0) cands.push({kind:'baggy',strain:s,size:gr});
+  for(const tier of METH_PACK_TIERS) if(invCount(tier)>0) cands.push({kind:'meth',tier});
+  if(!cands.length) return;   // nichts zu verkaufen -> stiller Durchlauf, kein Toast-Spam
+  const c=pick(cands);
+  let itemId,removeQty,grams,price,productName;
+  if(c.kind==='baggy'){
+    itemId=baggyId(c.strain,c.size); removeQty=1; grams=c.size;
+    price=Math.round(c.size*baggyPricePerG(c.strain)*RUNNER_DISCOUNT); productName=itemName(c.strain);
+  } else {
+    grams=Math.min(randi(1,3), invCount(c.tier));
+    itemId=c.tier; removeQty=grams;
+    price=Math.round(grams*METH_PRICE_PER_GRAM[c.tier]*RUNNER_DISCOUNT); productName=itemName(c.tier);
+  }
+  if(Math.random()<RUNNER_CAUGHT_CHANCE){
+    addHeat(POLICE_CFG.heatPerRunnerCaught);
+    logCrime('dealing');   // bestehender Key, gleiche Straftaten-Klasse wie ein persoenlicher Deal
+    toast(t('runner.caught'));   // kein Verkauf, keine Ware verloren — wie updateRobbery()s Alarm-Fall
+    return;
+  }
+  invRemove(itemId,removeQty);
+  player.money+=price;
+  toast(t('runner.sold',{n:grams,product:productName,pay:price}));
+  saveGame();
+}
 let packOpen=false;
 let packState={strain:'weed', grams:1};
 function openPackUI(){
@@ -12477,7 +12708,9 @@ function updateBuyerCalls(dt){
   buyerCallCD=BUYER_CALL_INTERVAL;   // exakt alle 20s erneut prüfen, egal ob diesmal Ware da ist
   const options=[];
   // Paket D (Baggy-Parität): Gras wird NUR noch als fertiges Baggy angefragt — alle 3 Sorten.
-  for(const s of ROLL_STRAINS) for(const g of PACK_GRAM_OPTIONS) if(invCount(baggyId(s,g))>0) options.push({type:'weed',strain:s,size:g});
+  // Nutzer-Vorgabe: Meth-Baggies zaehlen hier ebenfalls als 'baggy' — PACK_STRAINS statt ROLL_STRAINS,
+  // gleiche Erweiterung wie schon bei offerWalkupSale() fuer die Laufkunden (baggy_md/mp/mb_Ng).
+  for(const s of PACK_STRAINS) for(const g of packGramOptionsFor(s)) if(invCount(baggyId(s,g))>0) options.push({type:'weed',strain:s,size:g});
   for(const tier in METH_PRICE_PER_GRAM) if(invCount(tier)>0) options.push({type:'meth',tier});
   if(!options.length) return;   // nichts zu verkaufen — in 20s erneut versuchen
   spawnBuyerCall(pick(options));
@@ -12674,7 +12907,10 @@ function drawJewelryAccessories(bx,by,dir){
   // Koordinaten aus phChar() abgelesen (Kopf y8-33, Gesicht y16-29, Torso ab y34, Arme x5-8/x24-27
   // y36-46): Kette sitzt am Hals-Kragen (Kopf-/Torso-Grenze), Uhr am Handgelenk (unteres Arm-Ende).
   // Bugfix: vorher bei y19 (mitten im Gesicht) bzw. y33 (Schulter statt Handgelenk) — beides zu hoch.
-  if(player.hasChain){
+  // Ketten-Stile (Nutzer-Vorgabe): 3 einzeln kaufbare Stile, nur der aktuell getragene (wornChain)
+  // wird gezeichnet — Gold bleibt die bestehende Balken/Anhaenger-Optik, Diamant/King nutzen die
+  // echten zugeschnittenen Bilder (chain_diamond.png/chain_king.png).
+  if(player.wornChain==='gold'){
     // Nutzer-Feedback: soll sichtbar UM den Hals haengen, nicht nur ein flacher Balken am Kragen —
     // zwei kurze Segmente am Hals-Kragen (y32, die Kette selbst) + ein Anhaenger, der 3px in den
     // Torso hineinhaengt (y33-36), damit sich "haengt um den Hals" auch bei dieser Sprite-Groesse liest.
@@ -12682,6 +12918,10 @@ function drawJewelryAccessories(bx,by,dir){
     ctx.fillRect(bx+12,by+32,3,1);
     ctx.fillRect(bx+17,by+32,3,1);
     ctx.fillRect(bx+15,by+33,2,4);
+  } else if(player.wornChain==='diamond'){
+    ctx.drawImage(IMAGES.chain_diamond,bx+7,by+30,16,20);
+  } else if(player.wornChain==='king'){
+    ctx.drawImage(IMAGES.chain_king,bx+7,by+29,16,22);
   }
   if(player.hasWatch){
     // Nutzer-Feedback: bessere Optik als ein reiner Gold-Block — dunkles Armband quer ueber dem
@@ -12728,7 +12968,10 @@ function consumeAnchor(){
 }
 function cigTip(){
   const a=consumeAnchor();
-  const bx=Math.round(a.x), by=Math.round(a.y)-EQUIP_ANCHOR_DY;
+  // Nutzer-Feedback: Kippe/Joint hing zu tief (Kinn/Brust statt Mund) — 5px höher, siehe
+  // gleicher Versatz in drawConsumables() weiter unten (Mund liegt laut drawJewelryAccessories
+  // bei ca. py-33, EQUIP_ANCHOR_DY allein trifft nur py-30).
+  const bx=Math.round(a.x), by=Math.round(a.y)-EQUIP_ANCHOR_DY-5;
   if(a.dir===1) return {x:bx-15,y:by};
   if(a.dir===2) return {x:bx+13,y:by};
   if(a.dir===3) return {x:bx,y:by-8};
@@ -12745,7 +12988,7 @@ function drawConsumables(bx,by,dir){
     if(dir===1){ cx0=bx-13; ex=cx0-2; }
     else if(dir===2){ cx0=bx+7; ex=cx0+6; }
     else { cx0=bx+1; ex=cx0+6; }
-    const byy=dir===0?by+2:by;
+    const byy=(dir===0?by+2:by)-5;   // Nutzer-Feedback: 5px höher zum Mund, siehe cigTip()
     ctx.fillStyle=s.type==='blunt'?'#5a3a20':s.type==='joint'?'#d8d5cc':'#eceae2';
     ctx.fillRect(cx0,byy,6,th);
     const drag=s.dragT>0;
@@ -12757,6 +13000,15 @@ function drawConsumables(bx,by,dir){
     const lift=d.sipT>0?7:0;   // Schluck läuft → Flasche zum Mund angehoben
     const hx=dir===1?bx-16:dir===2?bx+12:bx+8;
     const hy=by+16-lift;       // Ruhehaltung: Hand-/Hüfthöhe
+    // Nutzer-Vorgabe: Flaschenkopf soll sich beim Schluck zum Spieler(-mund) drehen, nicht nur
+    // gerade angehoben werden — Rotation um den Flaschenboden (Hand-Pivot), Drehsinn je nach
+    // Seite: Flasche steht links vom Zentrum (dir1) -> Hals kippt nach rechts zur Mitte, rechts
+    // vom Zentrum (dir0/dir2) -> Hals kippt nach links zur Mitte.
+    const tilt=d.sipT>0?(dir===1?0.55:-0.55):0;
+    ctx.save();
+    ctx.translate(hx+2,hy+1);
+    ctx.rotate(tilt);
+    ctx.translate(-(hx+2),-(hy+1));
     if(d.type==='beer'){
       ctx.fillStyle='#6b3f14'; ctx.fillRect(hx,hy-8,4,9);      // brauner Flaschenkörper
       ctx.fillStyle='#caa54a'; ctx.fillRect(hx,hy-4,4,3);      // Etikett
@@ -12766,6 +13018,7 @@ function drawConsumables(bx,by,dir){
       ctx.fillStyle='#b8262c'; ctx.fillRect(hx,hy-5,4,3);      // rotes Etikett
       ctx.fillStyle='#cfd8de'; ctx.fillRect(hx+1,hy-13,2,3);   // Flaschenhals
     }
+    ctx.restore();
   }
 }
 function puffSmoke(){
@@ -13424,6 +13677,7 @@ function update(dt){
     updateCameraShake(dt);
     updateGrowPots(dt);
     updateMethCooks(dt);
+    updateRunner(dt);
     updateRobbery(dt);
     updateJewelryHeist(dt);
     updateBuyerCalls(dt);
@@ -13590,6 +13844,7 @@ function update(dt){
   updateDeadNpcs(dt);
   updateGrowPots(dt);
   updateMethCooks(dt);
+  updateRunner(dt);
   updateBuyerCalls(dt);
   updateWalkupCooldowns(dt);   // Paket 18
   // Autosave
@@ -13711,7 +13966,7 @@ function render(time){
         ctx.drawImage(IMAGES.player, player.frame*32, player.dir*64,32,64,
                     Math.round(player.px)-16, Math.round(player.py)-60, 32,64);
         if(player.outfit==='tracksuit') drawTracksuitStripe(Math.round(player.px)-16, Math.round(player.py)-60, player.dir);
-        if(player.hasChain||player.hasWatch) drawJewelryAccessories(Math.round(player.px)-16, Math.round(player.py)-60, player.dir);
+        if(player.wornChain||player.hasWatch) drawJewelryAccessories(Math.round(player.px)-16, Math.round(player.py)-60, player.dir);
         if(player.hasSunglasses||player.hasHat||player.hasTattoo) drawPlayerAccessories(Math.round(player.px)-16, Math.round(player.py)-60, player.dir);
       }
       // Kippe/Joint/Blunt + Flasche sichtbar (Rückenansicht: verdeckt) — Paket B: gemeinsame
@@ -13859,7 +14114,9 @@ function render(time){
   ctx.globalCompositeOperation='lighter';
   const glowBase = a;
   for(const b of list){
-    if(b===player||b.isNpc||!b.gang) continue;   // Neon nur für Gebäude (NPCs haben kein w/h → NaN-Crash)
+    // Neon nur für Gebäude — NPCs UND Graffiti-Tags (TAGS, auch mit .gang gefüllt) haben kein w/h,
+    // sonst wird b.w/2 zu NaN -> createRadialGradient() crasht jeden Frame (RIESIGER-white-Bug-Ursache).
+    if(b===player||b.isNpc||b.isTag||!b.gang||!b.w) continue;
     const g=GANGS[b.gang];
     const gx=b.px+b.w/2, gy=b.py+b.h*0.35;
     const p=.5+.5*Math.sin(time/400+b.px);
@@ -14342,8 +14599,10 @@ function saveGame(){
       methLabSlots:player.methLabSlots, methCooks:player.methCooks,
       hasLaptop:player.hasLaptop, hasSkimmer:player.hasSkimmer,
       hasExtraSafe:player.hasExtraSafe, extraSafe:player.extraSafe,
-      hasChain:player.hasChain, hasWatch:player.hasWatch, hasGrillz:player.hasGrillz,
+      hasChainGold:player.hasChainGold, hasChainDiamond:player.hasChainDiamond, hasChainKing:player.hasChainKing,
+      wornChain:player.wornChain, hasWatch:player.hasWatch, hasGrillz:player.hasGrillz,
       hasSunglasses:player.hasSunglasses, hasHat:player.hasHat, hasTattoo:player.hasTattoo,
+      hasRunner:player.hasRunner, runnerT:runnerT,
       outfit:player.outfit,
       hasVest:player.hasVest, hasVestMilitary:player.hasVestMilitary, tutorialsSeen:player.tutorialsSeen,
       timesArrested:player.timesArrested,
@@ -14520,8 +14779,13 @@ function startGame(fresh){
     player.hasLaptop=!!s.hasLaptop; player.hasSkimmer=!!s.hasSkimmer;
     player.hasExtraSafe=!!s.hasExtraSafe;
     player.extraSafe=Array.isArray(s.extraSafe)?s.extraSafe.filter(i=>i&&ITEMS[i.id]&&i.n>0):[];
-    player.hasChain=!!s.hasChain; player.hasWatch=!!s.hasWatch; player.hasGrillz=!!s.hasGrillz;
+    player.hasChainGold=!!s.hasChainGold; player.hasChainDiamond=!!s.hasChainDiamond; player.hasChainKing=!!s.hasChainKing;
+    player.wornChain=s.wornChain||null;
+    // Migration: alte Saves kannten nur ein einzelnes hasChain-Flag (immer die Gold-Kette).
+    if(s.hasChain&&!player.hasChainGold){ player.hasChainGold=true; if(!player.wornChain) player.wornChain='gold'; }
+    player.hasWatch=!!s.hasWatch; player.hasGrillz=!!s.hasGrillz;
     player.hasSunglasses=!!s.hasSunglasses; player.hasHat=!!s.hasHat; player.hasTattoo=!!s.hasTattoo;
+    player.hasRunner=!!s.hasRunner; runnerT=Number.isFinite(s.runnerT)?s.runnerT:RUNNER_INTERVAL;
     // Parallel-Küche-Migration: neue Saves haben methLabSlots/methCooks (Array), alte Saves (vor dieser
     // Erweiterung) hatten nur ein einzelnes methCook-Objekt/null — das wandert 1:1 in Slot 0, damit
     // laufende Kochvorgänge aus alten Spielständen nicht verloren gehen.
@@ -14590,8 +14854,10 @@ function startGame(fresh){
     player.methLabSlots=0; player.methCooks=[];
     player.hasLaptop=false; player.hasSkimmer=false;
     player.hasExtraSafe=false; player.extraSafe=[];
-    player.hasChain=false; player.hasWatch=false; player.hasGrillz=false;
+    player.hasChainGold=false; player.hasChainDiamond=false; player.hasChainKing=false; player.wornChain=null;
+    player.hasWatch=false; player.hasGrillz=false;
     player.hasSunglasses=false; player.hasHat=false; player.hasTattoo=false;
+    player.hasRunner=false; runnerT=RUNNER_INTERVAL;
     player.hasVest=false; player.hasVestMilitary=false; player.tutorialsSeen={};
     applyOutfit('default');
     for(const k in JobSystem.levels) JobSystem.levels[k]={xp:0,lvl:1,introSeen:false,cooldownUntil:0};   // neues Spiel: Job-Level zurücksetzen
