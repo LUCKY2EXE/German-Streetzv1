@@ -591,7 +591,7 @@ canvas#game{
 #roll-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
 
 /* ---------- Grow-Shop-UI + Pack-UI: gleiche Panel-Familie wie Roll-UI ---------- */
-#growshop-box, #pack-box, #kiosk-box, #chemshop-box, #dripshop-box, #armor-box, #casino-box, #blackjack-box, #dealershop-box, #police-station-box, #gangjoin-box, #gangops-box, #scammershop-box, #carding-box, #atm-box{
+#growshop-box, #pack-box, #kiosk-box, #chemshop-box, #dripshop-box, #armor-box, #casino-box, #blackjack-box, #dealershop-box, #police-station-box, #gangjoin-box, #gangops-box, #scammershop-box, #carding-box, #atm-box, #jewelershop-box{
   position: fixed;
   left: 50%;
   top: 50%;
@@ -606,7 +606,7 @@ canvas#game{
   z-index: 47;
   box-shadow: 0 6px 0 rgba(0,0,0,.55);
 }
-#growshop-title, #pack-title, #kiosk-title, #chemshop-title, #dripshop-title, #armor-title, #blackjack-title, #dealershop-title, #police-station-title, #gangjoin-title, #gangops-title, #scammershop-title, #carding-title, #atm-title{ font-size: 11px; margin-bottom: 10px; text-shadow: 1px 1px 0 #000; }
+#growshop-title, #pack-title, #kiosk-title, #chemshop-title, #dripshop-title, #armor-title, #blackjack-title, #dealershop-title, #police-station-title, #gangjoin-title, #gangops-title, #scammershop-title, #carding-title, #atm-title, #jewelershop-title{ font-size: 11px; margin-bottom: 10px; text-shadow: 1px 1px 0 #000; }
 #police-station-content{ font-size: 9px; line-height: 1.7; }
 #police-station-content .roll-btn{ display: block; width: 100%; margin-top: 10px; text-align: center; }
 .shop-row{
@@ -632,7 +632,7 @@ canvas#game{
   cursor: pointer;
 }
 .shop-row button:disabled{ opacity: .35; cursor: default; }
-#growshop-hint, #pack-hint, #kiosk-hint, #chemshop-hint, #dripshop-hint, #armor-hint, #casino-hint, #blackjack-hint, #dealershop-hint, #police-station-hint, #gangjoin-hint, #gangops-hint, #scammershop-hint, #carding-hint, #atm-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
+#growshop-hint, #pack-hint, #kiosk-hint, #chemshop-hint, #dripshop-hint, #armor-hint, #casino-hint, #blackjack-hint, #dealershop-hint, #police-station-hint, #gangjoin-hint, #gangops-hint, #scammershop-hint, #carding-hint, #atm-hint, #jewelershop-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
 #carding-content{ font-size: 9px; line-height: 1.7; text-align: center; }
 #carding-content .roll-btn{ display: block; width: 100%; margin-top: 10px; }
 #atm-pin-row{ display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
@@ -950,6 +950,14 @@ canvas#game{
   <div id="scammershop-title">SCAMMER</div>
   <div id="scammershop-content"></div>
   <div id="scammershop-hint"></div>
+</div>
+
+<!-- Juwelier-Shop (Nutzer-Vorgabe): Ketten/Uhren kaufen oder aus Diamanten verarbeiten. -->
+<div id="jewelershop-box" class="hidden">
+  <button id="jewelershop-close" class="panel-close-btn" title="Schließen">✕</button>
+  <div id="jewelershop-title">JUWELIER</div>
+  <div id="jewelershop-content"></div>
+  <div id="jewelershop-hint"></div>
 </div>
 
 <!-- Carding-UI: am platzierten Laptop im Trap-Haus — Blanko-Karte gegen $200 zu einer geladenen Karte machen. -->
@@ -1299,6 +1307,9 @@ const I18N = {
       skimmer:    { name: 'Skimmer', desc: 'Klicken: im Trap-Haus aufstellen (Karten-Kloning).', installed: 'Skimmer im Trap-Haus aufgestellt.', already: 'Schon aufgestellt.' },
       blank_card: { name: 'Blanko-Karte', desc: 'Am Laptop im Trap-Haus zu einer geladenen Karte aufladen.' },
       loaded_card:{ name: 'Geladene Karte', desc: 'Am Geldautomaten einsetzen — 60% Auszahlung, 40% Alarm.' },
+      diamond:{ name: 'Diamant', desc: 'Rohware — beim Dealer verhehlen oder beim Juwelier zu Schmuck verarbeiten.' },
+      chain:{ name: 'Kette', desc: 'Klicken: anlegen.', installed: 'Kette angelegt.', already: 'Trägst du schon.' },
+      watch:{ name: 'Uhr', desc: 'Klicken: anlegen.', installed: 'Uhr angelegt.', already: 'Trägst du schon.' },
       baggies: { name: 'Baggies', desc: 'Leere Tütchen zum Verpacken. Klicken öffnet das Verpacken-Menü.' },
       scale:   { name: 'Feinwaage', desc: 'Zum Abwiegen beim Verpacken. Klicken öffnet das Verpacken-Menü.' },
       baggy_1g:  { name: 'Baggy 1g',  desc: '1g fertig verpackt. Für den Straßenverkauf.' },
@@ -1434,7 +1445,10 @@ const I18N = {
     dealer: {
       title: 'DEALER', hint: 'ESC — SCHLIESSEN',
       noMoney: 'Zu wenig Geld.',
-      bought: '{name} gekauft — {price}$.'
+      bought: '{name} gekauft — {price}$.',
+      sellDiamonds: 'Diamanten verhehlen ({n})',
+      sellBtn: 'VERKAUFEN',
+      diamondsSold: '{n} Diamanten verhehlt — {amount}$.'
     },
     weapon: {
       reloading: 'Nachladen…', reloaded: 'Magazin voll nachgeladen.', magFull: 'Magazin ist schon voll.',
@@ -1499,11 +1513,24 @@ const I18N = {
       success: '{amount}$ aus der Kasse erbeutet.',
       cooldown: 'Diese Kasse ist noch leer — später nochmal versuchen.'
     },
+    jewelryheist: {
+      started: 'K halten, um die Vitrine aufzubrechen …',
+      aborted: 'Überfall abgebrochen.',
+      alarm: 'Alarm! Die Vitrine hat lautlos ausgelöst.',
+      success: '{n} Diamanten erbeutet.',
+      cooldown: 'Diese Vitrine ist noch leer — später nochmal versuchen.'
+    },
     cigmachine: {
       bought: 'Kippen-Packung gezogen — 25$.', noMoney: 'Zu wenig Geld für den Automaten.'
     },
     scammer: {
       title: 'SCAMMER', hint: 'Laptop, Skimmer und Blanko-Karten für den großen Coup.'
+    },
+    jeweler: {
+      title: 'JUWELIER', hint: 'Ketten, Uhren — kaufen oder aus Diamanten verarbeiten lassen.',
+      craftLabel: '{name} aus Diamanten ({n}💎 + {fee}$)',
+      needDiamonds: 'Nicht genug Diamanten.',
+      crafted: '{name} aus Diamanten gefertigt.'
     },
     carding: {
       title: 'LAPTOP', hint: 'Blanko-Karte gegen Bares zu einer geladenen Karte machen.',
@@ -1551,7 +1578,7 @@ const I18N = {
     phone: {
       title: 'NAVI — ZIEL WÄHLEN', off: '× NAVI AUS', hint: 'KLICK — ZIEL WÄHLEN<br>N / ESC — ZUKLAPPEN',
       started: 'Navi läuft: {name}', arrived: 'Ziel erreicht.',
-      dest: { dealer: 'DEALER (GASSE)', villa: 'REICHE TRAP', roma: 'RESTAURANT ROMA', spaeti: 'SPÄTI 24', home: 'TRAP-HAUS', station: 'BAHNHOF', ybc: 'YBC-BLOCK', btk: 'BTK-BLOCK', stb: 'STB-BLOCK', ntl: 'NTL-BLOCK', liefer: 'LIEFERUNG', corner: 'CORNER SHOP', bike: 'BIKE SHOP', armor: 'ARMOR SHOP', baustelle: 'BAUSTELLE', growshop: 'GROW SHOP', drip: 'DRIP', casino: 'EL DORADO SPIELHALLE', security: 'SECURITY-RUNDE', gangwar: 'GANG-KRIEG' },
+      dest: { dealer: 'DEALER (GASSE)', villa: 'REICHE TRAP', roma: 'RESTAURANT ROMA', spaeti: 'SPÄTI 24', home: 'TRAP-HAUS', station: 'BAHNHOF', ybc: 'YBC-BLOCK', btk: 'BTK-BLOCK', stb: 'STB-BLOCK', ntl: 'NTL-BLOCK', liefer: 'LIEFERUNG', corner: 'CORNER SHOP', bike: 'BIKE SHOP', armor: 'ARMOR SHOP', baustelle: 'BAUSTELLE', growshop: 'GROW SHOP', drip: 'DRIP', casino: 'EL DORADO SPIELHALLE', security: 'SECURITY-RUNDE', gangwar: 'GANG-KRIEG', juwelier: 'JUWELIER' },
       home: { title: 'NOKIA 3310', hint: 'KLICK — APP ÖFFNEN<br>ESC/N — SCHLIESSEN', appNavi: 'NAVI', appMessages: 'NACHRICHTEN', appFelony: 'FELONY', appGangs: 'GANGS', back: '< ZURÜCK', noMessages: 'Keine Nachrichten.', hintList: 'KLICK — AUSWÄHLEN<br>ESC/N — SCHLIESSEN' }
     },
     gangs: {
@@ -1581,6 +1608,8 @@ const I18N = {
         shopRobbery: 'Ladendiebstahl mit Bereicherungsabsicht',
         shopRobberyCaught: 'Auf frischer Tat ertappter Raubüberfall',
         cardFraudCaught: 'Kreditkartenbetrug',
+        jewelryHeist: 'Juwelendiebstahl',
+        jewelryHeistCaught: 'Auf frischer Tat ertappter Juwelenraub',
         killGang: 'Totschlag',
         killCivilian: 'Mord',
         killCop: 'Mord an einem Polizeibeamten'
@@ -1608,7 +1637,7 @@ const I18N = {
     },
     dialog: { hint: '▼ E', prompt: '[E]' },
     zone: { neutral: 'Neutral-Zone', war: 'Kriegszone — STB vs NTL' },
-    speakers: { you: 'DU', cornerShop: 'CORNER SHOP', bikeShop: 'BIKE SHOP', armorShop: 'ARMOR SHOP', david: "DAVID'S", station: 'BAHNHOF', unknown: '???', passerby: 'PASSANT', dealer: 'DEALER', scammer: 'SCAMMER', kiosk: 'SPÄTI 24', restaurant: 'ROMA', growshop: 'GROW SHOP', drip: 'DRIP', foreman: 'POLIER', casino: 'EL DORADO SPIELHALLE', junkie: 'JUNKIE', homeless: 'OBDACHLOSER', police: 'POLIZEI' },
+    speakers: { you: 'DU', cornerShop: 'CORNER SHOP', bikeShop: 'BIKE SHOP', armorShop: 'ARMOR SHOP', david: "DAVID'S", station: 'BAHNHOF', unknown: '???', passerby: 'PASSANT', dealer: 'DEALER', scammer: 'SCAMMER', jeweler: 'JUWELIER', kiosk: 'SPÄTI 24', restaurant: 'ROMA', growshop: 'GROW SHOP', drip: 'DRIP', foreman: 'POLIER', casino: 'EL DORADO SPIELHALLE', junkie: 'JUNKIE', homeless: 'OBDACHLOSER', police: 'POLIZEI' },
     door: {
       houseTrap: ['Mein Trap Haus. Kaputtes Dach, eine Matratze, kalter Kaffee.', 'Zuhause ist, wo keiner nachfragt.', '(Innenräume kommen in Stufe 3.)'],
       gang: ['Ey. Kein Zutritt für Fremde.', 'Verschwinde, bevor was passiert.', '(Gangs, Quests & Beitritt folgen in Stufe 2.)'],
@@ -1622,6 +1651,7 @@ const I18N = {
       restaurant: ['Es riecht nach Knoblauch und heißem Öl.', '"PERSONAL GESUCHT" klebt schief an der Scheibe.', '(Kellnern folgt später.)'],
       growshop: ['Grow-Bedarf für Einsteiger und Profis.', 'Dünger, Lampen, Töpfe — alles fürs eigene Zelt.', 'Samen? Gibt\'s nur beim Dealer in der Gasse.', 'Kauf läuft über die Theke drinnen.'],
       drip: ['Neue Kollektion im Schaufenster.', 'Bässe wummern durch die Scheibe.', 'Drinnen läuft der Umkleide-Spiegel heiß.'],
+      jewelry: ['Ketten, Uhren, Diamanten hinter Panzerglas.', 'Die Vitrine glitzert einladend — vielleicht zu einladend.', 'Kauf läuft über die Theke drinnen.'],
       casino: ['Neonlicht flackert bis auf die Straße.', 'Drinnen blinkt und piept ein Automat vor sich hin.', 'Direkt neben dem Bahnhof, ganz wie im echten Leben.'],
       police: ['Nichts zu melden. Weiterziehen.'],
       default: ['Alles dunkel. Niemand öffnet.', 'Niemand öffnet die Tür.']
@@ -1631,6 +1661,7 @@ const I18N = {
       shop_corner: 'Tipp: Drinnen an der Kasse [E] drücken zum Einkaufen.',
       shop_grow: 'Tipp: Drinnen an der Theke [E] drücken für Grow-Bedarf.',
       shop_drip: 'Tipp: Drinnen an der Theke [E] drücken für Outfits.',
+      shop_jewelry: 'Tipp: Drinnen an der Theke [E] drücken für Schmuck. Die Vitrine ist etwas anderes …',
       shop_armor: 'Tipp: Drinnen am Tresen [E] drücken für Ausrüstung.',
       shop_casino: 'Tipp: Drinnen am Automaten [E] drücken zum Spielen.'
     },
@@ -1725,6 +1756,9 @@ const I18N = {
       skimmer:    { name: 'Skimmer', desc: 'Click: set up in the trap house (card cloning).', installed: 'Skimmer set up in the trap house.', already: 'Already set up.' },
       blank_card: { name: 'Blank Card', desc: 'Load it at the laptop in the trap house into a loaded card.' },
       loaded_card:{ name: 'Loaded Card', desc: 'Use it at an ATM — 60% payout, 40% alarm.' },
+      diamond:{ name: 'Diamond', desc: 'Raw goods — fence it at the Dealer or have the Jeweler set it into jewelry.' },
+      chain:{ name: 'Chain', desc: 'Click: put on.', installed: 'Chain put on.', already: 'Already wearing it.' },
+      watch:{ name: 'Watch', desc: 'Click: put on.', installed: 'Watch put on.', already: 'Already wearing it.' },
       baggies: { name: 'Baggies', desc: 'Empty bags for packing. Click opens the packing menu.' },
       scale:   { name: 'Scale', desc: 'For weighing while packing. Click opens the packing menu.' },
       baggy_1g:  { name: 'Baggy 1g',  desc: '1g pre-packed. Ready for street sale.' },
@@ -1883,7 +1917,10 @@ const I18N = {
     dealer: {
       title: 'DEALER', hint: 'ESC — CLOSE',
       noMoney: 'Not enough cash.',
-      bought: 'Bought {name} — ${price}.'
+      bought: 'Bought {name} — ${price}.',
+      sellDiamonds: 'Fence diamonds ({n})',
+      sellBtn: 'SELL',
+      diamondsSold: 'Fenced {n} diamonds — ${amount}.'
     },
     walkup: {
       offerJunkie:   'Got {n}g of {product} for me? I will pay ${price}, cash, right now.',
@@ -1926,11 +1963,24 @@ const I18N = {
       success: 'Grabbed ${amount} from the register.',
       cooldown: 'This register is still empty — try again later.'
     },
+    jewelryheist: {
+      started: 'Hold K to break open the display case …',
+      aborted: 'Heist aborted.',
+      alarm: 'Alarm! The display case triggered silently.',
+      success: 'Grabbed {n} diamonds.',
+      cooldown: 'This display case is still empty — try again later.'
+    },
     cigmachine: {
       bought: 'Grabbed a pack of cigarettes — $25.', noMoney: 'Not enough cash for the machine.'
     },
     scammer: {
       title: 'SCAMMER', hint: 'Laptop, skimmer, and blank cards for the big score.'
+    },
+    jeweler: {
+      title: 'JEWELER', hint: 'Chains, watches — buy them or have them set from diamonds.',
+      craftLabel: '{name} from diamonds ({n}💎 + ${fee})',
+      needDiamonds: 'Not enough diamonds.',
+      crafted: '{name} set from diamonds.'
     },
     carding: {
       title: 'LAPTOP', hint: 'Turn a blank card into a loaded card for cash.',
@@ -1966,7 +2016,7 @@ const I18N = {
     phone: {
       title: 'NAVI — PICK DESTINATION', off: '× NAVI OFF', hint: 'CLICK — SET DESTINATION<br>N / ESC — CLOSE',
       started: 'Navi running: {name}', arrived: 'Destination reached.',
-      dest: { dealer: 'DEALER (ALLEY)', villa: 'RICH TRAP', roma: 'RESTAURANT ROMA', spaeti: 'SPÄTI 24', home: 'TRAP HOUSE', station: 'STATION', ybc: 'YBC BLOCK', btk: 'BTK BLOCK', stb: 'STB BLOCK', ntl: 'NTL BLOCK', liefer: 'DELIVERY', corner: 'CORNER SHOP', bike: 'BIKE SHOP', armor: 'ARMOR SHOP', baustelle: 'CONSTRUCTION SITE', growshop: 'GROW SHOP', drip: 'DRIP', casino: 'EL DORADO SPIELHALLE', security: 'SECURITY ROUND', gangwar: 'GANG WAR' },
+      dest: { dealer: 'DEALER (ALLEY)', villa: 'RICH TRAP', roma: 'RESTAURANT ROMA', spaeti: 'SPÄTI 24', home: 'TRAP HOUSE', station: 'STATION', ybc: 'YBC BLOCK', btk: 'BTK BLOCK', stb: 'STB BLOCK', ntl: 'NTL BLOCK', liefer: 'DELIVERY', corner: 'CORNER SHOP', bike: 'BIKE SHOP', armor: 'ARMOR SHOP', baustelle: 'CONSTRUCTION SITE', growshop: 'GROW SHOP', drip: 'DRIP', casino: 'EL DORADO SPIELHALLE', security: 'SECURITY ROUND', gangwar: 'GANG WAR', juwelier: 'JEWELER' },
       home: { title: 'NOKIA 3310', hint: 'CLICK — OPEN APP<br>ESC/N — CLOSE', appNavi: 'NAVI', appMessages: 'MESSAGES', appFelony: 'FELONY', appGangs: 'GANGS', back: '< BACK', noMessages: 'No messages.', hintList: 'CLICK — SELECT<br>ESC/N — CLOSE' }
     },
     gangs: {
@@ -1996,6 +2046,8 @@ const I18N = {
         shopRobbery: 'Shoplifting with Intent to Enrich',
         shopRobberyCaught: 'Robbery Caught in the Act',
         cardFraudCaught: 'Credit Card Fraud',
+        jewelryHeist: 'Jewelry Theft',
+        jewelryHeistCaught: 'Jewelry Robbery Caught in the Act',
         killGang: 'Manslaughter',
         killCivilian: 'Murder',
         killCop: 'Murder of a Police Officer'
@@ -2023,7 +2075,7 @@ const I18N = {
     },
     dialog: { hint: '▼ E', prompt: '[E]' },
     zone: { neutral: 'Neutral Zone', war: 'War zone — STB vs NTL' },
-    speakers: { you: 'YOU', cornerShop: 'CORNER SHOP', bikeShop: 'BIKE SHOP', armorShop: 'ARMOR SHOP', david: "DAVID'S", station: 'STATION', unknown: '???', passerby: 'PASSER-BY', dealer: 'DEALER', scammer: 'SCAMMER', kiosk: 'SPÄTI 24', restaurant: 'ROMA', growshop: 'GROW SHOP', drip: 'DRIP', foreman: 'FOREMAN', casino: 'EL DORADO SPIELHALLE', junkie: 'JUNKIE', homeless: 'HOMELESS', police: 'POLICE' },
+    speakers: { you: 'YOU', cornerShop: 'CORNER SHOP', bikeShop: 'BIKE SHOP', armorShop: 'ARMOR SHOP', david: "DAVID'S", station: 'STATION', unknown: '???', passerby: 'PASSER-BY', dealer: 'DEALER', scammer: 'SCAMMER', jeweler: 'JEWELER', kiosk: 'SPÄTI 24', restaurant: 'ROMA', growshop: 'GROW SHOP', drip: 'DRIP', foreman: 'FOREMAN', casino: 'EL DORADO SPIELHALLE', junkie: 'JUNKIE', homeless: 'HOMELESS', police: 'POLICE' },
     door: {
       houseTrap: ['My trap house. Leaky roof, a mattress, and cold coffee.', 'Home is where nobody asks questions.', '(Indoor areas arrive in Stage 3.)'],
       gang: ['Hey. No entry for strangers.', 'Get lost before something happens.', '(Gangs, quests, and joining follow in Stage 2.)'],
@@ -2037,6 +2089,7 @@ const I18N = {
       restaurant: ['Smells like garlic and hot oil.', 'A crooked "STAFF WANTED" sign sticks to the window.', '(Waiting tables comes later.)'],
       growshop: ['Grow supplies for beginners and pros alike.', 'Nutrients, lights, pots — everything for your own tent.', 'Seeds? Only from the dealer in the alley.', 'Buying goes through the counter inside.'],
       drip: ['New collection in the window.', 'Bass thumping through the glass.', 'The fitting-room mirror is working overtime in there.'],
+      jewelry: ['Chains, watches, diamonds behind bulletproof glass.', 'The display case glitters invitingly — maybe too invitingly.', 'Buying happens at the counter inside.'],
       casino: ['Neon light flickers all the way to the street.', 'A machine inside is blinking and beeping away.', 'Right next to the station, just like the real thing.'],
       police: ['Nothing to report. Move along.'],
       default: ['Everything is dark. Nobody opens.', 'Nobody opens the door.']
@@ -2046,6 +2099,7 @@ const I18N = {
       shop_corner: 'Tip: Inside, press [E] at the register to shop.',
       shop_grow: 'Tip: Inside, press [E] at the counter for grow supplies.',
       shop_drip: 'Tip: Inside, press [E] at the counter for outfits.',
+      shop_jewelry: 'Tip: Inside, press [E] at the counter for jewelry. The display case is a different story …',
       shop_armor: 'Tip: Inside, press [E] at the counter for equipment.',
       shop_casino: 'Tip: Inside, press [E] at the machine to play.'
     },
@@ -2154,7 +2208,13 @@ const MANIFEST = {
   pigeon:    {file:'pigeon.png',     w:24, h:10, kind:'critter'},
   rat:       {file:'rat.png',        w:20, h:7,  kind:'critter'},
   prop_bench:{file:'prop_bench.png', w:48, h:26, kind:'prop'},
-  prop_meth: {file:'prop_meth.png',  w:40, h:40, kind:'prop'},
+  prop_meth: {file:'Kochtopfmeth.png',  w:48, h:48, kind:'prop'},
+  // Meth-Labor-Assets (Nutzer-Vorgabe): Herd im Trap-Haus + "fertig"-Optik der Koch-Stationen.
+  stove_methlab: {file:'stove_methlab.png', w:48, h:48, kind:'prop'},
+  meth_ready: {file:'meth_ready.png', w:48, h:48, kind:'prop'},
+  // Zusaetzliche Deko an jeder Koch-Station im Labor (Nutzer-Vorgabe), rein optisch.
+  lab_flask_deco: {file:'meth_zubehoer_a.png', w:48, h:48, kind:'prop'},
+  lab_canister_deco: {file:'meth_zubehoer_b.png', w:48, h:48, kind:'prop'},
   prop_dice: {file:'prop_dice.png',  w:16, h:12, kind:'prop'},
   prop_trash:{file:'prop_trash.png', w:26, h:18, kind:'prop'},
   prop_lamp: {file:'prop_lamp.png',  w:18, h:56, kind:'prop'},
@@ -2208,7 +2268,10 @@ const MANIFEST = {
   shop_grow:    {file:'shop_grow.png',    w:160, h:160, kind:'building'},
   shop_drip:    {file:'shop_drip.png',    w:192, h:160, kind:'building'},
   shop_casino:  {file:'shop_casino.png',  w:160, h:160, kind:'building'},
-  shop_police:  {file:'shop_police.png',  w:192, h:160, kind:'building'}
+  shop_police:  {file:'police_station.png',  w:62, h:63, kind:'building'},
+  // Juwelier (Nutzer-Vorgabe): kein echtes Bild-Asset vorhanden — phBuilding()-Platzhalter
+  // (BUILD_STYLE.shop_jewelry) greift automatisch, gleicher Mechanismus wie bei jedem anderen Gebäude.
+  shop_jewelry: {file:'shop_jewelry.png', w:160, h:160, kind:'building'}
 };
 /* 15 Zivilisten-Vorlagen (civ_01.png … civ_15.png), gleiche Sheet-Struktur wie player.png */
 for(let i=1;i<=15;i++){
@@ -2973,7 +3036,10 @@ const BUILD_STYLE = {
   shop_grow:    {body:'#1f2e1a',roof2:'#142010',sign:{text:'GROW',color:'#39ff64'},window:'cold',crates:true},
   shop_drip:    {body:'#33203a',roof2:'#221528',sign:{text:'DRIP',color:'#ff2ec4'},window:'cold'},
   shop_casino:  {body:'#2a1220',roof2:'#1a0a14',sign:{text:'SPIELHALLE',color:'#ff2ec4'},window:'cold'},
-  shop_police:  {body:'#2e3440',roof2:'#1c212a',sign:{text:'POLIZEI',color:'#3a6bdb'},window:'cold',pillars:true}
+  shop_police:  {body:'#2e3440',roof2:'#1c212a',sign:{text:'POLIZEI',color:'#3a6bdb'},window:'cold',pillars:true},
+  // Juwelier (Nutzer-Vorgabe): dunkles, edles Farbschema, goldenes Schild — kein Bild-Asset vorhanden,
+  // dieser Platzhalter reicht laut bestehendem phBuilding()-Mechanismus voellig aus.
+  shop_jewelry: {body:'#221e1a',roof2:'#151210',sign:{text:'JUWELIER',color:'#f5e6a3'},window:'cold'}
 };
 
 function phBuilding(key,def){
@@ -3593,6 +3659,26 @@ function makeInterior(type){
       I.lights.push({x:3,y:3,r:90,c:'rgba(200,160,255,0.12)'},{x:11,y:2,r:90,c:'rgba(200,160,255,0.12)'});
       break;
     }
+    /* ===== JUWELIER (Nutzer-Vorgabe): Kauf-Theke + Vitrine (Ueberfall-Ziel) ===== */
+    case 'shop_jewelry':{
+      I.w=14; I.h=9; I.floor='tile_white'; I.ambientColor='rgba(40,35,15,0.15)';
+      I.furniture.push(
+        // Vitrine: das Raub-Ziel (heistable, NICHT robbable — sonst kollidiert es mit updateRobbery()).
+        {k:'display_case',x:6,y:2,w:3,h:1,c:'#1a1a20',detail:'diamonds',interactive:'rob_only',heistable:true,
+         label:{de:'Vitrine',en:'Display case'}},
+        // Kauf-/Verarbeitungs-Theke.
+        {k:'counter_glass',x:9,y:6,w:3,h:1,c:'#2a2620',detail:'jewelry',interactive:'jewelershop',
+         label:{de:'Theke',en:'Counter'},dialog:{de:'Schmuck kaufen?',en:'Buy jewelry?'}},
+        {k:'shelf',x:1,y:1,w:1,h:3,c:'#3a3226',detail:'jewelry'},
+        {k:'sign',x:5,y:0,w:4,h:0.5,c:'#f5e6a3',detail:'neon',text:'JUWELIER',glow:true,glowColor:'rgba(245,230,163,0.4)',glowR:70},
+        {k:'lamp',x:3,y:3,w:0,h:0,c:'#f5e6a3',detail:'warm',glow:true,glowColor:'rgba(245,230,163,0.22)',glowR:90},
+        {k:'lamp',x:11,y:5,w:0,h:0,c:'#f5e6a3',detail:'warm',glow:true,glowColor:'rgba(245,230,163,0.22)',glowR:90},
+        {k:'door',x:6,y:8,w:2,h:0.5,c:'#2a1e12',detail:'exit'}
+      );
+      I.exits=[{x:6,y:8,w:2,h:1}];
+      I.lights.push({x:3,y:3,r:90,c:'rgba(245,230,163,0.14)'},{x:11,y:5,r:90,c:'rgba(245,230,163,0.14)'});
+      break;
+    }
     /* ===== CASINO "EL DORADO SPIELHALLE" (Paket 17) ===== */
     case 'shop_casino':{
       I.w=14; I.h=9; I.floor='tile_check'; I.ambientColor='rgba(40,10,30,0.18)';
@@ -3655,7 +3741,14 @@ function makeInterior(type){
       );
       // Koch-Stationen (Paket 11, erweitert): eine pro gekauftem Slot, siehe METHLAB_SLOT_POS/
       // makeCookstationFurniture()/buyMethlabSlot() — ersetzt die früher einzelne, hartcodierte Station.
-      for(let i=0;i<player.methLabSlots;i++) I.furniture.push(makeCookstationFurniture(i));
+      // Nutzer-Vorgabe: zusaetzlich 2 reine Deko-Requisiten direkt neben jeder Station (rechts daneben,
+      // uebereinander gestapelt — passt bei allen 5 Slot-Positionen, auch den engeren an der rechten Wand).
+      for(let i=0;i<player.methLabSlots;i++){
+        const p=METHLAB_SLOT_POS[i];
+        I.furniture.push(makeCookstationFurniture(i));
+        I.furniture.push({k:'lab_flask_deco',x:p.x+2.1,y:p.y+0.1,w:0.6,h:0.6,c:'#cfe3ea'});
+        I.furniture.push({k:'lab_canister_deco',x:p.x+2.1,y:p.y+0.9,w:0.6,h:0.6,c:'#5a5a62'});
+      }
       // Bewusst kein I.exits — sonst würde die Rückweg-Erkennungszone exitInterior() auslösen und
       // direkt nach draußen springen statt zurück ins Trap-Haus (intTargetBuilding zeigt weiterhin dorthin).
       I.lights.push({x:5,y:1,r:90,c:'rgba(200,255,192,0.12)'},{x:10,y:1,r:90,c:'rgba(200,255,192,0.12)'});
@@ -3875,7 +3968,7 @@ function makeInterior(type){
   const SOLID=new Set(['shelf','counter','fridge','fridge_wall','stove','wardrobe',
     'workbench','metalshelf','booth','kitchen','bar','pillar','pillar_big','roof_pillar',
     'ticketmachine','info','info_counter','display','display_big','weaponwall','vestdisplay',
-    'toolwall','bike_wall','bikestand','crate','box','safe','trashcan','counter_glass','glass',
+    'toolwall','bike_wall','bikestand','crate','box','safe','display_case','trashcan','counter_glass','glass',
     'wall_glass','schedule_board','bench_broken','bench_detailed','bike_rack','sign_stand','sofa',
     'cookstation','mixtank','still','clothes_rack','changing_booth','toilet','payphone','bars']);
   for(const f of I.furniture){
@@ -3895,13 +3988,14 @@ function makeInterior(type){
 const INT_DOOR_MAP={
   'house_trap':'house_trap','shop_kiosk':'shop_kiosk','shop_corner':'shop_corner',
   'shop_bike':'shop_bike','shop_armor':'shop_armor','shop_restaurant':'shop_restaurant',
-  'shop_grow':'shop_grow','shop_drip':'shop_drip',
+  'shop_grow':'shop_grow','shop_drip':'shop_drip','shop_jewelry':'shop_jewelry',
   'station':'station','station_underground':'station_underground'
 };
 const BUILDING_TO_INT={
   'house_trap':'house_trap','shop_kiosk':'shop_kiosk','shop_corner':'shop_corner',
   'shop_bike':'shop_bike','shop_armor':'shop_armor','shop_restaurant':'shop_restaurant',
   'shop_grow':'shop_grow','shop_drip':'shop_drip','shop_casino':'shop_casino',
+  'shop_jewelry':'shop_jewelry',
   'station':'station'
 };
 
@@ -4271,6 +4365,22 @@ function drawInteriorFurniture(ctx, f, time){
     case 'glass':{
       ctx.fillStyle=f.c;
       ctx.fillRect(tx,ty,tw,th);
+      break;
+    }
+    // Juwelier-Vitrine (Nutzer-Vorgabe): dunkler Sockel + Glas-Aufsatz mit funkelnden Diamant-Akzenten.
+    case 'display_case':{
+      ctx.fillStyle=f.c;
+      ctx.fillRect(tx,ty+th*0.4,tw,th*0.6);
+      ctx.fillStyle='rgba(180,220,230,0.25)';
+      ctx.fillRect(tx+tw*0.05,ty,tw*0.9,th*0.45);
+      ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=1;
+      ctx.strokeRect(tx+tw*0.05,ty,tw*0.9,th*0.45);
+      ctx.fillStyle='#dff3f7';
+      for(let i=0;i<3;i++){
+        ctx.beginPath();
+        ctx.arc(tx+tw*(0.2+i*0.3),ty+th*0.22,tw*0.035,0,7);
+        ctx.fill();
+      }
       break;
     }
     case 'booth':{
@@ -4957,8 +5067,30 @@ function drawInteriorFurniture(ctx, f, time){
       ctx.beginPath(); ctx.ellipse(tx+tw*0.85,ty+th*0.25,2,2,0,0,7); ctx.fill();
       break;
     }
+    // Herd im Trap-Haus (Nutzer-Vorgabe): echtes Bild statt Platzhalter-Box — nur dieser eine Herd im
+    // ganzen File nutzt k:'stove', gefahrlos auf ein reales Bild umstellbar.
+    case 'stove':{
+      ctx.drawImage(IMAGES.stove_methlab,tx,ty,tw,th);
+      break;
+    }
+    // Deko neben jeder Meth-Labor-Koch-Station (Nutzer-Vorgabe), rein optisch, keine Interaktion.
+    case 'lab_flask_deco':{
+      ctx.drawImage(IMAGES.lab_flask_deco,tx,ty,tw,th);
+      break;
+    }
+    case 'lab_canister_deco':{
+      ctx.drawImage(IMAGES.lab_canister_deco,tx,ty,tw,th);
+      break;
+    }
     /* ===== Paket 11: Meth-Labor-Stationen ===== */
     case 'cookstation':{
+      // Nutzer-Vorgabe: nach dem Kristallisieren zeigt die Station das fertige Produkt (Lampe+Kiste)
+      // statt der Flammen-Optik — sichtbarer Hinweis "hier gibt's was zu ernten", ohne Extra-UI.
+      const cook=player.methCooks&&player.methCooks[f.slotIndex];
+      if(cook&&cook.phase==='ready'){
+        ctx.drawImage(IMAGES.meth_ready,tx,ty,tw,th);
+        break;
+      }
       // Dunkle Herdplatte mit 3 Flammen + Thermometer — zentrale Interaktions-Station
       ctx.fillStyle='#2a2a2e';
       ctx.fillRect(tx,ty,tw,th);
@@ -5269,7 +5401,7 @@ function areaFree(tx,ty,wT,hT){
 }
 
 let trapHouse=null;
-let richTrap=null, kioskB=null, restaurantB=null, alleySpot=null, constructionSite=null, growShopB=null, dripShopB=null, casinoB=null;
+let richTrap=null, kioskB=null, restaurantB=null, alleySpot=null, constructionSite=null, growShopB=null, dripShopB=null, casinoB=null, jewelryB=null;
 let policeStationB=null;   // Polizei (Stufe 3): Außenfassade + Entlassungspunkt, siehe releaseFromCustody()
 
 function placeWithFallback(type,tx,ty,opts){
@@ -5298,6 +5430,8 @@ function genSpecialPlaces(){
   kioskB=placeWithFallback('shop_kiosk',516,470);
   growShopB=placeWithFallback('shop_grow',498,478);
   dripShopB=placeWithFallback('shop_drip',540,516);
+  // Juwelier (Nutzer-Vorgabe): beim bestehenden Cluster aus reicher Trap/Grow-/Drip-Shop, thematisch passend.
+  jewelryB=placeWithFallback('shop_jewelry',556,478);
   policeStationB=placeWithFallback('shop_police',488,462);   // Polizei (Stufe 3): Landmark + Entlassungspunkt
   // Casino direkt neben dem Bahnhof (wie im echten Leben) — Position relativ zum tatsächlich
   // platzierten Bahnhof-Gebäude berechnet, nicht hart auf feste Koordinaten verdrahtet.
@@ -5319,6 +5453,7 @@ function genSpecialPlaces(){
   }
   if(growShopB) debugLocations.growshop={x:growShopB.door.x,y:growShopB.baseY+40,name:'Grow Shop'};
   if(dripShopB) debugLocations.drip={x:dripShopB.door.x,y:dripShopB.baseY+40,name:'DRIP'};
+  if(jewelryB) debugLocations.juwelier={x:jewelryB.door.x,y:jewelryB.baseY+40,name:'Juwelier'};
   if(policeStationB) debugLocations.polizei={x:policeStationB.door.x,y:policeStationB.baseY+40,name:'Polizeiwache'};
   if(casinoB) debugLocations.casino={x:casinoB.door.x,y:casinoB.baseY+40,name:'EL DORADO SPIELHALLE'};
   // Baustelle für den Worker-Job
@@ -5663,6 +5798,7 @@ function renderInterior(time){
   ctx.drawImage(IMAGES.player,p.frame*32,p.dir*64,32,64,
     Math.round(p.x)-16,Math.round(p.y)-60,32,64);
   if(player.outfit==='tracksuit') drawTracksuitStripe(Math.round(p.x)-16, Math.round(p.y)-60, p.dir);
+  if(player.hasChain||player.hasWatch) drawJewelryAccessories(Math.round(p.x)-16, Math.round(p.y)-60, p.dir);
   // Paket B: Kippe/Joint/Blunt + Flasche auch drinnen am Sprite (fehlte hier komplett)
   drawConsumables(Math.round(p.x),Math.round(p.y)-EQUIP_ANCHOR_DY,p.dir);
   // Paket 18: Sprechblasen der ambienten Interior-NPCs (Kopie aus renderBubbles(), ohne
@@ -6126,6 +6262,10 @@ function interactInterior(){
   }
   if(f.interactive==='dripshop'){
     openDripshopUI();
+    return;
+  }
+  if(f.interactive==='jewelershop'){
+    openJewelerUI();
     return;
   }
   if(f.interactive==='casino_slot'){
@@ -6909,6 +7049,47 @@ function updateRobbery(dt){
     toast(t('robbery.success',{amount:cash}));
     addHeat(POLICE_CFG.heatPerRobbery);
     logCrime('shopRobbery');
+    saveGame();
+  }
+}
+// Juwelier-Ueberfall (Nutzer-Vorgabe): 1:1-Muster von updateRobbery(), aber eigene Konstanten/State/
+// Ausgang (Diamanten statt Cash) — bewusst EIGENE Funktion statt updateRobbery() zu erweitern, denn
+// die wird von 7 bestehenden Ladenkassen geteilt (Aenderungsrisiko fuer alle). Trigger ueber f.heistable
+// (NICHT f.robbable), sonst wuerden beide Systeme beim selben Tastendruck gleichzeitig feuern.
+const JEWELRY_HEIST_HOLD_TIME=4.5, JEWELRY_HEIST_ALARM_CHANCE=0.4, JEWELRY_HEIST_COOLDOWN_MS=900000;
+function updateJewelryHeist(dt){
+  if(!interior||dialog.active||invOpen||phoneOpen){ player.heisting=null; return; }
+  const f=intInteractTarget;
+  const holding=keys.has('k')&&f&&f.heistable;
+  if(!holding){
+    if(player.heisting){ player.heisting=null; toast(t('jewelryheist.aborted')); }
+    return;
+  }
+  if(!player.heisting||player.heisting.f!==f){
+    if(f.heistAt&&Date.now()-f.heistAt<JEWELRY_HEIST_COOLDOWN_MS){ toast(t('jewelryheist.cooldown')); return; }
+    const willAlarm=Math.random()<JEWELRY_HEIST_ALARM_CHANCE;
+    player.heisting={f,t:0,willAlarm,alarmAt:willAlarm?rand(JEWELRY_HEIST_HOLD_TIME*0.25,JEWELRY_HEIST_HOLD_TIME*0.85):999};
+    toast(t('jewelryheist.started'));
+  }
+  const r=player.heisting;
+  r.t+=dt;
+  // Nutzer-Vorgabe (Konsistenz mit ATM-Fix/WEGRENNEN): Alarm ist NICHT sofort/unausweichlich — nur
+  // Strafregister + Heat, die Polizei kommt ueber das normale Chase-System, Flucht bleibt moeglich.
+  if(r.willAlarm&&r.t>=r.alarmAt){
+    player.heisting=null;
+    toast(t('jewelryheist.alarm'));
+    logCrime('jewelryHeistCaught');
+    addHeat(POLICE_CFG.heatPerJewelryHeist);
+    return;
+  }
+  if(r.t>=JEWELRY_HEIST_HOLD_TIME){
+    const n=randi(2,5);
+    invAdd('diamond',n);
+    f.heistAt=Date.now();
+    player.heisting=null;
+    toast(t('jewelryheist.success',{n}));
+    addHeat(POLICE_CFG.heatPerJewelryHeist);
+    logCrime('jewelryHeist');
     saveGame();
   }
 }
@@ -8296,6 +8477,8 @@ const player={
   // Panzerschrank (Nutzer-Vorgabe): zweites, unabhaengiges Lager, das confiscateContraband() nie
   // referenziert — dadurch immun gegen Hausdurchsuchung UND Personen-Konfiszierung bei Verhaftung.
   hasExtraSafe:false, extraSafe:[],
+  // Juwelier (Nutzer-Vorgabe): Ketten/Uhren als einfache Flags, analog hasLaptop/hasSkimmer.
+  hasChain:false, hasWatch:false,
   // Casino (Paket 17): Spin dauert nur ~1-2 Echtzeit-Sekunden, bewusst kein Save/Load-Eintrag
   slotSpin:null,
   // DRIP-Outfit (Paket 8): aktuell getragenes Paletten-Preset, siehe OUTFIT_PALETTES/applyOutfit()
@@ -8423,6 +8606,7 @@ const POLICE_CFG={
   heatPerDrinkPublic: 6,       // Felony-Erweiterung: öffentlicher Alkoholkonsum, deutlich unter heatDeal (12)
   heatPerFraud: 10,            // Für den (noch geplanten) Scammer-Job reserviert — heatPerDeal(12) > heatPerFraud > heatPerGunOut
   heatPerRobbery: 15,          // Nutzer-Vorgabe: ausraubbare Laeden — spuerbar ueber heatPerDeal(12), unter heatPerKill(25)
+  heatPerJewelryHeist: 20,     // Juwelier-Ueberfall: groesser als ein Laden-Raub (15), aber unter Kill(25)/Explosion(30)
   // Aktives Dispatch (Nutzer-Feedback: "5 Sterne, volle Автomatik, nix passiert" — reine Ambient-Patrouillen
   // finden den Spieler auf der riesigen Karte viel zu selten, siehe NPC_ACTIVE_D2-Deckelung im Haupt-Loop).
   // Ab 1 Fahndungsstern werden fehlende Verfolger direkt in Spielernähe nachgespawnt statt zu hoffen,
@@ -8470,6 +8654,11 @@ const CRIME_CATALOG={
   // Nutzer-Vorgabe (Korrektur): Karten-Kloning/ATM-Fehlschlag ist milder als ein Juwelier-Alarm —
   // nur noch 20 Min Haft (severity 3, wie dealing/shopRobbery), nicht mehr 50 Min.
   cardFraudCaught:  {severity:3},
+  // Juwelier-Ueberfall (Nutzer-Vorgabe): erfolgreich = severity 4 (wie shopRobberyCaught/methExplosion,
+  // 40 Min), bei Alarm erwischt = severity 5 (wie das alte cardFraudCaught, 50 Min) — ein Juwelier-Job
+  // ist ein groesseres Ding als ein Laden-Raub, daher jeweils eine Stufe hoeher.
+  jewelryHeist:      {severity:4},
+  jewelryHeistCaught:{severity:5},
   killGang:      {severity:6},
   killCivilian:  {severity:8},
   killCop:       {severity:12}
@@ -8843,6 +9032,12 @@ function respawnPlayer(){
       n.waitT=rand(0.5,2);
     }
   }
+  // Bugfix (weißer-Bildschirm/Lag-Untersuchung): Respawn setzt player.px/py schon lange auf die
+  // Aussen-Koordinaten (Kommentar "landet immer draußen" war schon da), aber interior/intFade wurden nie
+  // zurueckgesetzt — starb man drinnen, blieb der Interior-Render-Zweig (render()s intFade>0-Gate) aktiv
+  // und zeigte fuer immer den letzten Raum, waehrend der Spieler logisch schon draussen war (Desync).
+  // Gleiches Force-Exit-Muster wie in startArrest() (Zeile ~9008) fuer denselben Fall.
+  if(interior){ interior=null; intFade=0; intFadeDir=0; intTargetBuilding=null; }
   el('minimap-wrap').classList.remove('hidden'); // Respawn landet immer draußen (auch nach Tod in einem Gebäude)
   toast(t('toast.playerDown',{lost}));
   saveGame();
@@ -9355,6 +9550,11 @@ function doorDialog(b){
       const tip=tutorialLine('shop_drip'); if(tip) lines.push(tip);
       openDialog(t('speakers.drip'),lines);
       break;}
+    case 'shop_jewelry':{
+      const lines=[t('door.jewelry.0'),t('door.jewelry.1'),t('door.jewelry.2')];
+      const tip=tutorialLine('shop_jewelry'); if(tip) lines.push(tip);
+      openDialog(t('speakers.jeweler'),lines);
+      break;}
     case 'shop_casino':{
       const lines=[night?t('door.casino.0'):t('door.casino.1'),t('door.casino.2')];
       const tip=tutorialLine('shop_casino'); if(tip) lines.push(tip);
@@ -9605,6 +9805,23 @@ const ITEMS={
   blank_card:{ icon:'card', cat:'tool', weight:5, use(){ toast(t('items.blank_card.desc')); return false; } },
   // Geladene Karte: Ergebnis von doCarding(), wird am Geldautomaten verbraucht (siehe resolveAtm()).
   loaded_card:{ icon:'card', cat:'tool', weight:5, use(){ toast(t('items.loaded_card.desc')); return false; } },
+  // Juwelier (Nutzer-Vorgabe): Diamant ist reine Rohware, wird beim Dealer verhehlt oder beim
+  // Juwelier zu Schmuck verarbeitet (siehe sellDiamondsToDealer()/craftJewelry()) — use() ist Flavor.
+  diamond:{ icon:'diamond', cat:'tool', weight:5, use(){ toast(t('items.diamond.desc')); return false; } },
+  // Kette/Uhr: gekauft ODER aus Diamanten verarbeitet erzeugen dasselbe Item (siehe craftJewelry()) —
+  // gleiches use()-Muster wie laptop_carding/skimmer (einmalig, permanent, player.hasX-Flag).
+  chain:{ icon:'chain', cat:'tool', weight:50,
+             use(){
+               if(player.hasChain){ toast(t('items.chain.already')); return false; }
+               player.hasChain=true;
+               toast(t('items.chain.installed')); saveGame(); return true;
+             } },
+  watch:{ icon:'watch', cat:'tool', weight:80,
+             use(){
+               if(player.hasWatch){ toast(t('items.watch.already')); return false; }
+               player.hasWatch=true;
+               toast(t('items.watch.installed')); saveGame(); return true;
+             } },
   baggies: { icon:'baggy_empty', cat:'tool', weight:0.5, use(){ openPackUI(); return false; } },
   scale:   { icon:'scale', cat:'tool', weight:400,
              use(){ toast(t('items.scale.desc')); return false; } },
@@ -10084,6 +10301,10 @@ function makeItemIcons(){
   ITEM_ICONS.fullyarp='german_streetz_assets/fullyarp.png';
   ITEM_ICONS.militaryarp='german_streetz_assets/militaryarp.png';
   ITEM_ICONS.costumfullyarp='german_streetz_assets/costumfullyarp.png';
+  // Meth-Labor-Slot-Icons (Nutzer-Vorgabe): echte Bilder je Ausbaustufe statt geliehenem Gasmasken-Icon.
+  ITEM_ICONS.methlab_slot1='german_streetz_assets/meth_slot1_icon.png';
+  ITEM_ICONS.methlab_slot2='german_streetz_assets/meth_slot2_icon.png';
+  ITEM_ICONS.methlab_slot3='german_streetz_assets/meth_slot3_icon.png';
   // Waffen-Update: Glock-40-Icon (Trommel-Magazin)
   ITEM_ICONS.g40='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAXCAYAAAARIY8tAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQySURBVEhLlVXPi9x0FA9WWCw7zE4y+eb3JJPkO/k9SSaZ36uZLZVdDwWF3f9ARLEHQdCD4oI3QVAvPYgoCAqCHgRFEQ8elEJBiqV4qCAUS6Wgh7GioOKT952udkOh4wceLyHv17z3eW84juO4juM/5sbDnxPfKRRFaf8nm0xzHHcS7W7D5p3sjrRpmn4cx++maapxsj9/Szr9/N/6Q4eQpumvZTFYFkWxnM1my6paLBeLneVgMLgWhuGlJEkux3F8eTAYXN9Z7CyrqlouFotldSRH71X12+7uLmRZ9j5HugWYcQWd6AGIogj6/T7EcQxFUcJ0NofpdAbj8QQmkylMJhOYTGewvX0/DIdDKMsSRqMxsyvLIbPN8hzSLIP5fBs8z/uL0wz7QpknEHgOUEqh1+sxHYYR5PkA0jSDKIohimOWGAvIshySJLn1nkKe5+wZ7VGjDEcjME3za65j6OcxKFaPhlmWwWAwgDAMQdd1lqwoCsizjFXt+z5Ylsmex+Mxe7dtG1zXBcdxoNejWDkTWZZf4jRNo5ubm/uiKP7g+x6UZcGSYIVB4ONcYDgsWcIwDIBSlyXAoo6KkGUJg4GmaaAoyp+KovyhadovoijO/qUFIeQFNMBq5/MZk+l0AnmegaLIQAgBnuffEwThjCiKLxNCfm80Gmd4nn/KpRS63S4EQQCqqp52XddJkkQ/xjtZll9DoySOIUliyNIU0rTPqm21Whd6vv8qpfRDtN3f378vDINL+FxV1b3tdvtby7JAkqSPjwW9DRuGYVzFvq1aEUIYhay37baA/f2x3+8/3uv1roRheDYIgldwXnmem+hMSPsiMopS+k49MIOu67s4IBwYDhslvqV5nv+cEDJxHOc5x3GeRG3b9iGl9GnP89SDg4MThJArmLDb7X5Qj81gGMZHOGDsIQbFYfb7CQS+jz/7xbr9cbgbkiRdxdlRSj+tf8Xel0fVo2AS1MgeXdduSpJk1X1qOEkIuTkajbCl5+sfuU6n8yYGRUo67orHUbSipKqqn9Tt74AToii+7nneZ5qmPVv/yFmWeQ1Zg0FXLQrZHuCCNZvNc0EQPOz7vlL3WxuWZT1j2/ZPuDi2YzNa4vIossy2ExlFe70bju8Xdd+1gXMQBOGr5lYTGo0G20g8F3gOUCNDKKXf7e3tbdR914aqqk8g51VVZUdr59Qpdi3n8zljlud7OMRH6n5rw3Zd5DboxurA4RxW5zthh8sPAjAt842639rodDpncd3bYpsdL9M0WWCcy2qzI1ykL+p+a0NV1VySCAgCD0JbwKvIEnTtLjvD+H/QdZwv635r4/Dw8B5Zli/i1WzxLSBEZGxCJpmWyTSl9Fzd73/BMIwHMcHW1hbuAGsXMgqPnm3b33ied7etvjsURXlUFMXrPN/6vtlsvq0oylme58e4sXXbdfAPzmqzjJwYCroAAAAASUVORK5CYII=';
   // Vodka: klare Flasche mit weißem Etikett und Silber-Kappe
@@ -10357,6 +10578,35 @@ function makeItemIcons(){
   x.fillStyle='#c9a227';
   x.fillRect(6,15,6,2);
   ITEM_ICONS.card=c.toDataURL();
+  // Juwelier (Nutzer-Vorgabe): Diamant, Kette, Uhr — drei neue Icons.
+  // Diamant: facettierter Stein, eisblau/weiß.
+  c=mkCanvas(24,24); x=c.getContext('2d');
+  x.fillStyle='#dff3f7';
+  x.beginPath(); x.moveTo(12,3); x.lineTo(19,9); x.lineTo(15,20); x.lineTo(9,20); x.lineTo(5,9); x.closePath(); x.fill();
+  x.fillStyle='#a8dbe8';
+  x.beginPath(); x.moveTo(12,3); x.lineTo(15,9); x.lineTo(9,9); x.closePath(); x.fill();
+  x.strokeStyle='#ffffff'; x.lineWidth=0.5;
+  x.beginPath(); x.moveTo(9,9); x.lineTo(15,9); x.lineTo(12,20); x.closePath(); x.stroke();
+  ITEM_ICONS.diamond=c.toDataURL();
+  // Kette: goldene Ringkette, U-Form.
+  c=mkCanvas(24,24); x=c.getContext('2d');
+  x.strokeStyle='#f5c542'; x.lineWidth=3; x.lineCap='round';
+  x.beginPath(); x.moveTo(6,5); x.quadraticCurveTo(6,18,12,19); x.quadraticCurveTo(18,18,18,5); x.stroke();
+  x.fillStyle='#e3c93a';
+  x.beginPath(); x.arc(12,19,2.2,0,7); x.fill();
+  ITEM_ICONS.chain=c.toDataURL();
+  // Uhr: rundes Gold-Zifferblatt mit Armband oben/unten.
+  c=mkCanvas(24,24); x=c.getContext('2d');
+  x.fillStyle='#3a3a3a';
+  x.fillRect(9,1,6,6); x.fillRect(9,17,6,6);
+  x.fillStyle='#f5c542';
+  x.beginPath(); x.arc(12,12,7,0,7); x.fill();
+  x.fillStyle='#1a1a1a';
+  x.beginPath(); x.arc(12,12,4.5,0,7); x.fill();
+  x.strokeStyle='#f5c542'; x.lineWidth=1;
+  x.beginPath(); x.moveTo(12,12); x.lineTo(12,9); x.stroke();
+  x.beginPath(); x.moveTo(12,12); x.lineTo(14,13); x.stroke();
+  ITEM_ICONS.watch=c.toDataURL();
 }
 makeItemIcons();
 
@@ -10730,7 +10980,9 @@ function renderDealershop(){
     const row=document.createElement('div');
     row.className='shop-row';
     const img=document.createElement('img');
-    img.src=ITEM_ICONS[ITEMS.gasmask.icon];   // geliehenes Labor-Icon, kein eigenes Stationen-Icon nötig
+    // Nutzer-Vorgabe: echte Icons je Ausbaustufe (Slot 1-3) statt geliehenem Gasmasken-Icon — Stufe 4
+    // nutzt bewusst dasselbe Bild wie Stufe 3 (keine eigene 4. Grafik vorhanden).
+    img.src=ITEM_ICONS['methlab_slot'+Math.min(player.methLabSlots+1,3)];
     img.alt='';
     const name=document.createElement('div');
     name.className='shop-row-name';
@@ -10745,6 +10997,36 @@ function renderDealershop(){
     row.appendChild(img); row.appendChild(name); row.appendChild(priceEl); row.appendChild(btn);
     box.appendChild(row);
   }
+  // Juwelier (Nutzer-Vorgabe): Diamanten aus dem Ueberfall beim Dealer als Hehler verkaufen — gleiche
+  // Extra-Zeile-Technik wie der Methlabor-Slot-Kauf oben, nur sichtbar wenn ueberhaupt Diamanten da sind.
+  if(invCount('diamond')>0){
+    const row=document.createElement('div');
+    row.className='shop-row';
+    const img=document.createElement('img');
+    img.src=ITEM_ICONS[ITEMS.diamond.icon];
+    img.alt='';
+    const name=document.createElement('div');
+    name.className='shop-row-name';
+    name.textContent=t('dealer.sellDiamonds',{n:invCount('diamond')});
+    const priceEl=document.createElement('div');
+    priceEl.className='shop-row-price';
+    priceEl.textContent=(invCount('diamond')*DIAMOND_FENCE_PRICE)+'$';
+    const btn=document.createElement('button');
+    btn.textContent=t('dealer.sellBtn');
+    btn.addEventListener('click',sellDiamondsToDealer);
+    row.appendChild(img); row.appendChild(name); row.appendChild(priceEl); row.appendChild(btn);
+    box.appendChild(row);
+  }
+}
+const DIAMOND_FENCE_PRICE=300;
+function sellDiamondsToDealer(){
+  const n=invCount('diamond');
+  if(n<=0) return;
+  invRemove('diamond',n);
+  player.money+=n*DIAMOND_FENCE_PRICE;
+  toast(t('dealer.diamondsSold',{n,amount:n*DIAMOND_FENCE_PRICE}));
+  saveGame();
+  renderDealershop();
 }
 function buyDealershopItem(g){
   if(player.money<g.price){ toast(t('dealer.noMoney')); return; }
@@ -10814,6 +11096,99 @@ function buyScammerItem(g){
 }
 window.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&!el('scammershop-box').classList.contains('hidden')) closeScammerShopUI();
+});
+
+/* ---------------- Juwelier-Shop-UI (Nutzer-Vorgabe): Ketten/Uhren kaufen ODER aus Diamanten
+   verarbeiten — beide Wege erzeugen absichtlich dasselbe Item (gleicher hasChain/hasWatch-Flag). */
+const JEWELER_ITEMS=[
+  {id:'chain', price:2500, n:1},
+  {id:'watch', price:4000, n:1}
+];
+const JEWELRY_CRAFT_RECIPES={ chain:{diamonds:3,fee:500}, watch:{diamonds:4,fee:800} };
+let jewelershopOpen=false;
+function openJewelerUI(){
+  if(dialog.active) return;
+  closeInventory(); closePhone();
+  el('jewelershop-title').textContent=t('jeweler.title');
+  el('jewelershop-hint').textContent=t('jeweler.hint');
+  renderJewelerShop();
+  el('jewelershop-box').classList.remove('hidden');
+  jewelershopOpen=true;
+  showPanelBackdrop(closeJewelerUI);
+}
+function closeJewelerUI(){ el('jewelershop-box').classList.add('hidden'); jewelershopOpen=false; hidePanelBackdrop(); }
+el('jewelershop-close').addEventListener('click', closeJewelerUI);
+function renderJewelerShop(){
+  const box=el('jewelershop-content');
+  box.innerHTML='';
+  for(const g of JEWELER_ITEMS){
+    const row=document.createElement('div');
+    row.className='shop-row';
+    // Ketten/Uhren sind Einmal-Cosmetics wie Laptop/Skimmer — Zweitkauf waere sinnlos.
+    const owned=(g.id==='chain'&&player.hasChain)||(g.id==='watch'&&player.hasWatch);
+    const img=document.createElement('img');
+    img.src=ITEM_ICONS[ITEMS[g.id].icon];
+    img.alt='';
+    const name=document.createElement('div');
+    name.className='shop-row-name';
+    name.textContent=itemName(g.id)+(g.n>1?' ×'+g.n:'');
+    const price=document.createElement('div');
+    price.className='shop-row-price';
+    price.textContent=g.price+'$';
+    const btn=document.createElement('button');
+    btn.textContent=owned?t('armor.alreadyOwned'):'+';
+    btn.disabled=owned||player.money<g.price;
+    btn.addEventListener('click',()=>buyJewelerItem(g));
+    row.appendChild(img); row.appendChild(name); row.appendChild(price); row.appendChild(btn);
+    box.appendChild(row);
+  }
+  // Verarbeitung (Nutzer-Vorgabe: "alles ein System"): Diamanten + Gebuehr statt Bargeld — gleiche
+  // Extra-Zeile-Technik wie der Meth-Labor-Slot-Kauf im Dealer-Shop (renderDealershop()).
+  for(const id in JEWELRY_CRAFT_RECIPES){
+    const r=JEWELRY_CRAFT_RECIPES[id];
+    const owned=id==='chain'?player.hasChain:player.hasWatch;
+    const row=document.createElement('div');
+    row.className='shop-row';
+    const img=document.createElement('img');
+    img.src=ITEM_ICONS[ITEMS[id].icon];
+    img.alt='';
+    const name=document.createElement('div');
+    name.className='shop-row-name';
+    name.textContent=t('jeweler.craftLabel',{name:itemName(id),n:r.diamonds,fee:r.fee});
+    const price=document.createElement('div');
+    price.className='shop-row-price';
+    price.textContent=invCount('diamond')+'💎';
+    const btn=document.createElement('button');
+    btn.textContent=owned?t('armor.alreadyOwned'):'+';
+    btn.disabled=owned||invCount('diamond')<r.diamonds||player.money<r.fee;
+    btn.addEventListener('click',()=>craftJewelry(id));
+    row.appendChild(img); row.appendChild(name); row.appendChild(price); row.appendChild(btn);
+    box.appendChild(row);
+  }
+}
+function buyJewelerItem(g){
+  if(player.money<g.price){ toast(t('dealer.noMoney')); return; }
+  if(!invAdd(g.id,g.n||1)) return;   // Geld erst NACH erfolgreichem invAdd abbuchen
+  player.money-=g.price;
+  toast(t('dealer.bought',{name:itemName(g.id),price:g.price}));
+  saveGame();
+  renderJewelerShop();
+}
+function craftJewelry(id){
+  const owned=id==='chain'?player.hasChain:player.hasWatch;
+  if(owned){ toast(t('armor.alreadyOwned')); return; }
+  const r=JEWELRY_CRAFT_RECIPES[id];
+  if(invCount('diamond')<r.diamonds){ toast(t('jeweler.needDiamonds')); return; }
+  if(player.money<r.fee){ toast(t('dealer.noMoney')); return; }
+  if(!invAdd(id,1)) return;   // Ressourcen erst NACH erfolgreichem invAdd abbuchen
+  invRemove('diamond',r.diamonds);
+  player.money-=r.fee;
+  toast(t('jeweler.crafted',{name:itemName(id)}));
+  saveGame();
+  renderJewelerShop();
+}
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!el('jewelershop-box').classList.contains('hidden')) closeJewelerUI();
 });
 
 /* ---------------- Carding-UI: am Laptop im Trap-Haus (Nutzer-Vorgabe) ----------------
@@ -12229,6 +12604,21 @@ function drawTracksuitStripe(bx,by,dir){
   else if(dir===2) bar(9,21,46);
   else { bar(8,21,46); bar(24,21,46); }
 }
+// Juwelier-Schmuck (Nutzer-Vorgabe): render-time Overlay wie drawTracksuitStripe() oben — bewusst NICHT
+// in phChar() gebacken (das Weste-Muster), damit es unabhaengig vom aktiven Outfit (Farbpalette ODER
+// realArt-Sprite wie der Trainingsanzug) immer sichtbar bleibt. Kleine Gold-Akzente, gleiches Prinzip
+// wie die Boss-Goldkette (phBoss()) — kein fotorealistischer Schmuck nötig auf dieser Sprite-Groesse.
+function drawJewelryAccessories(bx,by,dir){
+  if(dir===3) return;   // von hinten nicht sichtbar, gleiches Prinzip wie drawConsumables()
+  if(player.hasChain){
+    ctx.fillStyle='#f5c542';
+    ctx.fillRect(bx+13,by+19,6,2);
+  }
+  if(player.hasWatch){
+    ctx.fillStyle='#f5c542';
+    ctx.fillRect(bx+23,by+33,3,2);
+  }
+}
 /* Paket B: Rauchen/Trinken funktioniert jetzt auch drinnen — dort steht der Spieler auf
    intPlayer.x/y, während player.px/py die (veraltete) Außenwelt-Position behält. Ohne diesen
    Anker spawnten Rauch-Partikel drinnen an der falschen Stelle und waren nie sichtbar. */
@@ -12389,6 +12779,7 @@ function phoneDests(){
   if(kioskB) d.push({key:'spaeti', x:kioskB.door.x, y:kioskB.baseY+30});
   if(growShopB) d.push({key:'growshop', x:growShopB.door.x, y:growShopB.baseY+30});
   if(dripShopB) d.push({key:'drip', x:dripShopB.door.x, y:dripShopB.baseY+30});
+  if(jewelryB) d.push({key:'juwelier', x:jewelryB.door.x, y:jewelryB.baseY+30});
   if(casinoB) d.push({key:'casino', x:casinoB.door.x, y:casinoB.baseY+30});
   if(trapHouse) d.push({key:'home', x:trapHouse.door.x, y:trapHouse.baseY+30});
   const st=BUILDINGS.find(b=>b.type==='station');
@@ -12934,6 +13325,7 @@ function update(dt){
     updateGrowPots(dt);
     updateMethCooks(dt);
     updateRobbery(dt);
+    updateJewelryHeist(dt);
     updateBuyerCalls(dt);
     updateWalkupCooldowns(dt);
     updateSlotSpin(dt);
@@ -12955,6 +13347,12 @@ function update(dt){
     // no-opt bei arrestFadeDir===0, updateCustody bei verstecktem Overlay) — sicher, hier zusätzlich zu rufen.
     updateArrestFade(dt);
     updateCustody(dt);
+    // Bugfix (weißer-Bildschirm/Lag-Untersuchung): fehlte hier bisher komplett — starb der Spieler drinnen
+    // (z.B. durch eine unbeaufsichtigt explodierende Meth-Kueche, updateMethCooks() oben laeuft ja schon
+    // interior-unabhaengig), wurde die Todes-Sequenz erst beim naechsten Verlassen des Gebaeudes nachgeholt,
+    // ploetzlich und ohne erkennbaren Auslöser — genau das "zufaellig, mitten im Spiel" Verhalten. Gleiches
+    // Muster wie updateArrestFade/updateCustody direkt darueber (waren fuer die Zelle bereits ergaenzt worden).
+    updateDeathFade(dt);
     return;
   }
   // Bewegung
@@ -13210,6 +13608,7 @@ function render(time){
         ctx.drawImage(IMAGES.player, player.frame*32, player.dir*64,32,64,
                     Math.round(player.px)-16, Math.round(player.py)-60, 32,64);
         if(player.outfit==='tracksuit') drawTracksuitStripe(Math.round(player.px)-16, Math.round(player.py)-60, player.dir);
+        if(player.hasChain||player.hasWatch) drawJewelryAccessories(Math.round(player.px)-16, Math.round(player.py)-60, player.dir);
       }
       // Kippe/Joint/Blunt + Flasche sichtbar (Rückenansicht: verdeckt) — Paket B: gemeinsame
       // Zeichnung mit renderInterior(), siehe drawConsumables()
@@ -13247,7 +13646,11 @@ function render(time){
           // in der Icon-Mitte, das hatte die "hängt verkehrt"-Optik verursacht), damit die Hand nah am Körper
           // bleibt und nur die Spitze weit nach vorne schwingt.
           const p=Math.min(1,player.atkAnim.t/player.atkAnim.dur), swing=Math.sin(p*Math.PI);
-          const reach=WEAPON_STATS[player.weapon].reach;
+          // Bugfix (weißer-Bildschirm/Lag-Untersuchung): alle anderen WEAPON_STATS-Lookups im File nutzen
+          // ||'fist' als Absicherung gegen einen Waffen-Namen ohne Stats-Eintrag — diese Stelle hatte sie
+          // nicht, ein einziger Datendrift (neue Waffe ohne WEAPON_STATS-Eintrag) hätte hier bei JEDEM
+          // Stich-Frame geworfen und render() ab diesem Punkt dauerhaft einfrieren lassen.
+          const reach=WEAPON_STATS[player.weapon||'fist'].reach;
           const dist=swing*reach*0.85;
           const bx=Math.round(player.px)-6, by=anchor.y;
           const ox=av.dvx*dist, oy=av.dvy*dist;
@@ -13322,9 +13725,15 @@ function render(time){
     } else if(e.isRat){
       ctx.drawImage(IMAGES.rat,e.frame*10,0,10,7,Math.round(e.px)-5,Math.round(e.py)-6,10,7);
     } else if(e.isBench||e.isProp){
-      ctx.drawImage(IMAGES[e.type], Math.round(e.px), Math.round(e.py));
+      // Bugfix (weißer-Bildschirm/Lag-Untersuchung): IMAGES[e.type] hatte keine Absicherung — ein einziger
+      // Typo/Datendrift zwischen einem addProp()-Aufruf und dem MANIFEST-Key wuerde hier bei JEDEM Frame
+      // werfen (die Bank/das Prop bleibt ja dauerhaft im Array) und render() ab diesem Punkt fuer immer
+      // einfrieren lassen, statt nur einmal. Fehlendes Bild wird jetzt uebersprungen statt zu crashen.
+      const img=IMAGES[e.type];
+      if(img) ctx.drawImage(img, Math.round(e.px), Math.round(e.py));
     } else {
-      ctx.drawImage(IMAGES[e.type], e.px, e.py);
+      const img=IMAGES[e.type];
+      if(img) ctx.drawImage(img, e.px, e.py);
     }
   }
   renderParticles(vw,vh);
@@ -13523,6 +13932,12 @@ const Music={
   },
   sched(){
     const spb=60/this.bpm/4;
+    // Bugfix (weißer-Bildschirm/Lag): nach einer laengeren Zeit im Hintergrund-Tab wird setInterval
+    // gedrosselt, aber ctx.currentTime laeuft echtzeit-genau weiter — ohne diese Bremse wuerde die
+    // While-Schleife beim Zurueckkommen tausende verpasste Sechzehntel in EINEM synchronen Rutsch
+    // nachholen (jede mit eigenen AudioNode-Allokationen) und den Main-Thread mehrere Sekunden blockieren.
+    // Bei grosser Luecke einfach auf "jetzt" vorspulen statt nachzuholen.
+    if(this.nextT<this.ctx.currentTime-1) this.nextT=this.ctx.currentTime;
     while(this.nextT < this.ctx.currentTime+0.12){
       this.playStep(this.step,this.nextT);
       this.step=(this.step+1)%64;
@@ -13621,6 +14036,8 @@ const Reggae={
   },
   sched(){
     const spb=60/this.bpm/4;               // Sechzehntel-Dauer
+    // Bugfix (weißer-Bildschirm/Lag): gleicher Nachhol-Bug wie bei Music.sched() — siehe Kommentar dort.
+    if(this.nextT<this.ctx.currentTime-1) this.nextT=this.ctx.currentTime;
     while(this.nextT<this.ctx.currentTime+0.12){
       this.playStep(this.step,this.nextT);
       this.step=(this.step+1)%16;
@@ -13816,6 +14233,7 @@ function saveGame(){
       methLabSlots:player.methLabSlots, methCooks:player.methCooks,
       hasLaptop:player.hasLaptop, hasSkimmer:player.hasSkimmer,
       hasExtraSafe:player.hasExtraSafe, extraSafe:player.extraSafe,
+      hasChain:player.hasChain, hasWatch:player.hasWatch,
       outfit:player.outfit,
       hasVest:player.hasVest, hasVestMilitary:player.hasVestMilitary, tutorialsSeen:player.tutorialsSeen,
       timesArrested:player.timesArrested,
@@ -13938,7 +14356,14 @@ function loop(t){
     update(dt);
     render(t);
   }catch(e){
-    if(loopErrs++<5) console.error('[GS] Frame-Fehler (Loop läuft weiter):', e);
+    loopErrs++;
+    // Bugfix (weißer-Bildschirm/Lag-Untersuchung): der alte 5er-Deckel liess ALLE Fehler ab dem 6. in der
+    // Session spurlos verschwinden — genau das hat bisher jede Diagnose des Bugs verhindert (kein
+    // Konsolen-Fehler sichtbar trotz echtem Dauer-Fehler). Jetzt grosszuegiger gedeckelt (200, nicht
+    // unbegrenzt, gegen Konsolen-Spam bei einem echten Dauer-Fehler) + einmaliger Toast beim ERSTEN Fehler,
+    // damit man's auch ohne offene DevTools sofort merkt statt nur "es hakt/friert ein".
+    if(loopErrs<=200) console.error('[GS] Frame-Fehler #'+loopErrs+' (Loop läuft weiter):', e);
+    if(loopErrs===1) toast('Fehler aufgetreten — Konsole (F12) prüfen: '+e.message, 8000);
   }
   requestAnimationFrame(loop);         // läuft IMMER weiter — kein Hard-Freeze mehr
 }
@@ -13985,6 +14410,7 @@ function startGame(fresh){
     player.hasLaptop=!!s.hasLaptop; player.hasSkimmer=!!s.hasSkimmer;
     player.hasExtraSafe=!!s.hasExtraSafe;
     player.extraSafe=Array.isArray(s.extraSafe)?s.extraSafe.filter(i=>i&&ITEMS[i.id]&&i.n>0):[];
+    player.hasChain=!!s.hasChain; player.hasWatch=!!s.hasWatch;
     // Parallel-Küche-Migration: neue Saves haben methLabSlots/methCooks (Array), alte Saves (vor dieser
     // Erweiterung) hatten nur ein einzelnes methCook-Objekt/null — das wandert 1:1 in Slot 0, damit
     // laufende Kochvorgänge aus alten Spielständen nicht verloren gehen.
@@ -14053,6 +14479,7 @@ function startGame(fresh){
     player.methLabSlots=0; player.methCooks=[];
     player.hasLaptop=false; player.hasSkimmer=false;
     player.hasExtraSafe=false; player.extraSafe=[];
+    player.hasChain=false; player.hasWatch=false;
     player.hasVest=false; player.hasVestMilitary=false; player.tutorialsSeen={};
     applyOutfit('default');
     for(const k in JobSystem.levels) JobSystem.levels[k]={xp:0,lvl:1,introSeen:false,cooldownUntil:0};   // neues Spiel: Job-Level zurücksetzen
