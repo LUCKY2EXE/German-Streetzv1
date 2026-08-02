@@ -1611,7 +1611,7 @@ const I18N = {
     phone: {
       title: 'NAVI — ZIEL WÄHLEN', off: '× NAVI AUS', hint: 'KLICK — ZIEL WÄHLEN<br>N / ESC — ZUKLAPPEN',
       started: 'Navi läuft: {name}', arrived: 'Ziel erreicht.',
-      dest: { dealer: 'DEALER (GASSE)', villa: 'REICHE TRAP', roma: 'RESTAURANT ROMA', spaeti: 'SPÄTI 24', home: 'TRAP-HAUS', station: 'BAHNHOF', ybc: 'YBC-BLOCK', btk: 'BTK-BLOCK', stb: 'STB-BLOCK', ntl: 'NTL-BLOCK', liefer: 'LIEFERUNG', corner: 'CORNER SHOP', bike: 'BIKE SHOP', armor: 'ARMOR SHOP', baustelle: 'BAUSTELLE', growshop: 'GROW SHOP', drip: 'DRIP', casino: 'EL DORADO SPIELHALLE', security: 'SECURITY-RUNDE', gangwar: 'GANG-KRIEG', juwelier: 'JUWELIER' },
+      dest: { dealer: 'DEALER (GASSE)', villa: 'REICHE TRAP', roma: 'RESTAURANT ROMA', spaeti: 'SPÄTI 24', home: 'TRAP-HAUS', station: 'BAHNHOF', ybc: 'YBC-BLOCK', btk: 'BTK-BLOCK', stb: 'STB-BLOCK', ntl: 'NTL-BLOCK', liefer: 'LIEFERUNG', corner: 'CORNER SHOP', bike: 'BIKE SHOP', armor: 'ARMOR SHOP', baustelle: 'BAUSTELLE', growshop: 'GROW SHOP', drip: 'DRIP', casino: 'EL DORADO SPIELHALLE', security: 'SECURITY-RUNDE', gangwar: 'GANG-KRIEG', juwelier: 'JUWELIER', scooter: 'DEIN ROLLER' },
       home: { title: 'NOKIA 3310', hint: 'KLICK — APP ÖFFNEN<br>ESC/N — SCHLIESSEN', appNavi: 'NAVI', appMessages: 'NACHRICHTEN', appFelony: 'FELONY', appGangs: 'GANGS', appRunner: 'RUNNER', back: '< ZURÜCK', noMessages: 'Keine Nachrichten.', hintList: 'KLICK — AUSWÄHLEN<br>ESC/N — SCHLIESSEN' }
     },
     gangs: {
@@ -2073,7 +2073,7 @@ const I18N = {
     phone: {
       title: 'NAVI — PICK DESTINATION', off: '× NAVI OFF', hint: 'CLICK — SET DESTINATION<br>N / ESC — CLOSE',
       started: 'Navi running: {name}', arrived: 'Destination reached.',
-      dest: { dealer: 'DEALER (ALLEY)', villa: 'RICH TRAP', roma: 'RESTAURANT ROMA', spaeti: 'SPÄTI 24', home: 'TRAP HOUSE', station: 'STATION', ybc: 'YBC BLOCK', btk: 'BTK BLOCK', stb: 'STB BLOCK', ntl: 'NTL BLOCK', liefer: 'DELIVERY', corner: 'CORNER SHOP', bike: 'BIKE SHOP', armor: 'ARMOR SHOP', baustelle: 'CONSTRUCTION SITE', growshop: 'GROW SHOP', drip: 'DRIP', casino: 'EL DORADO SPIELHALLE', security: 'SECURITY ROUND', gangwar: 'GANG WAR', juwelier: 'JEWELER' },
+      dest: { dealer: 'DEALER (ALLEY)', villa: 'RICH TRAP', roma: 'RESTAURANT ROMA', spaeti: 'SPÄTI 24', home: 'TRAP HOUSE', station: 'STATION', ybc: 'YBC BLOCK', btk: 'BTK BLOCK', stb: 'STB BLOCK', ntl: 'NTL BLOCK', liefer: 'DELIVERY', corner: 'CORNER SHOP', bike: 'BIKE SHOP', armor: 'ARMOR SHOP', baustelle: 'CONSTRUCTION SITE', growshop: 'GROW SHOP', drip: 'DRIP', casino: 'EL DORADO SPIELHALLE', security: 'SECURITY ROUND', gangwar: 'GANG WAR', juwelier: 'JEWELER', scooter: 'YOUR SCOOTER' },
       home: { title: 'NOKIA 3310', hint: 'CLICK — OPEN APP<br>ESC/N — CLOSE', appNavi: 'NAVI', appMessages: 'MESSAGES', appFelony: 'FELONY', appGangs: 'GANGS', appRunner: 'RUNNER', back: '< BACK', noMessages: 'No messages.', hintList: 'CLICK — SELECT<br>ESC/N — CLOSE' }
     },
     gangs: {
@@ -13447,6 +13447,10 @@ function phoneDests(){
   // Nutzer-Vorgabe: laufende Gang-Kriege muessen im Navi auftauchen, damit man hinlaufen kann.
   activeFights.forEach((f,i)=>d.push({key:'gangwar', x:f.x, y:f.y,
     label:GANGS[f.gidA].name+' vs '+GANGS[f.gidB].name}));
+  // Roller (Nutzer-Vorgabe): "wo hab ich den nochmal geparkt" — Navi-Eintrag auf die AKTUELLE Position
+  // (nicht den Kaufort), verschwindet automatisch waehrend man selbst draufsitzt (dann braucht man
+  // keine Wegbeschreibung zu sich selbst).
+  if(player.hasScooter&&!player.driving) d.push({key:'scooter', x:SCOOTER.px, y:SCOOTER.py});
   return d;
 }
 function renderPhone(){
