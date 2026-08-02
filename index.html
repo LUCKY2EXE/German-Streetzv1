@@ -1467,9 +1467,14 @@ const I18N = {
       hireRunnerLabel: 'Runner anheuern'
     },
     runner: {
-      hired: 'Runner angeheuert — verkauft ab jetzt automatisch aus deinem Bestand.',
+      hired: 'Runner angeheuert — im Nokia (App RUNNER) Ware übergeben, damit er verkaufen kann.',
       sold: 'Runner hat {n}g {product} verkauft — {pay}$.',
-      caught: 'Dein Runner wurde erwischt! Heat gestiegen, Ware/Cash unberührt.'
+      caught: 'Dein Runner wurde erwischt! Heat gestiegen, Ware/Cash unberührt.',
+      hint: 'KLICK — WARE ÜBERGEBEN/ZURÜCKHOLEN<br>ESC/N — SCHLIESSEN',
+      notHired: 'Noch kein Runner angeheuert.',
+      hireBtn: 'Runner anheuern ({price}$)',
+      nextSale: 'Nächster Verkaufsversuch in {secs}s.',
+      stockLabel: 'RUNNER-BESTAND'
     },
     weapon: {
       reloading: 'Nachladen…', reloaded: 'Magazin voll nachgeladen.', magFull: 'Magazin ist schon voll.',
@@ -1607,7 +1612,7 @@ const I18N = {
       title: 'NAVI — ZIEL WÄHLEN', off: '× NAVI AUS', hint: 'KLICK — ZIEL WÄHLEN<br>N / ESC — ZUKLAPPEN',
       started: 'Navi läuft: {name}', arrived: 'Ziel erreicht.',
       dest: { dealer: 'DEALER (GASSE)', villa: 'REICHE TRAP', roma: 'RESTAURANT ROMA', spaeti: 'SPÄTI 24', home: 'TRAP-HAUS', station: 'BAHNHOF', ybc: 'YBC-BLOCK', btk: 'BTK-BLOCK', stb: 'STB-BLOCK', ntl: 'NTL-BLOCK', liefer: 'LIEFERUNG', corner: 'CORNER SHOP', bike: 'BIKE SHOP', armor: 'ARMOR SHOP', baustelle: 'BAUSTELLE', growshop: 'GROW SHOP', drip: 'DRIP', casino: 'EL DORADO SPIELHALLE', security: 'SECURITY-RUNDE', gangwar: 'GANG-KRIEG', juwelier: 'JUWELIER' },
-      home: { title: 'NOKIA 3310', hint: 'KLICK — APP ÖFFNEN<br>ESC/N — SCHLIESSEN', appNavi: 'NAVI', appMessages: 'NACHRICHTEN', appFelony: 'FELONY', appGangs: 'GANGS', back: '< ZURÜCK', noMessages: 'Keine Nachrichten.', hintList: 'KLICK — AUSWÄHLEN<br>ESC/N — SCHLIESSEN' }
+      home: { title: 'NOKIA 3310', hint: 'KLICK — APP ÖFFNEN<br>ESC/N — SCHLIESSEN', appNavi: 'NAVI', appMessages: 'NACHRICHTEN', appFelony: 'FELONY', appGangs: 'GANGS', appRunner: 'RUNNER', back: '< ZURÜCK', noMessages: 'Keine Nachrichten.', hintList: 'KLICK — AUSWÄHLEN<br>ESC/N — SCHLIESSEN' }
     },
     gangs: {
       title: 'GANGS', hint: 'KLICK AUF EINEN KRIEG — NAVI-ZIEL SETZEN',
@@ -1958,9 +1963,14 @@ const I18N = {
       hireRunnerLabel: 'Hire a runner'
     },
     runner: {
-      hired: 'Runner hired — sells off your stock automatically from now on.',
+      hired: 'Runner hired — hand him stock in the Nokia (RUNNER app) so he can sell it.',
       sold: 'Runner sold {n}g of {product} — ${pay}.',
-      caught: 'Your runner got caught! Heat went up, product/cash untouched.'
+      caught: 'Your runner got caught! Heat went up, product/cash untouched.',
+      hint: 'CLICK — HAND OVER/TAKE BACK STOCK<br>ESC/N — CLOSE',
+      notHired: 'No runner hired yet.',
+      hireBtn: 'Hire runner (${price})',
+      nextSale: 'Next sale attempt in {secs}s.',
+      stockLabel: 'RUNNER STOCK'
     },
     walkup: {
       offerJunkie:   'Got {n}g of {product} for me? I will pay ${price}, cash, right now.',
@@ -2064,7 +2074,7 @@ const I18N = {
       title: 'NAVI — PICK DESTINATION', off: '× NAVI OFF', hint: 'CLICK — SET DESTINATION<br>N / ESC — CLOSE',
       started: 'Navi running: {name}', arrived: 'Destination reached.',
       dest: { dealer: 'DEALER (ALLEY)', villa: 'RICH TRAP', roma: 'RESTAURANT ROMA', spaeti: 'SPÄTI 24', home: 'TRAP HOUSE', station: 'STATION', ybc: 'YBC BLOCK', btk: 'BTK BLOCK', stb: 'STB BLOCK', ntl: 'NTL BLOCK', liefer: 'DELIVERY', corner: 'CORNER SHOP', bike: 'BIKE SHOP', armor: 'ARMOR SHOP', baustelle: 'CONSTRUCTION SITE', growshop: 'GROW SHOP', drip: 'DRIP', casino: 'EL DORADO SPIELHALLE', security: 'SECURITY ROUND', gangwar: 'GANG WAR', juwelier: 'JEWELER' },
-      home: { title: 'NOKIA 3310', hint: 'CLICK — OPEN APP<br>ESC/N — CLOSE', appNavi: 'NAVI', appMessages: 'MESSAGES', appFelony: 'FELONY', appGangs: 'GANGS', back: '< BACK', noMessages: 'No messages.', hintList: 'CLICK — SELECT<br>ESC/N — CLOSE' }
+      home: { title: 'NOKIA 3310', hint: 'CLICK — OPEN APP<br>ESC/N — CLOSE', appNavi: 'NAVI', appMessages: 'MESSAGES', appFelony: 'FELONY', appGangs: 'GANGS', appRunner: 'RUNNER', back: '< BACK', noMessages: 'No messages.', hintList: 'CLICK — SELECT<br>ESC/N — CLOSE' }
     },
     gangs: {
       title: 'GANGS', hint: 'CLICK A WAR — SET NAV TARGET',
@@ -8807,6 +8817,9 @@ const player={
   hasSunglasses:false, hasHat:false, hasTattoo:false,
   // Runner (Nutzer-Vorgabe): passiver Verkaufs-Service, gleiche einfache Flag-Technik wie hasMethLab.
   hasRunner:false,
+  // Runner-GUI (Nutzer-Vorgabe): Runner verkauft nur noch, was man ihm im Nokia (App "RUNNER")
+  // explizit uebergeben hat — eigener kleiner Bestand statt automatischem Zugriff aufs Hauptinventar.
+  runnerStock:[],
   // Casino (Paket 17): Spin dauert nur ~1-2 Echtzeit-Sekunden, bewusst kein Save/Load-Eintrag
   slotSpin:null,
   // DRIP-Outfit (Paket 8): aktuell getragenes Paletten-Preset, siehe OUTFIT_PALETTES/applyOutfit()
@@ -12690,6 +12703,7 @@ function baggyPricePerG(strain){
    verkauft der Runner automatisch EINE Ladung vorhandener Ware (Baggies ODER rohes Meth) mit Rabatt
    (er behält eine Marge), zählt aber als eigene Straftat (Runner kann geschnappt werden). */
 const RUNNER_HIRE_PRICE=8000, RUNNER_INTERVAL=240, RUNNER_DISCOUNT=0.45, RUNNER_CAUGHT_CHANCE=0.15;
+const RUNNER_STOCK_SLOTS=8;
 let runnerT=RUNNER_INTERVAL;
 function hireRunner(){
   if(player.hasRunner) return;
@@ -12699,7 +12713,36 @@ function hireRunner(){
   runnerT=RUNNER_INTERVAL;
   toast(t('runner.hired'));
   saveGame();
-  renderDealershop();
+  if(dealershopOpen) renderDealershop();
+  if(phoneOpen&&phoneApp==='runner') renderPhone();
+}
+// Runner-GUI (Nutzer-Vorgabe, "sonst sinnlos"): der Runner verkauft NUR noch, was man ihm explizit
+// im Nokia (App "RUNNER") uebergeben hat — eigener kleiner Bestand (player.runnerStock), gleiche
+// Add/Remove/Count-Technik wie extraSafeAdd/Remove/Count, bewusst eigene Funktionen statt das
+// Stash-System zu parametrisieren (siehe Panzerschrank-Kommentar weiter oben, gleiche Begruendung).
+function runnerStockCount(id){ const it=player.runnerStock.find(i=>i.id===id); return it?it.n:0; }
+function runnerStockAdd(id,n){
+  n=n||1;
+  const it=player.runnerStock.find(i=>i.id===id);
+  if(it){
+    if(!slotFits(id,it.n,n)){ toast(t('inv.full')); return false; }
+    it.n+=n;
+  } else {
+    if(player.runnerStock.length>=RUNNER_STOCK_SLOTS){ toast(t('inv.full')); return false; }
+    if(!slotFits(id,0,n)){ toast(t('inv.full')); return false; }
+    player.runnerStock.push({id,n});
+  }
+  if(phoneOpen&&phoneApp==='runner') renderPhone();
+  return true;
+}
+function runnerStockRemove(id,n){
+  n=n||1;
+  const it=player.runnerStock.find(i=>i.id===id);
+  if(!it||it.n<n) return false;
+  it.n-=n;
+  if(it.n<=0) player.runnerStock.splice(player.runnerStock.indexOf(it),1);
+  if(phoneOpen&&phoneApp==='runner') renderPhone();
+  return true;
 }
 function updateRunner(dt){
   if(!player.hasRunner) return;
@@ -12708,16 +12751,16 @@ function updateRunner(dt){
   runnerT=RUNNER_INTERVAL;
   const cands=[];
   for(const s of PACK_STRAINS) for(const gr of packGramOptionsFor(s))
-    if(invCount(baggyId(s,gr))>0) cands.push({kind:'baggy',strain:s,size:gr});
-  for(const tier of METH_PACK_TIERS) if(invCount(tier)>0) cands.push({kind:'meth',tier});
-  if(!cands.length) return;   // nichts zu verkaufen -> stiller Durchlauf, kein Toast-Spam
+    if(runnerStockCount(baggyId(s,gr))>0) cands.push({kind:'baggy',strain:s,size:gr});
+  for(const tier of METH_PACK_TIERS) if(runnerStockCount(tier)>0) cands.push({kind:'meth',tier});
+  if(!cands.length) return;   // Runner-Bestand leer -> stiller Durchlauf, kein Toast-Spam
   const c=pick(cands);
   let itemId,removeQty,grams,price,productName;
   if(c.kind==='baggy'){
     itemId=baggyId(c.strain,c.size); removeQty=1; grams=c.size;
     price=Math.round(c.size*baggyPricePerG(c.strain)*RUNNER_DISCOUNT); productName=itemName(c.strain);
   } else {
-    grams=Math.min(randi(1,3), invCount(c.tier));
+    grams=Math.min(randi(1,3), runnerStockCount(c.tier));
     itemId=c.tier; removeQty=grams;
     price=Math.round(grams*METH_PRICE_PER_GRAM[c.tier]*RUNNER_DISCOUNT); productName=itemName(c.tier);
   }
@@ -12727,7 +12770,7 @@ function updateRunner(dt){
     toast(t('runner.caught'));   // kein Verkauf, keine Ware verloren — wie updateRobbery()s Alarm-Fall
     return;
   }
-  invRemove(itemId,removeQty);
+  runnerStockRemove(itemId,removeQty);
   player.money+=price;
   toast(t('runner.sold',{n:grams,product:productName,pay:price}));
   saveGame();
@@ -13442,6 +13485,13 @@ function renderPhone(){
     gangsIcon.innerHTML+='<div class="app-glyph">GNG</div><div>'+t('phone.home.appGangs')+'</div>';
     gangsIcon.addEventListener('click',()=>{ phoneApp='gangs'; renderPhone(); });
     appsEl.appendChild(gangsIcon);
+    // Runner-GUI (Nutzer-Vorgabe): eigene App statt nur einer Dealer-Shop-Zeile — sonst kein
+    // sichtbarer Grund, WARUM/WIE der Runner ueberhaupt etwas verkauft ("sonst sinnlos").
+    const runnerIcon=document.createElement('div');
+    runnerIcon.className='phone-app-icon';
+    runnerIcon.innerHTML='<div class="app-glyph">RUN</div><div>'+t('phone.home.appRunner')+'</div>';
+    runnerIcon.addEventListener('click',()=>{ phoneApp='runner'; renderPhone(); });
+    appsEl.appendChild(runnerIcon);
     return;
   }
   appsEl.classList.add('hidden');
@@ -13571,6 +13621,59 @@ function renderPhone(){
         });
         listEl.appendChild(row);
       }
+    }
+  } else if(phoneApp==='runner'){
+    // Runner-GUI (Nutzer-Vorgabe): eigener kleiner Bestand statt automatischem Zugriff aufs
+    // Hauptinventar — Uebergabe per Klick, gleiches Zwei-Spalten-Prinzip wie Stash/Panzerschrank,
+    // nur direkt im Telefon-Screen statt eines eigenen Panels (kein Ort noetig, "Runner" ist ein
+    // Telefondienst).
+    el('phone-title').textContent=t('phone.home.appRunner');
+    el('phone-hint').innerHTML=t('runner.hint');
+    if(!player.hasRunner){
+      const info=document.createElement('div');
+      info.className='phone-row';
+      info.textContent=t('runner.notHired');
+      listEl.appendChild(info);
+      const hireRow=document.createElement('div');
+      hireRow.className='phone-row active';
+      hireRow.textContent=t('runner.hireBtn',{price:RUNNER_HIRE_PRICE});
+      hireRow.addEventListener('click',hireRunner);
+      listEl.appendChild(hireRow);
+    } else {
+      const status=document.createElement('div');
+      status.className='phone-row';
+      status.textContent=t('runner.nextSale',{secs:Math.max(0,Math.ceil(runnerT))});
+      listEl.appendChild(status);
+      const cols=document.createElement('div');
+      // Kein eigenes #stash-columns/#extrasafe-columns (display:flex) fuer diese ID vorhanden, und der
+      // 244px-Telefon-Screen ist ohnehin zu schmal fuer zwei Spalten nebeneinander wie im grossen
+      // Stash-Panel -- hier bewusst UNTEREINANDER gestapelt statt nebeneinander gequetscht.
+      cols.style.cssText='display:flex;flex-direction:column;gap:10px;';
+      const invCol=document.createElement('div'); invCol.className='stash-col';
+      const invLabel=document.createElement('div'); invLabel.className='stash-col-label'; invLabel.textContent=t('stash.yourInv');
+      const invGrid=document.createElement('div'); invGrid.className='stash-grid';
+      invCol.appendChild(invLabel); invCol.appendChild(invGrid);
+      const stockCol=document.createElement('div'); stockCol.className='stash-col';
+      const stockLabel=document.createElement('div'); stockLabel.className='stash-col-label'; stockLabel.textContent=t('runner.stockLabel');
+      const stockGrid=document.createElement('div'); stockGrid.className='stash-grid';
+      stockCol.appendChild(stockLabel); stockCol.appendChild(stockGrid);
+      cols.appendChild(invCol); cols.appendChild(stockCol);
+      listEl.appendChild(cols);
+      const desc=document.createElement('div'); desc.id='runner-desc';
+      desc.style.cssText='min-height:2.2em;margin-top:8px;font-size:8px;line-height:1.7;color:#15250f;';
+      listEl.appendChild(desc);
+      renderStashGrid(invGrid,player.inv,INV_SLOTS,(id)=>{
+        if(!runnerStockAdd(id,1)) return;
+        invRemove(id,1);
+        saveGame();
+        renderPhone();
+      },'runner-desc');
+      renderStashGrid(stockGrid,player.runnerStock,RUNNER_STOCK_SLOTS,(id)=>{
+        if(!invAdd(id,1)) return;
+        runnerStockRemove(id,1);
+        saveGame();
+        renderPhone();
+      },'runner-desc');
     }
   }
 }
@@ -14874,7 +14977,7 @@ function saveGame(){
       hasChainCuban:player.hasChainCuban,
       wornChain:player.wornChain, hasWatch:player.hasWatch, hasGrillz:player.hasGrillz,
       hasSunglasses:player.hasSunglasses, hasHat:player.hasHat, hasTattoo:player.hasTattoo,
-      hasRunner:player.hasRunner, runnerT:runnerT,
+      hasRunner:player.hasRunner, runnerT:runnerT, runnerStock:player.runnerStock,
       // Roller (Nutzer-Vorgabe): Position bleibt bewusst persistent (anders als ATMs/Zigarettenautomaten).
       scooterPx:SCOOTER.px, scooterPy:SCOOTER.py,
       hasScooter:player.hasScooter, scooterColor:player.scooterColor,
@@ -15069,6 +15172,7 @@ function startGame(fresh){
     player.hasWatch=!!s.hasWatch; player.hasGrillz=!!s.hasGrillz;
     player.hasSunglasses=!!s.hasSunglasses; player.hasHat=!!s.hasHat; player.hasTattoo=!!s.hasTattoo;
     player.hasRunner=!!s.hasRunner; runnerT=Number.isFinite(s.runnerT)?s.runnerT:RUNNER_INTERVAL;
+    player.runnerStock=Array.isArray(s.runnerStock)?s.runnerStock.filter(i=>i&&ITEMS[i.id]&&i.n>0):[];
     // Parallel-Küche-Migration: neue Saves haben methLabSlots/methCooks (Array), alte Saves (vor dieser
     // Erweiterung) hatten nur ein einzelnes methCook-Objekt/null — das wandert 1:1 in Slot 0, damit
     // laufende Kochvorgänge aus alten Spielständen nicht verloren gehen.
@@ -15142,7 +15246,7 @@ function startGame(fresh){
     player.hasChainGold=false; player.hasChainDiamond=false; player.hasChainKing=false; player.hasChainCuban=false; player.wornChain=null;
     player.hasWatch=false; player.hasGrillz=false;
     player.hasSunglasses=false; player.hasHat=false; player.hasTattoo=false;
-    player.hasRunner=false; runnerT=RUNNER_INTERVAL;
+    player.hasRunner=false; runnerT=RUNNER_INTERVAL; player.runnerStock=[];
     player.hasVest=false; player.hasVestMilitary=false; player.tutorialsSeen={};
     applyOutfit('default');
     for(const k in JobSystem.levels) JobSystem.levels[k]={xp:0,lvl:1,introSeen:false,cooldownUntil:0};   // neues Spiel: Job-Level zurücksetzen
