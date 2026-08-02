@@ -1219,6 +1219,7 @@ const CFG = {
   CHUNK: 50,                        // Tiles pro Chunk
   CHUNK_CACHE_MAX: 8,               // LRU: max. vorgerenderte Chunks (~Speicher!)
   PLAYER_SPEED: 3,                  // Tiles/Sek (Fahrrad: x1.6 → Stufe 2)
+  SCOOTER_SPEED_MULT: 3.5,          // Roller (Nutzer-Vorgabe): spuerbar schneller als Fuss/Fahrrad
   DAY_REAL_MS: 600000,              // 10 Min Echtzeit = 24h Spielzeit
   START_HOUR: 12,
   SAVE_KEY: 'hoodrpg_save_v1',
@@ -2250,8 +2251,11 @@ const MANIFEST = {
   grillz: {file:'Grillz.png', w:24, h:14, kind:'prop'},
   // Ketten-Stile (Nutzer-Vorgabe): 2 weitere Ketten-Bilder, gleiche Zuschnitt/Transparenz-Behandlung wie
   // Grillz.png — w/h nur Platzhalter-Fallback, echte Zielgroesse steht in drawJewelryAccessories().
-  chain_diamond: {file:'chain_diamond.png', w:16, h:20, kind:'prop'},
-  chain_king:    {file:'chain_king.png',    w:16, h:22, kind:'prop'},
+  chain_diamond: {file:'chain_diamond.png', w:18, h:13, kind:'prop'},
+  chain_king:    {file:'chain_king.png',    w:20, h:14, kind:'prop'},
+  // Roller (Nutzer-Vorgabe): ein Spritesheet mit 3 Zellen (front/back/side), siehe SCOOTER_FRAMES/
+  // drawScooter() — w/h hier nur Platzhalter-Fallback, echte Sub-Rechtecke werden explizit gecroppt.
+  scooter: {file:'roller_sprite.png', w:48, h:48, kind:'prop'},
   prop_dice: {file:'prop_dice.png',  w:16, h:12, kind:'prop'},
   prop_trash:{file:'prop_trash.png', w:26, h:18, kind:'prop'},
   prop_lamp: {file:'prop_lamp.png',  w:18, h:56, kind:'prop'},
@@ -6513,6 +6517,21 @@ function placeAtms(){
     if(spot) makeAtm(spot.x,spot.y);
   }
 }
+// Roller (Nutzer-Vorgabe): erstes fahrbares Fahrzeug — EIN globales Objekt statt eines Arrays, es gibt
+// nur den einen Roller. Position ist bewusst persistent (anders als ATMs/Zigarettenautomaten, die anonyme
+// Streuobjekte sind) — siehe saveGame()/startGame(). dir folgt player.dir waehrend der Fahrt, sonst 0.
+const SCOOTER={px:0,py:0,baseY:0,dir:0,isScooter:true};
+function placeScooter(){
+  const anchor=trapHouse?{x:trapHouse.door.x,y:trapHouse.baseY+20}:{x:MAP_PX/2,y:MAP_PX/2};
+  for(let i=0;i<24;i++){
+    const px=anchor.x+rand(-70,70), py=anchor.y+rand(-70,70);
+    if(px<60||py<60||px>MAP_PX-60||py>MAP_PX-60) continue;
+    if(collides(px,py)) continue;
+    SCOOTER.px=px; SCOOTER.py=py; SCOOTER.baseY=py; SCOOTER.dir=0;
+    return;
+  }
+  SCOOTER.px=anchor.x; SCOOTER.py=anchor.y; SCOOTER.baseY=anchor.y; SCOOTER.dir=0;
+}
 let atmOpen=false;
 function openAtmUI(){
   if(dialog.active) return;
@@ -7240,7 +7259,10 @@ function spawnGangBackup(gid,rid,count){
   const spawned=[];
   for(let i=0;i<count;i++){
     const spot=freeSpot(ptx-3,ptx+3,pty-3,pty+3,20)||{px:player.px+rand(-24,24),py:player.py+rand(-24,24)};
-    const n=makeNpc('gang',gid,spot.px,spot.py,{gang:gid,hp:30,state:'act',homeRect:ownRect,wanderR:200});
+    // Bugfix (Nutzer-live-gemeldet): tpl muss der Sprite-Template-Key sein ('npc_'+gid, wie ÜBERALL sonst
+    // im Code, z.B. gangHouseCluster()), NICHT der rohe gid-String — sonst ist IMAGES[n.tpl] undefined und
+    // drawNPC() crasht bei drawImage() (v.a. sichtbar sobald ein Backup-NPC stirbt: state==='dead'-Zweig).
+    const n=makeNpc('gang','npc_'+gid.toLowerCase(),spot.px,spot.py,{gang:gid,hp:30,state:'act',homeRect:ownRect,wanderR:200});
     n.tempT=rand(90,140);   // despawnt wie andere temporaere NPCs, aber nie solange sichtbar (updateTempNpcs())
     spawned.push(n);
   }
@@ -8347,6 +8369,30 @@ function drawVan(v){
   ctx.fillRect(-13,-26,10,4); ctx.fillRect(3,-26,10,4);          // Raeder vorne
   ctx.restore();
 }
+// Roller (Nutzer-Vorgabe): Zell-Crop aus roller_sprite.png (front/back/side), keine Rotation wie bei
+// drawVan() — das Referenzblatt ist eine Seitenansicht, gedreht wuerde sie beim Blick "nach oben"
+// verzerrt aussehen. Nur EINE Seiten-Zelle vorhanden -> fuer dir1 gespiegelt (siehe ctx.scale(-1,1)).
+const SCOOTER_FRAMES={front:{sx:0,sy:0,sw:30,sh:48}, back:{sx:30,sy:0,sw:30,sh:48}, side:{sx:60,sy:4,sw:48,sh:40}};
+function drawScooter(v){
+  const bx=Math.round(v.px), by=Math.round(v.py);
+  ctx.fillStyle='rgba(0,0,0,.3)';
+  ctx.fillRect(bx-14,by-4,28,5);                                  // Schatten
+  const dir=v.dir||0;
+  if(dir===0){
+    const f=SCOOTER_FRAMES.front;
+    ctx.drawImage(IMAGES.scooter,f.sx,f.sy,f.sw,f.sh, bx-15,by-48,30,48);
+  } else if(dir===3){
+    const f=SCOOTER_FRAMES.back;
+    ctx.drawImage(IMAGES.scooter,f.sx,f.sy,f.sw,f.sh, bx-15,by-48,30,48);
+  } else {
+    const f=SCOOTER_FRAMES.side;
+    ctx.save();
+    ctx.translate(bx,by);
+    if(dir===1) ctx.scale(-1,1);   // Referenzblatt zeigt nur die rechts-fahrende Seitenansicht
+    ctx.drawImage(IMAGES.scooter,f.sx,f.sy,f.sw,f.sh, -24,-40,48,40);
+    ctx.restore();
+  }
+}
 function renderParticles(vw,vh){
   for(const p of PARTICLES){
     if(p.x<camX-8||p.x>camX+vw+8||p.y<camY-8||p.y>camY+vh+8) continue;
@@ -8405,6 +8451,16 @@ function standUp(){
     for(const s of player.sitBench.seats) if(s.occ===player) s.occ=null;
     player.sitBench=null;
   }
+}
+/* ---------------- Roller-Fahren (Spieler) — gleiches Sofort-Prinzip wie sitOnBench/standUp ---------------- */
+function mountScooter(){
+  if(player.driving||player.riding) return;
+  if(player.sitting) standUp();
+  player.driving=true;
+  player.px=SCOOTER.px; player.py=SCOOTER.py;
+}
+function dismountScooter(){
+  player.driving=false;   // SCOOTER.px/py sind schon per Sync auf der aktuellen Position (siehe update())
 }
 function groupDialog(g){
   const SPECIAL={dealer:'speakers.dealer', scammer:'speakers.scammer', junkie:'speakers.junkie', homeless:'speakers.homeless'};
@@ -8561,6 +8617,7 @@ function renderMinimap(time){
 const player={
   px:0, py:0, dir:0, frame:0, animT:0, moving:false,
   hp:30, maxhp:30, money:50, bike:false,
+  driving:false,   // Roller (Nutzer-Vorgabe): erstes fahrbares Fahrzeug, siehe SCOOTER/mountScooter()
   sitting:false, sitT:0,
   inv:[], smoking:null, drinking:null, high:0, weapon:null,
   atkCD:0, atkAnim:null, hitFlashT:0, dead:false,
@@ -9132,6 +9189,9 @@ function startPlayerDeath(){
 function respawnPlayer(){
   player.px=trapHouse.door.x;
   player.py=trapHouse.baseY+30;                    // identischer Punkt wie startGame(fresh) — bekannt sicher
+  // Bugfix (Roller): stirbt der Spieler waehrend der Fahrt, blieb player.driving fuer immer haengen —
+  // E war dann dauerhaft aufs Absteigen belegt, ohne dass ueberhaupt noch ein Roller in der Naehe war.
+  player.driving=false;
   const lost=player.money-Math.floor(player.money*0.8);
   player.money=Math.floor(player.money*0.8);       // -20%
   player.hp=player.maxhp;
@@ -9182,6 +9242,9 @@ function startArrest(voluntary){
   if(player.arrested||player.dead) return;
   player.arrested=true;
   player.arrestVoluntary=!!voluntary;
+  // Bugfix (Roller): gleiches Problem wie bei respawnPlayer() — ohne das hier bliebe player.driving
+  // nach einer Verhaftung waehrend der Fahrt fuer immer haengen.
+  player.driving=false;
   // Nutzer-Vorgabe: der Safe wird bei einer Verhaftung DRAUSSEN nur ab 4-5 Sternen mitgeleert, nicht
   // bei jeder Festnahme — Schnappschuss JETZT (nicht erst bei releaseFromCustody()), da player.heat
   // während der Haft eingefroren bleibt (updateHeat() läuft nur im Exterior-Zweig), ein Snapshot ist
@@ -9598,6 +9661,7 @@ function interact(){
   if(player.smoking){ puffSmoke(); return; }             // E/C beim Rauchen = ziehen
   if(player.drinking){ takeSip(); return; }              // Paket B: E/C beim Trinken = Schluck
   if(player.sitting){ standUp(); return; }               // E im Sitzen = aufstehen
+  if(player.driving){ dismountScooter(); return; }        // E beim Fahren = absteigen
   if(!currentTarget) return;
   if(currentTarget.kind==='door') doorDialog(currentTarget.ref);
   else if(currentTarget.kind==='group') groupDialog(currentTarget.ref);
@@ -9607,6 +9671,7 @@ function interact(){
   else if(currentTarget.kind==='cigmachine') buyFromCigMachine(currentTarget.ref);
   else if(currentTarget.kind==='atm') openAtmUI();
   else if(currentTarget.kind==='boss') interactBoss(currentTarget.ref);
+  else if(currentTarget.kind==='scooter') mountScooter();
 }
 
 /* E an der Tür = kleiner Flavor-Text. Reingehen läuft über die BETRETEN-Taste/Button. */
@@ -9706,7 +9771,7 @@ function nearestEnterable(){
   return ref;
 }
 function enterBuilding(){
-  if(interior||dialog.active||invOpen||phoneOpen) return;
+  if(interior||dialog.active||invOpen||phoneOpen||player.driving) return;   // Roller: nicht fahrend ins Haus teleportieren
   const b=enterableB||nearestEnterable();
   if(b) enterInterior(b.type, b.door.x, b.baseY);
 }
@@ -9728,8 +9793,11 @@ const SAFE_UPGRADE_PRICES=[1000,2500,5000];   // Platzhalter-Preise Stufe 1-3, l
 const EXTRASAFE_SLOTS=12;   // Platzhalter, leicht anpassbar
 const GROW_POTS_MAX=4;
 // Nutzer-Vorgabe: kleiner + enger beieinander (wie die Meth-Koch-Stationen) statt breit verstreut —
-// bleibt bei 4 Töpfen, nur kompakter innerhalb des grünen Zelt-Untergrunds (x5-7.4/y5.8-8.1) geclustert.
-const GROW_POT_POS=[{x:5.3,y:6.0},{x:6.0,y:6.05},{x:5.4,y:6.75},{x:6.0,y:6.7}];
+// bleibt bei 4 Töpfen, kompakter innerhalb des grünen Zelt-Untergrunds (x5-7.4/y5.8-8.1) geclustert.
+// Bugfix (Adversarial-Review): erste Fassung hatte alle 6 Paare unter dem festen 50px-Interaktions-
+// Radius von renderInterior() (first-match-wins, keine Distanz-Sortierung) — E an Topf 2/3/4 loeste
+// oft faelschlich Topf 1 aus. Mindestabstand jetzt bewusst >52px (1.75 Kachel-Diagonale) pro Paar.
+const GROW_POT_POS=[{x:5.1,y:5.85},{x:6.85,y:5.9},{x:5.15,y:7.6},{x:6.9,y:7.65}];
 function makePotFurniture(i){
   const pot=player.pots[i]||{state:'empty'};
   const p=GROW_POT_POS[i];
@@ -9788,11 +9856,15 @@ function buyMethLab(){
 // Regal(x2-4/y2-5)/Mixtank(x11-12.6/y2-4)/Destille(x11-13/y5.5-7.7)/Treppe(x2-4/y9-10.5), plus 1
 // zusätzlicher Slot rechts neben dem Mixtank. Slot 0 ist die bisherige, immer vorhandene Position.
 // Länge = 1 + METHLAB_SLOT_PRICES.length (siehe unten).
+// Bugfix (Adversarial-Review): Zeilen-Abstand war 1.3 Kacheln (41.6px) — unter dem festen 50px-
+// Interaktionsradius von renderInterior() (first-match-wins) -> 9 von 13 Stationen loesten oft die
+// falsche (naeher am Scan-Start liegende) Nachbarstation aus. Jetzt 1.65 Kacheln (52.8px) Zeilenabstand,
+// Spaltenabstand (2.1 Kacheln/67.2px) war schon sicher und bleibt unveraendert.
 const METHLAB_SLOT_POS=[
   {x:4.2,y:2.0}, {x:6.3,y:2.0}, {x:8.4,y:2.0},
-  {x:4.2,y:3.3}, {x:6.3,y:3.3}, {x:8.4,y:3.3},
-  {x:4.2,y:4.6}, {x:6.3,y:4.6}, {x:8.4,y:4.6},
-  {x:4.2,y:5.9}, {x:6.3,y:5.9}, {x:8.4,y:5.9},
+  {x:4.2,y:3.65}, {x:6.3,y:3.65}, {x:8.4,y:3.65},
+  {x:4.2,y:5.3}, {x:6.3,y:5.3}, {x:8.4,y:5.3},
+  {x:4.2,y:6.95}, {x:6.3,y:6.95}, {x:8.4,y:6.95},
   {x:13.2,y:2.2}
 ];
 function makeCookstationFurniture(i){
@@ -12425,6 +12497,12 @@ function packGramOptionsFor(strain){ return METH_PACK_TIERS.includes(strain) ? P
 /* Paket D (Baggy-Parität): Sorten-Baggys — 'weed'→baggy_5g, 'weed_premium'→baggy_p_5g,
    'weed_exotic'→baggy_e_5g. Preis pro Gramm kommt aus WEED_PRICE_PER_GRAM (Standard: 50$/g).
    Meth-Sorten -> baggy_md/mp/mb_Ng, Preis aus METH_PRICE_PER_GRAM statt WEED_PRICE_PER_GRAM. */
+// Bugfix (Adversarial-Review): der XP-Bonus-Check `itemId.startsWith('meth_')` traf nie auf ein
+// verpacktes Meth-Baggy zu (baggy_md/mp/mb_Ng, siehe baggyId() unten) — seit Meth-Baggies auch an
+// Buyer-Calls/Laufkunden verkauft werden koennen, bekam dieser Verkaufsweg nie den Meth-Job-Bonus.
+function isMethProduct(itemId){
+  return itemId.startsWith('meth_')||itemId.startsWith('baggy_md_')||itemId.startsWith('baggy_mp_')||itemId.startsWith('baggy_mb_');
+}
 function baggyId(strain,g){
   return strain==='weed_premium' ? 'baggy_p_'+g+'g'
        : strain==='weed_exotic'  ? 'baggy_e_'+g+'g'
@@ -12434,7 +12512,10 @@ function baggyId(strain,g){
        : 'baggy_'+g+'g';
 }
 function baggyPricePerG(strain){
-  return METH_PACK_TIERS.includes(strain) ? (METH_PRICE_PER_GRAM[strain]||50) : (WEED_PRICE_PER_GRAM[strain]||50);
+  // Bugfix (Adversarial-Review): Meth-Job-Bonus fehlte hier komplett, obwohl roher Meth-Verkauf ihn an
+  // allen 3 Stellen bekommt (spawnBuyerCall/sellAllToMassBuyer/walkupSellPrice) — zentral hier gefixt,
+  // damit ALLE Baggy-Verkaufswege (Runner/Buyer-Call/Massenabnehmer/Laufkunden) automatisch konsistent sind.
+  return METH_PACK_TIERS.includes(strain) ? (METH_PRICE_PER_GRAM[strain]||50)*JobSystem.payMult('meth') : (WEED_PRICE_PER_GRAM[strain]||50);
 }
 /* Runner (Nutzer-Vorgabe): passiver Verkaufs-Service beim Dealer — kein sichtbarer, laufender NPC
    (Pathing/Kollision wäre unverhältnismäßig aufwändig für einen reinen Hintergrund-Mechanismus),
@@ -12750,7 +12831,7 @@ function sellToBuyer(n){
   toast(t('buyer.sold',{n:req.grams,product:req.productName,pay}));
   n.state='idle';
   if(navTarget&&navTarget.key==='buyer') navTarget=null;
-  if(req.itemId.startsWith('meth_')) JobSystem.addXp('meth',15);   // XP pro Meth-Deal, zusätzlich zur Ernte-XP
+  if(isMethProduct(req.itemId)) JobSystem.addXp('meth',15);   // XP pro Meth-Deal, zusätzlich zur Ernte-XP
   // Polizei (Stufe 3), Auslöser "Dealen": akute Heat nur mit Zeugen, das Register merkt sich den Deal aber
   // immer (Nutzer-Vorgabe: alles wird gespeichert, das Risiko erwischt zu werden bleibt bestehen).
   if(civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)) addHeat(POLICE_CFG.heatPerDeal);
@@ -12847,7 +12928,7 @@ function sellToWalkupNpc(g,req){
   for(let i=0;i<6;i++) spawnParticle(g.x+rand(-8,8),g.y-rand(10,30),
     {vy:-rand(15,30),vx:rand(-15,15),life:rand(.3,.5),size:2,color:'#f5c542'});
   toast(t('walkup.sold',{n:req.grams,product:req.product,pay:req.price}));
-  if(req.itemId.startsWith('meth_')) JobSystem.addXp('meth',5);   // kleiner Bonus, deutlich unter einem echten Buyer-Deal (15)
+  if(isMethProduct(req.itemId)) JobSystem.addXp('meth',5);   // kleiner Bonus, deutlich unter einem echten Buyer-Deal (15)
   // Polizei (Stufe 3), Auslöser "Dealen": akute Heat nur mit Zeugen, das Register merkt sich den Deal aber
   // immer (Nutzer-Vorgabe: alles wird gespeichert, das Risiko erwischt zu werden bleibt bestehen).
   if(civWitnessNearby(player.px,player.py,POLICE_CFG.witnessD2)) addHeat(POLICE_CFG.heatPerDeal);
@@ -12919,9 +13000,12 @@ function drawJewelryAccessories(bx,by,dir){
     ctx.fillRect(bx+17,by+32,3,1);
     ctx.fillRect(bx+15,by+33,2,4);
   } else if(player.wornChain==='diamond'){
-    ctx.drawImage(IMAGES.chain_diamond,bx+7,by+30,16,20);
+    // Nutzer-Feedback: nur der untere "Drape" (Hals-Ausschnitt weg) statt der ganzen geschlossenen
+    // Kette — sieht dadurch wie um den Hals haengend aus statt wie ein flacher Aufkleber. Ziel-Groesse
+    // an das neue (breitere statt hoehere) Seitenverhaeltnis des zugeschnittenen Bilds angepasst.
+    ctx.drawImage(IMAGES.chain_diamond,bx+6,by+30,18,13);
   } else if(player.wornChain==='king'){
-    ctx.drawImage(IMAGES.chain_king,bx+7,by+29,16,22);
+    ctx.drawImage(IMAGES.chain_king,bx+5,by+30,20,14);
   }
   if(player.hasWatch){
     // Nutzer-Feedback: bessere Optik als ein reiner Gold-Block — dunkles Armband quer ueber dem
@@ -13721,7 +13805,8 @@ function update(dt){
     if(m>1){ mvx/=m; mvy/=m; }
     if(m>0.15){
       if(player.sitting) standUp();                 // Aufstehen bei Bewegung
-      const sp=CFG.PLAYER_SPEED*CFG.TILE*(player.bike?1.6:1)*speedMult*(player.speedBoostT>0?SPEED_BOOST_MULT:1);
+      // Roller (Nutzer-Vorgabe): eigener Speed-Multiplikator, hat Vorrang vor dem nie aktivierten player.bike.
+      const sp=CFG.PLAYER_SPEED*CFG.TILE*(player.driving?CFG.SCOOTER_SPEED_MULT:(player.bike?1.6:1))*speedMult*(player.speedBoostT>0?SPEED_BOOST_MULT:1);
       const nx=player.px+mvx*sp*dt;
       if(!collides(nx,player.py)) player.px=nx;
       const ny=player.py+mvy*sp*dt;
@@ -13737,6 +13822,9 @@ function update(dt){
       player.frame=0;
       player.moving=false;
     }
+    // Roller-Position folgt dem Spieler jeden Frame, solange gefahren wird (auch im Stand, nicht nur
+    // beim Bewegen) — SCOOTER wird als eigener Eintrag in der Tiefensortierung gezeichnet (siehe render()).
+    if(player.driving){ SCOOTER.px=player.px; SCOOTER.py=player.py; SCOOTER.baseY=player.py; SCOOTER.dir=player.dir; }
   }
   // Nächstes Interaktionsziel suchen: Tür / Aktivitäts-Gruppe / Bank
   currentTarget=null; currentDoor=null;
@@ -13795,6 +13883,13 @@ function update(dt){
     const ddx=m.px+13-player.px, ddy=m.py+20-player.py;
     const d=ddx*ddx+ddy*ddy;
     if(d<best){ best=d; bestRef=m; bestKind='atm'; }
+  }
+  // Roller (Nutzer-Vorgabe): nur ansprechbar, solange man nicht schon draufsitzt (sonst wuerde ein
+  // Kandidat mit sich selbst als Ziel entstehen — E ist waehrend der Fahrt eh schon aufs Absteigen belegt).
+  if(!player.driving){
+    const ddx=SCOOTER.px-player.px, ddy=SCOOTER.py-player.py;
+    const d=ddx*ddx+ddy*ddy;
+    if(d<best){ best=d; bestRef=SCOOTER; bestKind='scooter'; }
   }
   if(bestRef){
     currentTarget={kind:bestKind,ref:bestRef};
@@ -13931,6 +14026,8 @@ function render(time){
     if(v.x+30<camX||v.x-30>camX+vw||v.y+30<camY||v.y-30>camY+vh) continue;
     list.push(v);
   }
+  // Roller: EIN Objekt statt eines Arrays, gleiche Sichtbarkeits-Kulling-Technik wie VANS.
+  if(SCOOTER.px+30>camX&&SCOOTER.px-30<camX+vw&&SCOOTER.py+20>camY&&SCOOTER.py-50<camY+vh) list.push(SCOOTER);
   for(const b of BENCHES){
     if(b.px+48>camX&&b.px<camX+vw&&b.baseY>camY&&b.py<camY+vh) list.push(b);
   }
@@ -13958,6 +14055,9 @@ function render(time){
         // Nutzer-Vorgabe: waehrend der Van-Mitfahrt Spieler-Sprite ausblenden (sitzt "im" Van) — Position
         // (player.px/py) bleibt trotzdem die echte, mitwandernde Quelle (siehe updateVans()), nur die
         // Zeichnung wird uebersprungen, exakt das gleiche Prinzip wie bei Interior (siehe render()-Kopf).
+      } else if(player.driving){
+        // Roller (Nutzer-Vorgabe): gleiches Prinzip wie player.riding — SCOOTER wird als eigener Eintrag
+        // in derselben Tiefensortierung gezeichnet (siehe drawScooter()), Spieler-Sprite bleibt unsichtbar.
       } else if(player.sitting&&player.sitBench){
         // Sitzpose in Rückansicht: die Lehne (danach gezeichnet) verdeckt den Unterkörper
         ctx.drawImage(IMAGES.player,0,192,32,48,
@@ -14077,6 +14177,8 @@ function render(time){
       drawDog(e);
     } else if(e.isVan){
       drawVan(e);
+    } else if(e.isScooter){
+      drawScooter(e);
     } else if(e.isTag){
       ctx.drawImage(TAG_IMGS[e.gang],Math.round(e.px),Math.round(e.py));
     } else if(e.isPigeon){
@@ -14210,7 +14312,7 @@ function render(time){
   renderArrestFade(ctx);
   // [E]-Prompt positionieren (HTML-Element, Welt → Screen)
   const pr=el('prompt');
-  if(currentTarget && !dialog.active && !player.sitting){
+  if(currentTarget && !dialog.active && !player.sitting && !player.driving){
     let sx,sy;
     if(currentTarget.kind==='door'){
       const b=currentTarget.ref;
@@ -14227,7 +14329,7 @@ function render(time){
     pr.style.top =((sy-camY)*Z)+'px';
   } else pr.classList.add('hidden');
   // BETRETEN-Prompt (eigene Taste B / Button) für Gebäude mit Innenraum
-  enterableB = (!dialog.active&&!invOpen&&!phoneOpen) ? nearestEnterable() : null;
+  enterableB = (!dialog.active&&!invOpen&&!phoneOpen&&!player.driving) ? nearestEnterable() : null;
   const ep=el('enter-prompt');
   if(enterableB){
     ep.classList.remove('hidden');
@@ -14603,6 +14705,8 @@ function saveGame(){
       wornChain:player.wornChain, hasWatch:player.hasWatch, hasGrillz:player.hasGrillz,
       hasSunglasses:player.hasSunglasses, hasHat:player.hasHat, hasTattoo:player.hasTattoo,
       hasRunner:player.hasRunner, runnerT:runnerT,
+      // Roller (Nutzer-Vorgabe): Position bleibt bewusst persistent (anders als ATMs/Zigarettenautomaten).
+      scooterPx:SCOOTER.px, scooterPy:SCOOTER.py,
       outfit:player.outfit,
       hasVest:player.hasVest, hasVestMilitary:player.hasVestMilitary, tutorialsSeen:player.tutorialsSeen,
       timesArrested:player.timesArrested,
@@ -14742,6 +14846,11 @@ function startGame(fresh){
   if(fresh){try{localStorage.removeItem(CFG.SAVE_KEY);}catch(e){}}
   if(s){
     player.px=s.x; player.py=s.y;
+    // Roller (Nutzer-Vorgabe): Position persistent — alte Spielstände ohne das Feld behalten die
+    // deterministische init()-Platzierung neben der Trap (siehe placeScooter()).
+    SCOOTER.px=Number.isFinite(s.scooterPx)?s.scooterPx:SCOOTER.px;
+    SCOOTER.py=Number.isFinite(s.scooterPy)?s.scooterPy:SCOOTER.py;
+    SCOOTER.baseY=SCOOTER.py;
     player.hp=Math.min(Number.isFinite(s.hp)?s.hp:30,player.maxhp);   // alte Spielstände (100 HP) migrieren
     if(player.hp<=0) player.hp=player.maxhp;   // Tab während der Todes-Blende geschlossen: nicht tot-aber-unsterblich laden
     player.dead=false; deathFade=0; deathFadeDir=0;
@@ -14840,6 +14949,7 @@ function startGame(fresh){
   } else {
     player.px=trapHouse.door.x;
     player.py=trapHouse.baseY+30;
+    placeScooter();   // Roller (Nutzer-Vorgabe): neues Spiel setzt ihn zurueck auf den Standard-Platz neben der Trap
     player.hp=player.maxhp; player.money=50;
     player.dead=false; deathFade=0; deathFadeDir=0;
     player.heat=0; player.heatCoolT=0; player.arrested=false; player.custodyReleaseAt=0;
@@ -14865,6 +14975,7 @@ function startGame(fresh){
   }
   JobSystem.active=null;
   standUp();
+  player.driving=false;   // Roller (Nutzer-Vorgabe): beim Laden/neuen Spiel immer zurueckgesetzt, wie player.riding
   player.smoking=null; player.drinking=null; player.high=0;
   player.slotSpin=null;
   closeInventory();
@@ -14989,6 +15100,7 @@ async function init(){
   genNPCs();
   placeCigMachines();
   placeAtms();
+  placeScooter();
   buildMinimapStatic();
   const bn=el('btn-new');
   bn.disabled=false;
