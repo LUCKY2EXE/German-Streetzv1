@@ -6533,6 +6533,14 @@ function atmSpotNearPoint(x,y,range){
       if((m.px-px)*(m.px-px)+(m.py-py)*(m.py-py)<170*170){ near=true; break; }
     }
     if(near) continue;
+    // Nutzer-Vorgabe: ATM und Zigarettenautomat nutzen dieselben Landmark-Punkte aus phoneDests()
+    // (jeweils eigener spotNearPoint-Aufruf ohne Wissen vom anderen Typ) — standen dadurch oft fast
+    // nebeneinander. CIG_MACHINES ist zu diesem Zeitpunkt schon vollstaendig befuellt (placeCigMachines()
+    // laeuft in init() vor placeAtms()), daher hier zusaetzlich Mindestabstand zu jedem Zigarettenautomaten.
+    for(const m of CIG_MACHINES){
+      if((m.px-px)*(m.px-px)+(m.py-py)*(m.py-py)<150*150){ near=true; break; }
+    }
+    if(near) continue;
     return {x:px,y:py};
   }
   return null;
@@ -6544,7 +6552,9 @@ function makeAtm(x,y){
 }
 function placeAtms(){
   for(const d of phoneDests()){
-    const spot=atmSpotNearPoint(d.x,d.y,90);
+    // Nutzer-Vorgabe: groesserer Suchradius (90->160) als frueher, sonst ist der Mindestabstand
+    // zum Zigarettenautomaten (siehe atmSpotNearPoint()) am selben Landmark-Punkt oft unerfuellbar.
+    const spot=atmSpotNearPoint(d.x,d.y,160);
     if(spot) makeAtm(spot.x,spot.y);
   }
 }
@@ -7285,8 +7295,19 @@ function triggerGangFight(gidA,rectA,gidB,rectB,maxPairs){
 function spawnGangBackup(gid,rid,count){
   const ownRect=Array.isArray(GANGS[gid].zone)?GANGS[gid].zone[0]:GANGS[gid].zone;
   const ptx=Math.floor(player.px/CFG.TILE), pty=Math.floor(player.py/CFG.TILE);
-  const enemies=NPCS.filter(n=>n.kind==='gang'&&n.gang===rid&&n.state!=='dead'&&
+  // Bugfix (Nutzer-live-gemeldet, "wo sind die die mitkaempfen, schiessen auch nicht"): "opps sliden"
+  // wird zwangslaeufig am EIGENEN Boss ausgeloest, also an der eigenen Basis -- der 500px-Nahbereich
+  // um den Spieler war dort so gut wie NIE mit Rivalen-NPCs besetzt, das Backup stand nur nutzlos
+  // herum (kein fightTarget, kein Kampf). Fallback: wenn niemand in der Naehe ist, Gegner aus der
+  // GESAMTEN Rivalen-Zone ziehen (gleiches Kriterium wie triggerGangFight()) -- die bestehende
+  // fightTarget-Verfolgung (npcGangFight()) laesst das Backup dann selbststaendig dorthin laufen.
+  let enemies=NPCS.filter(n=>n.kind==='gang'&&n.gang===rid&&n.state!=='dead'&&n.state!=='gangfight'&&
     Math.hypot(n.px-player.px,n.py-player.py)<500);
+  if(!enemies.length){
+    const rivalZones=Array.isArray(GANGS[rid].zone)?GANGS[rid].zone:[GANGS[rid].zone];
+    enemies=NPCS.filter(n=>n.kind==='gang'&&n.gang===rid&&n.state!=='dead'&&n.state!=='gangfight'&&
+      rivalZones.includes(n.homeRect));
+  }
   const spawned=[];
   for(let i=0;i<count;i++){
     const spot=freeSpot(ptx-3,ptx+3,pty-3,pty+3,20)||{px:player.px+rand(-24,24),py:player.py+rand(-24,24)};
@@ -7308,6 +7329,10 @@ function spawnGangBackup(gid,rid,count){
   if(pairs>0){
     mx/=pairs; my/=pairs;
     activeFights.push({gidA:gid,gidB:rid,x:mx,y:my,t:50});
+    // Gleiches Prinzip wie triggerGangFight(): Navi-Ziel auf den Kampf setzen, falls der Spieler
+    // gerade kein anderes Ziel hat -- sonst weiss man bei einem Fern-Kampf (Backup laeuft erst hin)
+    // nicht, wohin man laufen soll, um mitzukaempfen.
+    if(!navTarget) navTarget={x:mx,y:my,key:'gangwar'};
   }
   return {total:spawned.length, fighting:pairs};
 }
