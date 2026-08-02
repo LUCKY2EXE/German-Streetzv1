@@ -1437,11 +1437,10 @@ const I18N = {
       explosion: 'Explosion! Nachbarn rufen fast die Polizei — diesmal nochmal gut gegangen.',
       gas: 'Giftgas eingeatmet!', gasBlocked: 'Die Gasmaske hat dich geschützt.',
       harvested: '{n}g {name} gewonnen.',
-      slotBought: '{n}. Station gebaut — {price}$ bezahlt.',
-      slotNoMoney: 'Zu wenig Geld für eine weitere Station.',
-      slotsMaxed: 'Maximale Anzahl Koch-Stationen erreicht.',
-      buySlotLabel: 'Station {n} bauen',
-      slotsMaxedLabel: 'Alle Stationen gebaut'
+      npcCollected: '{n}g fertige Ware abgeholt.',
+      npcFed: '{n} Zutaten-Sets an den Chemiker übergeben.',
+      npcProgress: '{n} Batches in der Warteschlange — nächste fertig in {sec}s.',
+      npcMigration: 'Labor-Update: Ware/Zutaten gerettet, {amount}$ für alte Stationen zurückerstattet.'
     },
     growcorner: {
       needSeedFert: 'Du brauchst einen Samen und Dünger.', planted: '{name} eingepflanzt.',
@@ -1920,11 +1919,10 @@ const I18N = {
       explosion: 'Explosion! The neighbors almost called the cops — got lucky this time.',
       gas: 'Inhaled toxic gas!', gasBlocked: 'The gas mask protected you.',
       harvested: 'Got {n}g of {name}.',
-      slotBought: 'Station {n} built — ${price} paid.',
-      slotNoMoney: 'Not enough cash for another station.',
-      slotsMaxed: 'Maximum number of cook stations reached.',
-      buySlotLabel: 'Build station {n}',
-      slotsMaxedLabel: 'All stations built'
+      npcCollected: 'Collected {n}g of finished product.',
+      npcFed: 'Handed {n} ingredient sets to the chemist.',
+      npcProgress: '{n} batches queued — next one ready in {sec}s.',
+      npcMigration: 'Lab update: product/ingredients saved, ${amount} refunded for old stations.'
     },
     police: {
       stopGreeting: 'Check. Open the bag, hands where I can see them.',
@@ -2280,11 +2278,6 @@ const MANIFEST = {
   // Zusaetzliche Deko an jeder Koch-Station im Labor (Nutzer-Vorgabe), rein optisch.
   lab_flask_deco: {file:'meth_zubehoer_a.png', w:48, h:48, kind:'prop'},
   lab_canister_deco: {file:'meth_zubehoer_b.png', w:48, h:48, kind:'prop'},
-  // Nutzer-Vorgabe: dieselben 3 Ausbaustufen-Bilder (schon beim Dealer als Kauf-Icon genutzt, siehe
-  // ITEM_ICONS.methlab_slot1/2/3) zusaetzlich als echte Optik der Koch-Stationen selbst im Labor.
-  meth_station1: {file:'meth_slot1_icon.png', w:48, h:48, kind:'prop'},
-  meth_station2: {file:'meth_slot2_icon.png', w:48, h:48, kind:'prop'},
-  meth_station3: {file:'meth_slot3_icon.png', w:48, h:48, kind:'prop'},
   // Grillz (Nutzer-Vorgabe): echtes Bild statt Gold-Balken, auf Mundgroesse zugeschnitten/transparent
   // gemacht (Original als *_original_backup.png gesichert) — w/h hier sind nur Platzhalter-Fallback-
   // Groesse, die tatsaechliche Zielgroesse am Charakter wird in drawJewelryAccessories() explizit gesetzt.
@@ -3825,16 +3818,17 @@ function makeInterior(type){
         {k:'stairs',x:2,y:9,w:2,h:1.5,c:'#2a2a2a',detail:'up',interactive:'stairs',goto:'house_trap',
          label:{de:'Treppe hoch',en:'Stairs up'}}
       );
-      // Koch-Stationen (Paket 11, erweitert): eine pro gekauftem Slot, siehe METHLAB_SLOT_POS/
-      // makeCookstationFurniture()/buyMethlabSlot() — ersetzt die früher einzelne, hartcodierte Station.
-      // Nutzer-Vorgabe: zusaetzlich 2 reine Deko-Requisiten direkt neben jeder Station (rechts daneben,
-      // uebereinander gestapelt — Offsets an die kleinere 1.3x1.0-Stationsgroesse angepasst.
-      for(let i=0;i<player.methLabSlots;i++){
-        const p=METHLAB_SLOT_POS[i];
-        I.furniture.push(makeCookstationFurniture(i));
-        I.furniture.push({k:'lab_flask_deco',x:p.x+1.3,y:p.y+0.02,w:0.45,h:0.45,c:'#cfe3ea'});
-        I.furniture.push({k:'lab_canister_deco',x:p.x+1.3,y:p.y+0.53,w:0.45,h:0.45,c:'#5a5a62'});
-      }
+      // Chemiker (Nutzer-Vorgabe): ersetzt die frueheren 13 manuellen Koch-Stationen — Zutaten in
+      // einem Rutsch abgeben, er kocht automatisch (kein Reaktionsfenster, kein Explosionsrisiko
+      // mehr), siehe feedAndCollectMethNpc()/updateMethNpc(). Als Moebelstueck implementiert (nicht
+      // als bewegliche NPC-Entitaet), gleiches Prinzip wie der Chemie-Regal-Tresen — kein Pathing/
+      // Animations-Aufwand noetig, sieht fuer den Spieler trotzdem wie "jemand, den man anspricht" aus.
+      I.furniture.push(
+        {k:'chemist_npc',x:6.5,y:4.5,w:1.3,h:1.6,c:'#3a4a3a',interactive:'methnpc',
+         label:{de:'Chemiker',en:'Chemist'}},
+        {k:'lab_flask_deco',x:7.8,y:4.5,w:0.45,h:0.45,c:'#cfe3ea'},
+        {k:'lab_canister_deco',x:7.8,y:5.05,w:0.45,h:0.45,c:'#5a5a62'}
+      );
       // Bewusst kein I.exits — sonst würde die Rückweg-Erkennungszone exitInterior() auslösen und
       // direkt nach draußen springen statt zurück ins Trap-Haus (intTargetBuilding zeigt weiterhin dorthin).
       I.lights.push({x:5,y:1,r:90,c:'rgba(200,255,192,0.12)'},{x:10,y:1,r:90,c:'rgba(200,255,192,0.12)'});
@@ -4056,7 +4050,7 @@ function makeInterior(type){
     'ticketmachine','info','info_counter','display','display_big','weaponwall','vestdisplay',
     'toolwall','bike_wall','bikestand','crate','box','safe','display_case','trashcan','counter_glass','glass',
     'wall_glass','schedule_board','bench_broken','bench_detailed','bike_rack','sign_stand','sofa',
-    'cookstation','mixtank','still','clothes_rack','changing_booth','toilet','payphone','bars']);
+    'chemist_npc','mixtank','still','clothes_rack','changing_booth','toilet','payphone','bars']);
   for(const f of I.furniture){
     if(SOLID.has(f.k)){
       I.colliders.push({x:f.x*INT_TILE,y:f.y*INT_TILE,w:f.w*INT_TILE,h:f.h*INT_TILE});
@@ -5168,20 +5162,24 @@ function drawInteriorFurniture(ctx, f, time){
       ctx.drawImage(IMAGES.lab_canister_deco,tx,ty,tw,th);
       break;
     }
-    /* ===== Paket 11: Meth-Labor-Stationen ===== */
-    case 'cookstation':{
-      // Nutzer-Vorgabe: nach dem Kristallisieren zeigt die Station das fertige Produkt (Lampe+Kiste)
-      // statt der Flammen-Optik — sichtbarer Hinweis "hier gibt's was zu ernten", ohne Extra-UI.
-      const cook=player.methCooks&&player.methCooks[f.slotIndex];
-      if(cook&&cook.phase==='ready'){
-        ctx.drawImage(IMAGES.meth_ready,tx,ty,tw,th);
-        break;
-      }
-      // Nutzer-Vorgabe: dieselben 3 Ausbaustufen-Bilder wie beim Dealer-Kauf-Icon, je nach Slot-Index
-      // (0→Bild1, 1→Bild2, 2+→Bild3 — Stufe 4/5 nutzen bewusst dasselbe Bild wie Stufe 3, keine eigene
-      // 4./5. Grafik vorhanden, gleiches Wiederverwendungs-Muster wie beim Dealer).
-      const stationImg=['meth_station1','meth_station2','meth_station3'][Math.min(f.slotIndex,2)];
-      ctx.drawImage(IMAGES[stationImg],tx,ty,tw,th);
+    /* ===== Chemiker (ersetzt die frueheren 13 manuellen Koch-Stationen) ===== */
+    case 'chemist_npc':{
+      // Werkbank-Basis
+      ctx.fillStyle=f.c;
+      ctx.fillRect(tx,ty+th*0.6,tw,th*0.4);
+      ctx.fillStyle='#5a6a5a';
+      ctx.fillRect(tx,ty+th*0.6,tw,3);
+      // Vereinfachte stehende Figur (kein eigenes Sprite vorhanden — liest sich trotzdem als "jemand hier")
+      const cx=tx+tw*0.5;
+      ctx.fillStyle='#e8e6df';
+      ctx.fillRect(cx-tw*0.22,ty,tw*0.44,th*0.55);
+      ctx.fillStyle='#c9a877';
+      ctx.beginPath(); ctx.arc(cx,ty-2,tw*0.16,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#3a3a3a';
+      ctx.fillRect(cx-tw*0.1,ty-6,tw*0.2,4);
+      // Nutzer-Vorgabe: sichtbarer Hinweis, sobald fertige Ware zum Abholen bereitliegt
+      const r=player.methNpcReady;
+      if(r&&(r.meth_dirty>0||r.meth_pure>0||r.meth_blue>0)) ctx.drawImage(IMAGES.meth_ready,tx+tw*0.6,ty-th*0.25,tw*0.5,th*0.4);
       break;
     }
     case 'mixtank':{
@@ -6329,8 +6327,8 @@ function interactInterior(){
     openArmorUI();
     return;
   }
-  if(f.interactive==='cookstation'){
-    interactMethCook(f.slotIndex);
+  if(f.interactive==='methnpc'){
+    feedAndCollectMethNpc();
     return;
   }
   if(f.interactive==='dripshop'){
@@ -6766,7 +6764,7 @@ function gangHouseCluster(b,gid,rect,withBoss,withDograce){
   addGroup('meth',gid,mx,my-6);
   used++;
   // Nutzer-Vorgabe: eigene, kostenlose Koch-Station VOR dem Haus, sobald man Mitglied dieser Gang ist —
-  // eigenständig von player.methCooks/hasMethLab (dem teuren Privat-Labor), siehe interactGangCook().
+  // eigenständig vom hasMethLab-Chemiker (dem teuren Privat-Labor), siehe interactGangCook().
   const ocx=b.door.x-150, ocy=b.baseY+30;
   addProp('prop_meth', ocx, ocy, {meth:true, emitT:0});
   addGroup('owncook',gid,ocx,ocy-10);
@@ -8826,10 +8824,11 @@ const player={
   // Red Bull (Paket 5): temporärer Lauf-Speed-Boost, unabhängig vom Debug-"speed"-Multiplikator
   speedBoostT:0,
   // Meth-Labor (Paket 11, erweitert um mehrere parallele Stationen): eigenes Interior im Trap-Haus,
-  // Schutzausrüstung als einfache Flags, Koch-Zustandsmaschine analog player.pots (siehe
-  // interactMethCook()/updateMethCooks()) — methCooks ist index-gleich zu den gekauften Stationen
-  // (methLabSlots), ersetzt das frühere einzelne methCook-Objekt (Migration siehe loadGame()).
-  hasMethLab:false, hasLabCoat:false, hasGasmask:false, methLabSlots:0, methCooks:[],
+  // Schutzausrüstung als einfache Flags. Chemiker-Redesign (Nutzer-Vorgabe): ersetzt die frühere
+  // Parallel-Küche (methLabSlots/methCooks) durch eine einzelne Warteschlange + Sammel-Lager fuer
+  // fertige Ware — siehe feedAndCollectMethNpc()/updateMethNpc() (Migration siehe loadGame()).
+  hasMethLab:false, hasLabCoat:false, hasGasmask:false,
+  methNpcQueue:0, methNpcT:0, methNpcReady:{meth_dirty:0,meth_pure:0,meth_blue:0},
   // Karten-Kloning (Nutzer-Vorgabe): Laptop + Skimmer als einfache Flags, analog hasMethLab.
   hasLaptop:false, hasSkimmer:false,
   // Panzerschrank (Nutzer-Vorgabe): zweites, unabhaengiges Lager, das confiscateContraband() nie
@@ -9530,13 +9529,13 @@ function confiscateContraband(scope){
   }
   if(scope==='all'||scope==='house'){
     player.stash=strip(player.stash);
-    // Jeder laufende Kochvorgang zählt als Fund (Bugfix: vorher inkrementierte das Löschen hier n nicht,
-    // wodurch ein Raid auf ein noch nicht abgeerntetes Labor als "nichts gefunden" durchging). Bei mehreren
-    // parallelen Stationen (Paket 11-Erweiterung) trifft eine Razzia ALLE gerade laufenden Kochvorgänge —
-    // bewusste, direkte Konsequenz der echten Parallelität: mehr Stationen = mehr Risiko bei einer Razzia.
-    for(let i=0;i<player.methCooks.length;i++){
-      if(player.methCooks[i]){ player.methCooks[i]=null; n+=1; hard=true; }
+    // Chemiker-Redesign: fertige, noch nicht abgeholte Ware beim Chemiker UND eine laufende
+    // Koch-Warteschlange zaehlen beide als Fund — gleiches Prinzip wie zuvor bei den einzelnen
+    // Kochstationen, nur an das neue Warteschlangen-Modell angepasst.
+    for(const q of ['meth_dirty','meth_pure','meth_blue']){
+      if(player.methNpcReady[q]>0){ n+=player.methNpcReady[q]; hard=true; player.methNpcReady[q]=0; }
     }
+    if(player.methNpcQueue>0){ n+=player.methNpcQueue; hard=true; player.methNpcQueue=0; player.methNpcT=0; }
   }
   return {n,hard};
 }
@@ -10039,59 +10038,16 @@ function buyMethLab(){
   if(player.money<METHLAB_PRICE){ toast(t('methlab.noMoney')); return; }
   player.money-=METHLAB_PRICE;
   player.hasMethLab=true;
-  player.methLabSlots=1;   // Station 1 ist im Basis-Labor enthalten, weitere kostenpflichtig (siehe METHLAB_SLOT_PRICES)
-  player.methCooks=[null];
   // Sofort sichtbar machen, falls man gerade in der Trap steht (gleiches Prinzip wie bei plant_pot/led_light)
   if(interior&&interior.type==='house_trap') interior.furniture.push(makeLabHatchFurniture());
   toast(t('methlab.unlocked'));
   saveGame();
 }
-// Käufliche Zusatz-Stationen fürs Meth-Labor (Nutzer-Feedback: "mehrere Plätze für 10k/15k/20k...,
-// wo dann die Maschine platziert wird") — echte Parallel-Küche: jede Station kocht unabhängig,
-// siehe player.methCooks/updateMethCooks(). Preise sind eine einfache, leicht anpassbare Liste statt
-// einer Formel; Länge davon (+1 für die im Basis-Labor enthaltene Station 0) begrenzt zugleich die
-// maximale Stationszahl auf METHLAB_SLOT_POS.length (Platz im Raum, siehe case 'meth_lab').
-// Nutzer-Vorgabe: 8 weitere Stationen (5->13), dafür kleiner + enger gepackt statt über den ganzen
-// Raum verteilt — 3x4-Raster in der freien Mitte (x4.2-10.15/y2-6.9), kollisionsfrei zu
-// Regal(x2-4/y2-5)/Mixtank(x11-12.6/y2-4)/Destille(x11-13/y5.5-7.7)/Treppe(x2-4/y9-10.5), plus 1
-// zusätzlicher Slot rechts neben dem Mixtank. Slot 0 ist die bisherige, immer vorhandene Position.
-// Länge = 1 + METHLAB_SLOT_PRICES.length (siehe unten).
-// Bugfix (Adversarial-Review): Zeilen-Abstand war 1.3 Kacheln (41.6px) — unter dem festen 50px-
-// Interaktionsradius von renderInterior() (first-match-wins) -> 9 von 13 Stationen loesten oft die
-// falsche (naeher am Scan-Start liegende) Nachbarstation aus. Jetzt 1.65 Kacheln (52.8px) Zeilenabstand,
-// Spaltenabstand (2.1 Kacheln/67.2px) war schon sicher und bleibt unveraendert.
-const METHLAB_SLOT_POS=[
-  {x:4.2,y:2.0}, {x:6.3,y:2.0}, {x:8.4,y:2.0},
-  {x:4.2,y:3.65}, {x:6.3,y:3.65}, {x:8.4,y:3.65},
-  {x:4.2,y:5.3}, {x:6.3,y:5.3}, {x:8.4,y:5.3},
-  {x:4.2,y:6.95}, {x:6.3,y:6.95}, {x:8.4,y:6.95},
-  {x:13.2,y:2.2}
-];
-function makeCookstationFurniture(i){
-  const p=METHLAB_SLOT_POS[i];
-  return {k:'cookstation',x:p.x,y:p.y,w:1.3,h:1.0,c:'#2a2a2e',
-    interactive:'cookstation',slotIndex:i,
-    label:{de:'Koch-Station '+(i+1),en:'Cook station '+(i+1)}};
-}
-// Preise Slot 2-13 (Slot 1 gratis) — Fortsetzung der bestehenden +5000-Reihe, Platzhalter/leicht anpassbar.
+// Nutzer-Vorgabe (Redesign): die frueheren 13 manuellen Koch-Stationen (Preise siehe
+// METHLAB_SLOT_PRICES, nur noch fuer die Altspielstand-Geld-Rueckerstattung in startGame()
+// gebraucht) sind komplett durch den Chemiker ersetzt (siehe feedAndCollectMethNpc()/
+// updateMethNpc() weiter unten) — kein Slot-Kauf, kein Reaktionsfenster, kein Explosionsrisiko mehr.
 const METHLAB_SLOT_PRICES=[10000,15000,20000,25000,30000,35000,40000,45000,50000,55000,60000,65000];
-function nextMethlabSlotPrice(){
-  const idx=player.methLabSlots-1;
-  return (idx>=0&&idx<METHLAB_SLOT_PRICES.length) ? METHLAB_SLOT_PRICES[idx] : null;
-}
-function buyMethlabSlot(){
-  const price=nextMethlabSlotPrice();
-  if(price===null){ toast(t('methlab.slotsMaxed')); return; }
-  if(player.money<price){ toast(t('methlab.slotNoMoney')); return; }
-  player.money-=price;
-  const idx=player.methLabSlots;
-  player.methLabSlots++;
-  player.methCooks[idx]=null;
-  if(interior&&interior.type==='meth_lab') interior.furniture.push(makeCookstationFurniture(idx));
-  toast(t('methlab.slotBought',{n:idx+1,price}));
-  saveGame();
-  renderDealershop();   // Paket 3: Kauf-UI ist umgezogen, siehe renderDealershop()
-}
 const ITEMS={
   nokia:   { icon:'nokia', cat:'tool',       weight:150, use(){ openPhone(); return false; } },   // wird nicht verbraucht
   cig_pack:{ icon:'cigs',  cat:'consumable', weight:1,   use(){ return startSmoking('cig'); } },
@@ -10388,12 +10344,11 @@ function updateGrowPots(dt){
   }
 }
 
-/* ---------------- Meth-Labor: Koch-Zustandsmaschine (Paket 11, erweitert auf mehrere Slots) ----------------
-   Vorbild 1:1 die Grow-Ecke (player.pots/interactGrowPot/updateGrowPots) — jede gekaufte Station
-   (player.methCooks[idx]) kocht unabhängig, echte Parallel-Küche statt des früheren einzelnen
-   player.methCook-Objekts (Nutzer-Feedback: "mehrere Plätze, die parallel kochen").
-   Phase 2 "Reduktion" hat ein eigenes Reaktionsfenster (kein Dauer-Minigame, nur EIN Tastendruck-Moment) —
-   siehe Paket-11-Plan für die Herleitung aus dem User-Feedback. */
+/* ---------------- Meth-Kochen: Phasen-Konstanten ----------------
+   Seit dem Chemiker-Redesign nur noch vom Gang-Koch (player.gangCook/interactGangCook()/
+   updateGangCook(), manuelles Reaktionsfenster + Explosionsrisiko) genutzt — das private Labor
+   verwendet stattdessen die vereinfachte, explosionsfreie Warteschlange (METH_NPC_BATCH_TIME/
+   feedAndCollectMethNpc()/updateMethNpc() weiter unten). */
 const METH_PHASE_DURATION={
   prep:4.17, reduktion:12.5, reactionWindow:8, mischen:8.33, destillation:12.5, kristallisierung:37.5
 };
@@ -10401,78 +10356,58 @@ const METH_PHASE_LABEL_KEY={
   prep:'phasePrep', reduktion:'phaseReduktion', mischen:'phaseMischen',
   destillation:'phaseDestillation', kristallisierung:'phaseKristallisierung'
 };
-function interactMethCook(idx){
-  const cook=player.methCooks[idx];
-  if(!cook){
-    if(invCount('pseudoephedrin')<=0||invCount('red_phosphor')<=0||invCount('iodine')<=0||invCount('acetone')<=0){
-      toast(t('methlab.needChemicals'));
-      return;
-    }
-    invRemove('pseudoephedrin',1); invRemove('red_phosphor',1); invRemove('iodine',1); invRemove('acetone',1);
-    player.methCooks[idx]={phase:'prep',phaseT:0,reactionWindow:false,reactionT:0,quality:null};
-    toast(t('methlab.started'));
-    saveGame();
-    return;
-  }
-  if(cook.phase==='reduktion'&&cook.reactionWindow){
-    // Reaktions-Tastendruck: je schneller reagiert wird, desto besser die Qualität
-    const rt=cook.reactionT;
-    cook.quality = rt<2 ? 'meth_blue' : rt<5 ? 'meth_pure' : 'meth_dirty';
-    cook.phase='mischen'; cook.phaseT=0; cook.reactionWindow=false;
-    // Gift-Gas beim Eintritt in die Misch-Phase (Jod + Red Phosphor zugeben) — genau einmal pro Kochlauf
-    if(player.hasGasmask){ toast(t('methlab.gasBlocked')); }
-    else { damagePlayer(6); toast(t('methlab.gas')); }
-    saveGame();
-    return;
-  }
-  if(cook.phase==='ready'){
-    if(!invAdd(cook.quality,4)) return;   // Inventar voll — Ernte bleibt bereit, kein Verlust
-    toast(t('methlab.harvested',{n:4,name:itemName(cook.quality)}));
-    JobSystem.addXp('meth',JobSystem.jobs.meth.xp);
-    player.methCooks[idx]=null;
-    saveGame();
-    return;
-  }
-  // Laufende Phase ohne Interaktion nötig — nur Fortschritt anzeigen
-  const dur=METH_PHASE_DURATION[cook.phase]||1;
-  const sec=Math.max(0,Math.ceil(dur-cook.phaseT));
-  toast(t('methlab.progress',{phase:t('methlab.'+METH_PHASE_LABEL_KEY[cook.phase]),sec}));
+// Chemiker (Nutzer-Vorgabe, Redesign): ersetzt das fruehere manuelle 13-Stationen-System komplett.
+// Zutaten werden in einem Rutsch abgegeben, er kocht automatisch nacheinander durch (kein
+// Reaktionsfenster, kein Explosionsrisiko mehr), Qualitaet wird pro Batch zufaellig gewuerfelt.
+const METH_NPC_BATCH_TIME=75, METH_NPC_YIELD=4;
+// Platzhalter-Gewichte, leicht anpassbar — grobe Anlehnung an die bisherige Skill-basierte
+// Seltenheits-Reihenfolge (Blue Ice bleibt am seltensten/wertvollsten).
+const METH_NPC_QUALITY_WEIGHTS=[{q:'meth_dirty',w:50},{q:'meth_pure',w:35},{q:'meth_blue',w:15}];
+function rollMethNpcQuality(){
+  const total=METH_NPC_QUALITY_WEIGHTS.reduce((s,e)=>s+e.w,0);
+  let r=Math.random()*total;
+  for(const e of METH_NPC_QUALITY_WEIGHTS){ if(r<e.w) return e.q; r-=e.w; }
+  return METH_NPC_QUALITY_WEIGHTS[0].q;
 }
-function explodeMethCook(idx){
-  damagePlayer(player.hasLabCoat?8:16);
-  addShake(0.5);
-  for(let i=0;i<10;i++) spawnParticle(player.px+rand(-10,10),player.py-rand(10,30),
-    {vy:-rand(15,35),vx:rand(-20,20),life:rand(.3,.6),size:3,color:i<5?'#ff6a1a':'#c03434'});
-  toast(t('methlab.explosion'));
-  player.methCooks[idx]=null;
-  // Polizei (Stufe 3), Auslöser "Meth-Labor-Explosion": hörbar, kein Sichtweiten-Check nötig
-  addHeat(POLICE_CFG.heatPerExplosion);
-  logCrime('methExplosion');
+function feedAndCollectMethNpc(){
+  // Erst fertige Ware abholen (kein Verlust bei vollem Inventar — bleibt einfach liegen),
+  // dann alle kompletten Zutaten-Sets aus dem Inventar in die Warteschlange geben.
+  const r=player.methNpcReady;
+  let collected=0;
+  for(const q of ['meth_dirty','meth_pure','meth_blue']){
+    if(r[q]>0&&invAdd(q,r[q])){ collected+=r[q]; r[q]=0; }
+  }
+  let fed=0;
+  while(invCount('pseudoephedrin')>0&&invCount('red_phosphor')>0&&invCount('iodine')>0&&invCount('acetone')>0){
+    invRemove('pseudoephedrin',1); invRemove('red_phosphor',1); invRemove('iodine',1); invRemove('acetone',1);
+    player.methNpcQueue++; fed++;
+  }
+  if(collected>0) toast(t('methlab.npcCollected',{n:collected}));
+  if(fed>0) toast(t('methlab.npcFed',{n:fed}));
+  if(collected<=0&&fed<=0){
+    if(player.methNpcQueue>0){
+      const sec=Math.max(0,Math.ceil(METH_NPC_BATCH_TIME-player.methNpcT));
+      toast(t('methlab.npcProgress',{n:player.methNpcQueue,sec}));
+    } else {
+      toast(t('methlab.needChemicals'));
+    }
+  }
   saveGame();
 }
-function updateMethCooks(dt){
-  for(let idx=0;idx<player.methCooks.length;idx++){
-    const cook=player.methCooks[idx];
-    if(!cook||cook.phase==='ready') continue;
-    if(cook.phase==='reduktion'&&cook.reactionWindow){
-      cook.reactionT+=dt;
-      if(cook.reactionT>=METH_PHASE_DURATION.reactionWindow) explodeMethCook(idx);
-      continue;
-    }
-    cook.phaseT+=dt;
-    const dur=METH_PHASE_DURATION[cook.phase];
-    if(cook.phaseT<dur) continue;
-    if(cook.phase==='prep'){ cook.phase='reduktion'; cook.phaseT=0; }
-    else if(cook.phase==='reduktion'){ cook.reactionWindow=true; cook.reactionT=0; toast(t('methlab.readyPrompt')); }
-    else if(cook.phase==='mischen'){ cook.phase='destillation'; cook.phaseT=0; }
-    else if(cook.phase==='destillation'){ cook.phase='kristallisierung'; cook.phaseT=0; }
-    else if(cook.phase==='kristallisierung'){ cook.phase='ready'; cook.phaseT=0; }
-  }
+function updateMethNpc(dt){
+  if(player.methNpcQueue<=0) return;
+  player.methNpcT+=dt;
+  if(player.methNpcT<METH_NPC_BATCH_TIME) return;
+  player.methNpcT=0;
+  player.methNpcQueue--;
+  const q=rollMethNpcQuality();
+  player.methNpcReady[q]+=METH_NPC_YIELD;
+  JobSystem.addXp('meth',JobSystem.jobs.meth.xp);
+  saveGame();
 }
 // Nutzer-Vorgabe: eigene Koch-Station vor der eigenen Gang-Basis, unabhaengig vom teuren Privat-Labor —
-// 1:1 dieselbe Phasen-Logik wie interactMethCook()/updateMethCooks()/explodeMethCook(), aber bewusst
-// dupliziert statt generalisiert (eigenes player.gangCook-Objekt statt Array-Slot), damit das bezahlte
-// methCooks/methLabSlots/hasMethLab-System (inkl. Save/Load-Kappung auf methLabSlots) unangetastet bleibt.
+// nutzt weiterhin die manuelle Phasen-Logik mit Reaktionsfenster/Explosionsrisiko (eigenes
+// player.gangCook-Objekt), bewusst NICHT vom Chemiker-Redesign des Privat-Labors betroffen.
 function interactGangCook(){
   const cook=player.gangCook;
   if(!cook){
@@ -10724,10 +10659,6 @@ function makeItemIcons(){
   ITEM_ICONS.chain_diamond='german_streetz_assets/chain_diamond.png';
   ITEM_ICONS.chain_king='german_streetz_assets/chain_king.png';
   ITEM_ICONS.chain_cuban='german_streetz_assets/chain_cuban.png';
-  // Meth-Labor-Slot-Icons (Nutzer-Vorgabe): echte Bilder je Ausbaustufe statt geliehenem Gasmasken-Icon.
-  ITEM_ICONS.methlab_slot1='german_streetz_assets/meth_slot1_icon.png';
-  ITEM_ICONS.methlab_slot2='german_streetz_assets/meth_slot2_icon.png';
-  ITEM_ICONS.methlab_slot3='german_streetz_assets/meth_slot3_icon.png';
   // Waffen-Update: Glock-40-Icon (Trommel-Magazin)
   ITEM_ICONS.g40='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAXCAYAAAARIY8tAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQySURBVEhLlVXPi9x0FA9WWCw7zE4y+eb3JJPkO/k9SSaZ36uZLZVdDwWF3f9ARLEHQdCD4oI3QVAvPYgoCAqCHgRFEQ8elEJBiqV4qCAUS6Wgh7GioOKT952udkOh4wceLyHv17z3eW84juO4juM/5sbDnxPfKRRFaf8nm0xzHHcS7W7D5p3sjrRpmn4cx++maapxsj9/Szr9/N/6Q4eQpumvZTFYFkWxnM1my6paLBeLneVgMLgWhuGlJEkux3F8eTAYXN9Z7CyrqlouFotldSRH71X12+7uLmRZ9j5HugWYcQWd6AGIogj6/T7EcQxFUcJ0NofpdAbj8QQmkylMJhOYTGewvX0/DIdDKMsSRqMxsyvLIbPN8hzSLIP5fBs8z/uL0wz7QpknEHgOUEqh1+sxHYYR5PkA0jSDKIohimOWGAvIshySJLn1nkKe5+wZ7VGjDEcjME3za65j6OcxKFaPhlmWwWAwgDAMQdd1lqwoCsizjFXt+z5Ylsmex+Mxe7dtG1zXBcdxoNejWDkTWZZf4jRNo5ubm/uiKP7g+x6UZcGSYIVB4ONcYDgsWcIwDIBSlyXAoo6KkGUJg4GmaaAoyp+KovyhadovoijO/qUFIeQFNMBq5/MZk+l0AnmegaLIQAgBnuffEwThjCiKLxNCfm80Gmd4nn/KpRS63S4EQQCqqp52XddJkkQ/xjtZll9DoySOIUliyNIU0rTPqm21Whd6vv8qpfRDtN3f378vDINL+FxV1b3tdvtby7JAkqSPjwW9DRuGYVzFvq1aEUIYhay37baA/f2x3+8/3uv1roRheDYIgldwXnmem+hMSPsiMopS+k49MIOu67s4IBwYDhslvqV5nv+cEDJxHOc5x3GeRG3b9iGl9GnP89SDg4MThJArmLDb7X5Qj81gGMZHOGDsIQbFYfb7CQS+jz/7xbr9cbgbkiRdxdlRSj+tf8Xel0fVo2AS1MgeXdduSpJk1X1qOEkIuTkajbCl5+sfuU6n8yYGRUo67orHUbSipKqqn9Tt74AToii+7nneZ5qmPVv/yFmWeQ1Zg0FXLQrZHuCCNZvNc0EQPOz7vlL3WxuWZT1j2/ZPuDi2YzNa4vIossy2ExlFe70bju8Xdd+1gXMQBOGr5lYTGo0G20g8F3gOUCNDKKXf7e3tbdR914aqqk8g51VVZUdr59Qpdi3n8zljlud7OMRH6n5rw3Zd5DboxurA4RxW5zthh8sPAjAt842639rodDpncd3bYpsdL9M0WWCcy2qzI1ykL+p+a0NV1VySCAgCD0JbwKvIEnTtLjvD+H/QdZwv635r4/Dw8B5Zli/i1WzxLSBEZGxCJpmWyTSl9Fzd73/BMIwHMcHW1hbuAGsXMgqPnm3b33ied7etvjsURXlUFMXrPN/6vtlsvq0oylme58e4sXXbdfAPzmqzjJwYCroAAAAASUVORK5CYII=';
   // Vodka: klare Flasche mit weißem Etikett und Silber-Kappe
@@ -11402,33 +11333,8 @@ function renderDealershop(){
     row.appendChild(img); row.appendChild(name); row.appendChild(price); row.appendChild(btn);
     box.appendChild(row);
   }
-  // Paket 3 (Nutzer-Vorgabe): Methlabor-Upgrades ("der reiche Dealer") sind vom Chemie-Regal
-  // hierher umgezogen — nur wenn das Labor überhaupt existiert, sonst gibt's noch nichts, wo
-  // eine zweite Station stehen könnte. Gleiches Zeilen-Muster wie zuvor in renderChemshop().
-  if(player.hasMethLab){
-    const price=nextMethlabSlotPrice();
-    const row=document.createElement('div');
-    row.className='shop-row';
-    const img=document.createElement('img');
-    // Nutzer-Vorgabe: echte Icons je Ausbaustufe (Slot 1-3) statt geliehenem Gasmasken-Icon — Stufe 4
-    // nutzt bewusst dasselbe Bild wie Stufe 3 (keine eigene 4. Grafik vorhanden).
-    img.src=ITEM_ICONS['methlab_slot'+Math.min(player.methLabSlots+1,3)];
-    img.alt='';
-    const name=document.createElement('div');
-    name.className='shop-row-name';
-    name.textContent=price===null?t('methlab.slotsMaxedLabel'):t('methlab.buySlotLabel',{n:player.methLabSlots+1});
-    const priceEl=document.createElement('div');
-    priceEl.className='shop-row-price';
-    priceEl.textContent=price===null?'':price+'$';
-    const btn=document.createElement('button');
-    btn.textContent=price===null?t('armor.alreadyOwned'):'+';
-    btn.disabled=price===null||player.money<price;
-    btn.addEventListener('click',buyMethlabSlot);
-    row.appendChild(img); row.appendChild(name); row.appendChild(priceEl); row.appendChild(btn);
-    box.appendChild(row);
-  }
-  // Runner (Nutzer-Vorgabe): passiver Verkaufs-Service, gleiche Extra-Zeile-Technik wie der Methlabor-
-  // Slot-Kauf oben — nur sichtbar solange noch nicht angeheuert.
+  // Runner (Nutzer-Vorgabe): passiver Verkaufs-Service, gleiche Extra-Zeile-Technik wie andere
+  // Dealer-Shop-Extras — nur sichtbar solange noch nicht angeheuert.
   if(!player.hasRunner){
     const row=document.createElement('div');
     row.className='shop-row';
@@ -11449,7 +11355,7 @@ function renderDealershop(){
     box.appendChild(row);
   }
   // Juwelier (Nutzer-Vorgabe): Diamanten aus dem Ueberfall beim Dealer als Hehler verkaufen — gleiche
-  // Extra-Zeile-Technik wie der Methlabor-Slot-Kauf oben, nur sichtbar wenn ueberhaupt Diamanten da sind.
+  // Extra-Zeile-Technik wie die Runner-Anheuer-Zeile oben, nur sichtbar wenn ueberhaupt Diamanten da sind.
   if(invCount('diamond')>0){
     const row=document.createElement('div');
     row.className='shop-row';
@@ -14036,8 +13942,8 @@ JobSystem.register('drip',{
   }
 });
 
-/* ---- Chemiker (Meth-Labor, Paket 11): kein Job-Stations-Wrapper — die Koch-Zustandsmaschine
-   (interactMethCook()/updateMethCooks()) läuft unabhängig vom JobSystem.active-Feld, XP kommt
+/* ---- Chemiker (Meth-Labor, Paket 11): kein Job-Stations-Wrapper — die Koch-Warteschlange
+   (feedAndCollectMethNpc()/updateMethNpc()) läuft unabhängig vom JobSystem.active-Feld, XP kommt
    nur als Nebeneffekt einer erfolgreichen Ernte über JobSystem.addXp('meth', ...) dazu. */
 JobSystem.register('meth',{basePay:0, xp:40});
 
@@ -14075,7 +13981,7 @@ function update(dt){
     updateBlood(dt);
     updateCameraShake(dt);
     updateGrowPots(dt);
-    updateMethCooks(dt);
+    updateMethNpc(dt);
     updateRunner(dt);
     updateRobbery(dt);
     updateJewelryHeist(dt);
@@ -14101,7 +14007,7 @@ function update(dt){
     updateArrestFade(dt);
     updateCustody(dt);
     // Bugfix (weißer-Bildschirm/Lag-Untersuchung): fehlte hier bisher komplett — starb der Spieler drinnen
-    // (z.B. durch eine unbeaufsichtigt explodierende Meth-Kueche, updateMethCooks() oben laeuft ja schon
+    // (z.B. durch eine explodierende Gang-Kochstation, updateGangCook() oben laeuft ja schon
     // interior-unabhaengig), wurde die Todes-Sequenz erst beim naechsten Verlassen des Gebaeudes nachgeholt,
     // ploetzlich und ohne erkennbaren Auslöser — genau das "zufaellig, mitten im Spiel" Verhalten. Gleiches
     // Muster wie updateArrestFade/updateCustody direkt darueber (waren fuer die Zelle bereits ergaenzt worden).
@@ -14253,7 +14159,7 @@ function update(dt){
   updatePoliceDispatch(dt);
   updateDeadNpcs(dt);
   updateGrowPots(dt);
-  updateMethCooks(dt);
+  updateMethNpc(dt);
   updateRunner(dt);
   updateBuyerCalls(dt);
   updateWalkupCooldowns(dt);   // Paket 18
@@ -15013,7 +14919,7 @@ function saveGame(){
       growPots:player.growPots, pots:player.pots,
       stash:player.stash, safeLevel:player.safeLevel,
       hasMethLab:player.hasMethLab, hasLabCoat:player.hasLabCoat, hasGasmask:player.hasGasmask,
-      methLabSlots:player.methLabSlots, methCooks:player.methCooks,
+      methNpcQueue:player.methNpcQueue, methNpcT:player.methNpcT, methNpcReady:player.methNpcReady,
       hasLaptop:player.hasLaptop, hasSkimmer:player.hasSkimmer,
       hasExtraSafe:player.hasExtraSafe, extraSafe:player.extraSafe,
       hasChainGold:player.hasChainGold, hasChainDiamond:player.hasChainDiamond, hasChainKing:player.hasChainKing,
@@ -15216,17 +15122,39 @@ function startGame(fresh){
     player.hasSunglasses=!!s.hasSunglasses; player.hasHat=!!s.hasHat; player.hasTattoo=!!s.hasTattoo;
     player.hasRunner=!!s.hasRunner; runnerT=Number.isFinite(s.runnerT)?s.runnerT:RUNNER_INTERVAL;
     player.runnerStock=Array.isArray(s.runnerStock)?s.runnerStock.filter(i=>i&&ITEMS[i.id]&&i.n>0):[];
-    // Parallel-Küche-Migration: neue Saves haben methLabSlots/methCooks (Array), alte Saves (vor dieser
-    // Erweiterung) hatten nur ein einzelnes methCook-Objekt/null — das wandert 1:1 in Slot 0, damit
-    // laufende Kochvorgänge aus alten Spielständen nicht verloren gehen.
-    if(Array.isArray(s.methCooks)){
-      player.methLabSlots=Number.isFinite(s.methLabSlots)&&s.methLabSlots>0
-        ? Math.min(s.methLabSlots,METHLAB_SLOT_POS.length) : (player.hasMethLab?1:0);
-      player.methCooks=s.methCooks.slice(0,player.methLabSlots).map(c=>(c&&typeof c==='object')?c:null);
-      while(player.methCooks.length<player.methLabSlots) player.methCooks.push(null);
+    // Chemiker-Redesign-Migration (Nutzer-Vorgabe): das fruehere Parallel-Kuechen-System
+    // (methLabSlots/methCooks-Array, oder noch aelter ein einzelnes methCook-Objekt) wird beim
+    // ersten Laden nach dem Redesign fair aufgeloest, damit dieses Update nicht genau die Ware
+    // zerstoert, die es eigentlich retten soll: fertige Batches -> direkt als abholbare Ware
+    // gutschreiben, laufende Batches -> Grundzutaten zurueckerstatten (nie fertig geworden), gekaufte
+    // Zusatz-Slots -> eingesetztes Geld zurueckerstatten (das Slot-Kauf-System faellt komplett weg).
+    if(Number.isFinite(s.methNpcQueue)||s.methNpcReady){
+      player.methNpcQueue=Number.isFinite(s.methNpcQueue)?s.methNpcQueue:0;
+      player.methNpcT=Number.isFinite(s.methNpcT)?s.methNpcT:0;
+      player.methNpcReady=(s.methNpcReady&&typeof s.methNpcReady==='object')
+        ? {meth_dirty:s.methNpcReady.meth_dirty|0, meth_pure:s.methNpcReady.meth_pure|0, meth_blue:s.methNpcReady.meth_blue|0}
+        : {meth_dirty:0,meth_pure:0,meth_blue:0};
     } else {
-      player.methLabSlots=player.hasMethLab?1:0;
-      player.methCooks=player.hasMethLab?[(s.methCook&&typeof s.methCook==='object')?s.methCook:null]:[];
+      player.methNpcQueue=0; player.methNpcT=0; player.methNpcReady={meth_dirty:0,meth_pure:0,meth_blue:0};
+      const oldCooks=Array.isArray(s.methCooks) ? s.methCooks
+        : (s.methCook&&typeof s.methCook==='object') ? [s.methCook] : [];
+      let refundedIngredients=false;
+      for(const cook of oldCooks){
+        if(!cook||typeof cook!=='object') continue;
+        if(cook.phase==='ready'&&cook.quality){
+          player.methNpcReady[cook.quality]=(player.methNpcReady[cook.quality]||0)+4;
+        } else if(cook.phase){
+          invAdd('pseudoephedrin',1); invAdd('red_phosphor',1); invAdd('iodine',1); invAdd('acetone',1);
+          refundedIngredients=true;
+        }
+      }
+      const boughtSlots=Math.max(0,(Number.isFinite(s.methLabSlots)?s.methLabSlots:0)-1);
+      let refundedMoney=0;
+      if(boughtSlots>0) refundedMoney=METHLAB_SLOT_PRICES.slice(0,boughtSlots).reduce((a,b)=>a+b,0);
+      if(refundedMoney>0) player.money+=refundedMoney;
+      if(refundedIngredients||refundedMoney>0||player.methNpcReady.meth_dirty>0||player.methNpcReady.meth_pure>0||player.methNpcReady.meth_blue>0){
+        toast(t('methlab.npcMigration',{amount:refundedMoney}));
+      }
     }
     player.hasVest=!!s.hasVest;
     player.hasVestMilitary=!!s.hasVestMilitary;
@@ -15283,7 +15211,7 @@ function startGame(fresh){
     player.hasGrowTent=false; player.hasGrowLight=false; player.hasGrowHeat=false;
     player.growPots=0; player.pots=[]; player.stash=[]; player.safeLevel=0;
     player.hasMethLab=false; player.hasLabCoat=false; player.hasGasmask=false;
-    player.methLabSlots=0; player.methCooks=[];
+    player.methNpcQueue=0; player.methNpcT=0; player.methNpcReady={meth_dirty:0,meth_pure:0,meth_blue:0};
     player.hasLaptop=false; player.hasSkimmer=false;
     player.hasExtraSafe=false; player.extraSafe=[];
     player.hasChainGold=false; player.hasChainDiamond=false; player.hasChainKing=false; player.hasChainCuban=false; player.wornChain=null;
