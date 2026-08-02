@@ -591,7 +591,7 @@ canvas#game{
 #roll-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
 
 /* ---------- Grow-Shop-UI + Pack-UI: gleiche Panel-Familie wie Roll-UI ---------- */
-#growshop-box, #pack-box, #kiosk-box, #chemshop-box, #dripshop-box, #armor-box, #casino-box, #blackjack-box, #dealershop-box, #police-station-box, #gangjoin-box, #gangops-box, #scammershop-box, #carding-box, #atm-box, #jewelershop-box{
+#growshop-box, #pack-box, #kiosk-box, #chemshop-box, #dripshop-box, #armor-box, #casino-box, #blackjack-box, #dealershop-box, #police-station-box, #gangjoin-box, #gangops-box, #scammershop-box, #carding-box, #atm-box, #jewelershop-box, #bikeshop-box{
   position: fixed;
   left: 50%;
   top: 50%;
@@ -960,6 +960,14 @@ canvas#game{
   <div id="jewelershop-hint"></div>
 </div>
 
+<!-- Bike-Shop (Nutzer-Vorgabe): Roller in mehreren Farben kaufen. -->
+<div id="bikeshop-box" class="hidden">
+  <button id="bikeshop-close" class="panel-close-btn" title="Schließen">✕</button>
+  <div id="bikeshop-title">BIKE SHOP</div>
+  <div id="bikeshop-content"></div>
+  <div id="bikeshop-hint"></div>
+</div>
+
 <!-- Carding-UI: am platzierten Laptop im Trap-Haus — Blanko-Karte gegen $200 zu einer geladenen Karte machen. -->
 <div id="carding-box" class="hidden">
   <button id="carding-close" class="panel-close-btn" title="Schließen">✕</button>
@@ -1312,6 +1320,7 @@ const I18N = {
       chain:{ name: 'Kette (Gold)', desc: 'Klicken: anlegen.', installed: 'Kette angelegt.', already: 'Trägst du schon.' },
       chain_diamond:{ name: 'Kette (Diamant)', desc: 'Klicken: anlegen.', installed: 'Diamant-Kette angelegt.', already: 'Trägst du schon.' },
       chain_king:{ name: 'Kette (Iced-Out King)', desc: 'Klicken: anlegen.', installed: 'Iced-Out-King-Chain angelegt.', already: 'Trägst du schon.' },
+      chain_cuban:{ name: 'Kette (Cuban Link)', desc: 'Klicken: anlegen.', installed: 'Cuban-Link-Chain angelegt.', already: 'Trägst du schon.' },
       watch:{ name: 'Uhr', desc: 'Klicken: anlegen.', installed: 'Uhr angelegt.', already: 'Trägst du schon.' },
       grillz:{ name: 'Grillz', desc: 'Klicken: anlegen.', installed: 'Grillz angelegt.', already: 'Trägst du schon.' },
       baggies: { name: 'Baggies', desc: 'Leere Tütchen zum Verpacken. Klicken öffnet das Verpacken-Menü.' },
@@ -1545,6 +1554,12 @@ const I18N = {
       crafted: '{name} aus Diamanten gefertigt.',
       wear: 'TRAGEN', worn: 'GETRAGEN'
     },
+    bikeshop: {
+      title: 'BIKE SHOP', hint: 'Roller kaufen — danach jederzeit kostenlos umlackieren.',
+      bought: 'Roller gekauft — steht jetzt neben deiner Trap.',
+      colorChanged: 'Roller umlackiert.',
+      pick: 'WÄHLEN', picked: 'AKTUELL'
+    },
     carding: {
       title: 'LAPTOP', hint: 'Blanko-Karte gegen Bares zu einer geladenen Karte machen.',
       stock: 'Blanko-Karten: {blanks} — Geladene Karten: {loaded}',
@@ -1773,6 +1788,7 @@ const I18N = {
       chain:{ name: 'Chain (Gold)', desc: 'Click: put on.', installed: 'Chain put on.', already: 'Already wearing it.' },
       chain_diamond:{ name: 'Chain (Diamond)', desc: 'Click: put on.', installed: 'Diamond chain put on.', already: 'Already wearing it.' },
       chain_king:{ name: 'Chain (Iced-Out King)', desc: 'Click: put on.', installed: 'Iced-out king chain put on.', already: 'Already wearing it.' },
+      chain_cuban:{ name: 'Chain (Cuban Link)', desc: 'Click: put on.', installed: 'Cuban link chain put on.', already: 'Already wearing it.' },
       watch:{ name: 'Watch', desc: 'Click: put on.', installed: 'Watch put on.', already: 'Already wearing it.' },
       grillz:{ name: 'Grillz', desc: 'Click: put on.', installed: 'Grillz put on.', already: 'Already wearing it.' },
       baggies: { name: 'Baggies', desc: 'Empty bags for packing. Click opens the packing menu.' },
@@ -2006,6 +2022,12 @@ const I18N = {
       needDiamonds: 'Not enough diamonds.',
       crafted: '{name} set from diamonds.',
       wear: 'WEAR', worn: 'WORN'
+    },
+    bikeshop: {
+      title: 'BIKE SHOP', hint: 'Buy a scooter — repaint it for free anytime afterward.',
+      bought: 'Scooter bought — now parked next to your trap.',
+      colorChanged: 'Scooter repainted.',
+      pick: 'PICK', picked: 'CURRENT'
     },
     carding: {
       title: 'LAPTOP', hint: 'Turn a blank card into a loaded card for cash.',
@@ -2253,6 +2275,9 @@ const MANIFEST = {
   // Grillz.png — w/h nur Platzhalter-Fallback, echte Zielgroesse steht in drawJewelryAccessories().
   chain_diamond: {file:'chain_diamond.png', w:18, h:13, kind:'prop'},
   chain_king:    {file:'chain_king.png',    w:20, h:14, kind:'prop'},
+  chain_cuban:   {file:'chain_cuban.png',   w:18, h:13, kind:'prop'},
+  // Sonnenbrille (Nutzer-Vorgabe): echtes Bild statt Gold-Rechteck, gleiche Behandlung wie die Ketten.
+  sunglasses:    {file:'sunglasses_real.png', w:14, h:4, kind:'prop'},
   // Roller (Nutzer-Vorgabe): ein Spritesheet mit 3 Zellen (front/back/side), siehe SCOOTER_FRAMES/
   // drawScooter() — w/h hier nur Platzhalter-Fallback, echte Sub-Rechtecke werden explizit gecroppt.
   scooter: {file:'roller_sprite.png', w:48, h:48, kind:'prop'},
@@ -3541,7 +3566,9 @@ function makeInterior(type){
         // Werkzeug-Wand
         {k:'toolwall',x:12,y:1,w:3,h:2,c:'#2a2a2a',detail:'tools'},
         // Werkbank
-        {k:'workbench',x:10,y:4,w:4,h:1,c:'#4a3620',detail:'vice'},
+        // Nutzer-Vorgabe: Roller in mehreren Farben kaufen — Werkbank wiederverwendet als Bestell-Punkt.
+        {k:'workbench',x:10,y:4,w:4,h:1,c:'#4a3620',detail:'vice',interactive:'bikeshop',
+         label:{de:'Werkbank (Roller)',en:'Workbench (Scooter)'}},
         // Tresen — Nutzer-Vorgabe: auch ohne echtes Kauf-Sortiment ausraubbar (Taste K halten)
         {k:'counter',x:10,y:7,w:4,h:1,c:'#5a4a3a',detail:'wood',interactive:'rob_only',robbable:true,
          label:{de:'Kasse',en:'Register'}},
@@ -6296,6 +6323,10 @@ function interactInterior(){
     openJewelerUI();
     return;
   }
+  if(f.interactive==='bikeshop'){
+    openBikeshopUI();
+    return;
+  }
   if(f.interactive==='casino_slot'){
     interactSlotMachine();
     return;
@@ -6520,7 +6551,7 @@ function placeAtms(){
 // Roller (Nutzer-Vorgabe): erstes fahrbares Fahrzeug — EIN globales Objekt statt eines Arrays, es gibt
 // nur den einen Roller. Position ist bewusst persistent (anders als ATMs/Zigarettenautomaten, die anonyme
 // Streuobjekte sind) — siehe saveGame()/startGame(). dir folgt player.dir waehrend der Fahrt, sonst 0.
-const SCOOTER={px:0,py:0,baseY:0,dir:0,isScooter:true};
+const SCOOTER={px:0,py:0,baseY:0,dir:0,color:null,isScooter:true};
 function placeScooter(){
   const anchor=trapHouse?{x:trapHouse.door.x,y:trapHouse.baseY+20}:{x:MAP_PX/2,y:MAP_PX/2};
   for(let i=0;i<24;i++){
@@ -8373,23 +8404,124 @@ function drawVan(v){
 // drawVan() — das Referenzblatt ist eine Seitenansicht, gedreht wuerde sie beim Blick "nach oben"
 // verzerrt aussehen. Nur EINE Seiten-Zelle vorhanden -> fuer dir1 gespiegelt (siehe ctx.scale(-1,1)).
 const SCOOTER_FRAMES={front:{sx:0,sy:0,sw:30,sh:48}, back:{sx:30,sy:0,sw:30,sh:48}, side:{sx:60,sy:4,sw:48,sh:40}};
+// Roller-Farbvarianten (Nutzer-Vorgabe): nur EIN Referenzbild vorhanden (mattes Dunkelgrau) — statt
+// mehrerer echter Bilder wird das Sprite einmalig pro Farbe eingefaerbt (multiply-Tint, per
+// destination-in wieder auf die Original-Silhouette zugeschnitten, damit der transparente
+// Hintergrund nicht mitgefaerbt wird). Wird EINMAL nach loadAssets() vorberechnet (siehe
+// buildScooterColorVariants()), nicht pro Frame — Tinting ist zu teuer fuer 60x/Sek.
+const SCOOTER_COLORS=[
+  {id:'black', name:{de:'Schwarz',en:'Black'}, tint:null},
+  {id:'red',   name:{de:'Rot',en:'Red'},        tint:'#c0303a'},
+  {id:'blue',  name:{de:'Blau',en:'Blue'},      tint:'#2a5aae'},
+  {id:'gold',  name:{de:'Gold',en:'Gold'},      tint:'#c9a227'},
+  {id:'white', name:{de:'Weiß',en:'White'},     tint:'#e8e6df'}
+];
+const SCOOTER_PRICE=100000;
+const SCOOTER_COLOR_IMAGES={};
+function tintedScooterCanvas(tint){
+  const src=IMAGES.scooter;
+  const c=mkCanvas(src.width,src.height);
+  const x=c.getContext('2d');
+  x.drawImage(src,0,0);
+  if(tint){
+    x.globalCompositeOperation='multiply';
+    x.fillStyle=tint;
+    x.fillRect(0,0,c.width,c.height);
+    x.globalCompositeOperation='destination-in';
+    x.drawImage(src,0,0);
+    x.globalCompositeOperation='source-over';
+  }
+  return c;
+}
+function buildScooterColorVariants(){
+  for(const sc of SCOOTER_COLORS) SCOOTER_COLOR_IMAGES[sc.id]=tintedScooterCanvas(sc.tint);
+}
+// Nur die Seitenansicht als kleines Vorschau-Icon fuers Shop-Panel — die ganze Sprite-Zeile (3 Ansichten)
+// waere als 22x22-Icon (siehe .shop-row img) unkenntlich.
+function scooterColorIconDataURL(colorId){
+  const src=SCOOTER_COLOR_IMAGES[colorId];
+  const f=SCOOTER_FRAMES.side;
+  const c=mkCanvas(f.sw,f.sh);
+  c.getContext('2d').drawImage(src,f.sx,f.sy,f.sw,f.sh,0,0,f.sw,f.sh);
+  return c.toDataURL();
+}
+/* ---------------- Bike-Shop-UI (Nutzer-Vorgabe): Roller in mehreren Farben kaufen ----------------
+   Ein Kauf (SCOOTER_PRICE) schaltet den Roller ueberhaupt erst frei (siehe placeScooter()-Aufruf
+   hier, NICHT mehr in init()); danach ist das Umlackieren auf einen anderen Stil kostenlos, gleiches
+   Auswahl-Prinzip wie bei den Ketten-Stilen (wearChain()). */
+let bikeshopOpen=false;
+function openBikeshopUI(){
+  if(dialog.active) return;
+  closeInventory(); closePhone();
+  el('bikeshop-title').textContent=t('bikeshop.title');
+  el('bikeshop-hint').textContent=t('bikeshop.hint');
+  renderBikeshopUI();
+  el('bikeshop-box').classList.remove('hidden');
+  bikeshopOpen=true;
+  showPanelBackdrop(closeBikeshopUI);
+}
+function closeBikeshopUI(){ el('bikeshop-box').classList.add('hidden'); bikeshopOpen=false; hidePanelBackdrop(); }
+el('bikeshop-close').addEventListener('click', closeBikeshopUI);
+function renderBikeshopUI(){
+  const box=el('bikeshop-content');
+  box.innerHTML='';
+  for(const sc of SCOOTER_COLORS){
+    const row=document.createElement('div');
+    row.className='shop-row';
+    const img=document.createElement('img');
+    img.src=scooterColorIconDataURL(sc.id);
+    img.alt='';
+    const name=document.createElement('div');
+    name.className='shop-row-name';
+    name.textContent=sc.name[currentLang]||sc.name.de;
+    const price=document.createElement('div');
+    price.className='shop-row-price';
+    price.textContent=player.hasScooter?'':SCOOTER_PRICE+'$';
+    const btn=document.createElement('button');
+    const picked=player.hasScooter&&player.scooterColor===sc.id;
+    btn.textContent=picked?t('bikeshop.picked'):(player.hasScooter?t('bikeshop.pick'):'+');
+    btn.disabled=picked||(!player.hasScooter&&player.money<SCOOTER_PRICE);
+    btn.addEventListener('click',()=>buyScooterColor(sc.id));
+    row.appendChild(img); row.appendChild(name); row.appendChild(price); row.appendChild(btn);
+    box.appendChild(row);
+  }
+}
+function buyScooterColor(colorId){
+  if(!player.hasScooter){
+    if(player.money<SCOOTER_PRICE){ toast(t('dealer.noMoney')); return; }
+    player.money-=SCOOTER_PRICE;
+    player.hasScooter=true;
+    placeScooter();   // erst jetzt bekommt der Roller ueberhaupt eine Position neben der Trap
+    toast(t('bikeshop.bought'));
+  } else {
+    toast(t('bikeshop.colorChanged'));
+  }
+  player.scooterColor=colorId;
+  SCOOTER.color=colorId;
+  saveGame();
+  renderBikeshopUI();
+}
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!el('bikeshop-box').classList.contains('hidden')) closeBikeshopUI();
+});
 function drawScooter(v){
   const bx=Math.round(v.px), by=Math.round(v.py);
   ctx.fillStyle='rgba(0,0,0,.3)';
   ctx.fillRect(bx-14,by-4,28,5);                                  // Schatten
   const dir=v.dir||0;
+  const img=SCOOTER_COLOR_IMAGES[v.color]||SCOOTER_COLOR_IMAGES.black||IMAGES.scooter;
   if(dir===0){
     const f=SCOOTER_FRAMES.front;
-    ctx.drawImage(IMAGES.scooter,f.sx,f.sy,f.sw,f.sh, bx-15,by-48,30,48);
+    ctx.drawImage(img,f.sx,f.sy,f.sw,f.sh, bx-15,by-48,30,48);
   } else if(dir===3){
     const f=SCOOTER_FRAMES.back;
-    ctx.drawImage(IMAGES.scooter,f.sx,f.sy,f.sw,f.sh, bx-15,by-48,30,48);
+    ctx.drawImage(img,f.sx,f.sy,f.sw,f.sh, bx-15,by-48,30,48);
   } else {
     const f=SCOOTER_FRAMES.side;
     ctx.save();
     ctx.translate(bx,by);
     if(dir===1) ctx.scale(-1,1);   // Referenzblatt zeigt nur die rechts-fahrende Seitenansicht
-    ctx.drawImage(IMAGES.scooter,f.sx,f.sy,f.sw,f.sh, -24,-40,48,40);
+    ctx.drawImage(img,f.sx,f.sy,f.sw,f.sh, -24,-40,48,40);
     ctx.restore();
   }
 }
@@ -8454,7 +8586,7 @@ function standUp(){
 }
 /* ---------------- Roller-Fahren (Spieler) — gleiches Sofort-Prinzip wie sitOnBench/standUp ---------------- */
 function mountScooter(){
-  if(player.driving||player.riding) return;
+  if(!player.hasScooter||player.driving||player.riding) return;
   if(player.sitting) standUp();
   player.driving=true;
   player.px=SCOOTER.px; player.py=SCOOTER.py;
@@ -8618,6 +8750,8 @@ const player={
   px:0, py:0, dir:0, frame:0, animT:0, moving:false,
   hp:30, maxhp:30, money:50, bike:false,
   driving:false,   // Roller (Nutzer-Vorgabe): erstes fahrbares Fahrzeug, siehe SCOOTER/mountScooter()
+  // Roller-Kauf (Nutzer-Vorgabe): erst nach Kauf im Bike-Shop steht ueberhaupt einer bei der Trap.
+  hasScooter:false, scooterColor:null,
   sitting:false, sitT:0,
   inv:[], smoking:null, drinking:null, high:0, weapon:null,
   atkCD:0, atkAnim:null, hitFlashT:0, dead:false,
@@ -8642,7 +8776,7 @@ const player={
   // Juwelier (Nutzer-Vorgabe): Uhr/Grillz als einfache Flags, analog hasLaptop/hasSkimmer.
   // Ketten (Nutzer-Vorgabe): 3 einzeln besitzbare Stile statt einem Flag — wornChain bestimmt,
   // welcher Stil gerade sichtbar getragen wird (siehe drawJewelryAccessories()/wearChain()).
-  hasChainGold:false, hasChainDiamond:false, hasChainKing:false, wornChain:null,
+  hasChainGold:false, hasChainDiamond:false, hasChainKing:false, hasChainCuban:false, wornChain:null,
   hasWatch:false, hasGrillz:false,
   // Kosmetik (Nutzer-Vorgabe): Accessoires als einfache Flags, permanent + frei kombinierbar.
   hasSunglasses:false, hasHat:false, hasTattoo:false,
@@ -10022,6 +10156,12 @@ const ITEMS={
                player.hasChainKing=true; player.wornChain='king';
                toast(t('items.chain_king.installed')); saveGame(); return true;
              } },
+  chain_cuban:{ icon:'chain_cuban', cat:'tool', weight:65,
+             use(){
+               if(player.hasChainCuban){ toast(t('items.chain_cuban.already')); return false; }
+               player.hasChainCuban=true; player.wornChain='cuban';
+               toast(t('items.chain_cuban.installed')); saveGame(); return true;
+             } },
   watch:{ icon:'watch', cat:'tool', weight:80,
              use(){
                if(player.hasWatch){ toast(t('items.watch.already')); return false; }
@@ -10517,6 +10657,7 @@ function makeItemIcons(){
   // Ketten-Stile (Nutzer-Vorgabe): echte Bilder statt Canvas-Icon, gleiches Muster wie die Waffen oben.
   ITEM_ICONS.chain_diamond='german_streetz_assets/chain_diamond.png';
   ITEM_ICONS.chain_king='german_streetz_assets/chain_king.png';
+  ITEM_ICONS.chain_cuban='german_streetz_assets/chain_cuban.png';
   // Meth-Labor-Slot-Icons (Nutzer-Vorgabe): echte Bilder je Ausbaustufe statt geliehenem Gasmasken-Icon.
   ITEM_ICONS.methlab_slot1='german_streetz_assets/meth_slot1_icon.png';
   ITEM_ICONS.methlab_slot2='german_streetz_assets/meth_slot2_icon.png';
@@ -11346,8 +11487,9 @@ window.addEventListener('keydown',e=>{
    verarbeiten — beide Wege erzeugen absichtlich dasselbe Item (gleicher hasChain/hasWatch-Flag). */
 const JEWELER_ITEMS=[
   {id:'chain', price:2500, n:1},
-  // Ketten-Stile (Nutzer-Vorgabe): 2 weitere, teurere Stile — Preise Platzhalter, leicht anpassbar.
+  // Ketten-Stile (Nutzer-Vorgabe): weitere, teurere Stile — Preise Platzhalter, leicht anpassbar.
   {id:'chain_diamond', price:6000, n:1},
+  {id:'chain_cuban', price:9000, n:1},
   {id:'chain_king', price:12000, n:1},
   {id:'watch', price:4000, n:1},
   {id:'grillz', price:1800, n:1}
@@ -11355,9 +11497,9 @@ const JEWELER_ITEMS=[
 const JEWELRY_CRAFT_RECIPES={ chain:{diamonds:3,fee:500}, watch:{diamonds:4,fee:800}, grillz:{diamonds:2,fee:300} };
 // Ketten-Stile (Nutzer-Vorgabe): welches ITEMS-Item / welcher hasChainX-Flag gehört zu welchem
 // wornChain-Wert — gemeinsam genutzt von renderJewelerShop() und wearChain().
-const CHAIN_STYLE_BY_ID={chain:'gold', chain_diamond:'diamond', chain_king:'king'};
+const CHAIN_STYLE_BY_ID={chain:'gold', chain_diamond:'diamond', chain_king:'king', chain_cuban:'cuban'};
 function chainOwnedByStyle(style){
-  return style==='gold'?player.hasChainGold:style==='diamond'?player.hasChainDiamond:player.hasChainKing;
+  return style==='gold'?player.hasChainGold:style==='diamond'?player.hasChainDiamond:style==='king'?player.hasChainKing:player.hasChainCuban;
 }
 // Erlaubt das Zurueckwechseln zwischen bereits gekauften/verarbeiteten Stilen (alle 3 sind permanent
 // besitzbar, aber nur einer gleichzeitig sichtbar — siehe drawJewelryAccessories()).
@@ -13006,6 +13148,8 @@ function drawJewelryAccessories(bx,by,dir){
     ctx.drawImage(IMAGES.chain_diamond,bx+6,by+30,18,13);
   } else if(player.wornChain==='king'){
     ctx.drawImage(IMAGES.chain_king,bx+5,by+30,20,14);
+  } else if(player.wornChain==='cuban'){
+    ctx.drawImage(IMAGES.chain_cuban,bx+6,by+30,18,13);
   }
   if(player.hasWatch){
     // Nutzer-Feedback: bessere Optik als ein reiner Gold-Block — dunkles Armband quer ueber dem
@@ -13033,9 +13177,9 @@ function drawPlayerAccessories(bx,by,dir){
   }
   if(dir===3) return;   // Sonnenbrille/Tattoo von hinten nicht sichtbar (Gesicht/Vorderarm verdeckt)
   if(player.hasSunglasses){
-    // Auf Augen-Hoehe (Gesicht x9-23/y16-29, Augen bei y21-24 in phChar()).
-    ctx.fillStyle='#111111';
-    ctx.fillRect(bx+10,by+21,13,3);
+    // Nutzer-Vorgabe: echtes Bild statt Gold-Rechteck — Auf Augen-Hoehe (Gesicht x9-23/y16-29,
+    // Augen bei y21-24 in phChar()), gleiche Ziel-Groesse/Position wie das vorherige Rechteck.
+    ctx.drawImage(IMAGES.sunglasses,bx+9,by+20,14,4);
   }
   if(player.hasTattoo){
     // Kleiner farbiger Punkt am linken Ärmel (Arm x5-8/y36-46 in phChar()).
@@ -13884,9 +14028,9 @@ function update(dt){
     const d=ddx*ddx+ddy*ddy;
     if(d<best){ best=d; bestRef=m; bestKind='atm'; }
   }
-  // Roller (Nutzer-Vorgabe): nur ansprechbar, solange man nicht schon draufsitzt (sonst wuerde ein
-  // Kandidat mit sich selbst als Ziel entstehen — E ist waehrend der Fahrt eh schon aufs Absteigen belegt).
-  if(!player.driving){
+  // Roller (Nutzer-Vorgabe): erst ansprechbar nach Kauf im Bike-Shop, und nur solange man nicht schon
+  // draufsitzt (sonst wuerde ein Kandidat mit sich selbst als Ziel entstehen).
+  if(player.hasScooter&&!player.driving){
     const ddx=SCOOTER.px-player.px, ddy=SCOOTER.py-player.py;
     const d=ddx*ddx+ddy*ddy;
     if(d<best){ best=d; bestRef=SCOOTER; bestKind='scooter'; }
@@ -14027,7 +14171,7 @@ function render(time){
     list.push(v);
   }
   // Roller: EIN Objekt statt eines Arrays, gleiche Sichtbarkeits-Kulling-Technik wie VANS.
-  if(SCOOTER.px+30>camX&&SCOOTER.px-30<camX+vw&&SCOOTER.py+20>camY&&SCOOTER.py-50<camY+vh) list.push(SCOOTER);
+  if(player.hasScooter&&SCOOTER.px+30>camX&&SCOOTER.px-30<camX+vw&&SCOOTER.py+20>camY&&SCOOTER.py-50<camY+vh) list.push(SCOOTER);
   for(const b of BENCHES){
     if(b.px+48>camX&&b.px<camX+vw&&b.baseY>camY&&b.py<camY+vh) list.push(b);
   }
@@ -14702,11 +14846,13 @@ function saveGame(){
       hasLaptop:player.hasLaptop, hasSkimmer:player.hasSkimmer,
       hasExtraSafe:player.hasExtraSafe, extraSafe:player.extraSafe,
       hasChainGold:player.hasChainGold, hasChainDiamond:player.hasChainDiamond, hasChainKing:player.hasChainKing,
+      hasChainCuban:player.hasChainCuban,
       wornChain:player.wornChain, hasWatch:player.hasWatch, hasGrillz:player.hasGrillz,
       hasSunglasses:player.hasSunglasses, hasHat:player.hasHat, hasTattoo:player.hasTattoo,
       hasRunner:player.hasRunner, runnerT:runnerT,
       // Roller (Nutzer-Vorgabe): Position bleibt bewusst persistent (anders als ATMs/Zigarettenautomaten).
       scooterPx:SCOOTER.px, scooterPy:SCOOTER.py,
+      hasScooter:player.hasScooter, scooterColor:player.scooterColor,
       outfit:player.outfit,
       hasVest:player.hasVest, hasVestMilitary:player.hasVestMilitary, tutorialsSeen:player.tutorialsSeen,
       timesArrested:player.timesArrested,
@@ -14851,6 +14997,8 @@ function startGame(fresh){
     SCOOTER.px=Number.isFinite(s.scooterPx)?s.scooterPx:SCOOTER.px;
     SCOOTER.py=Number.isFinite(s.scooterPy)?s.scooterPy:SCOOTER.py;
     SCOOTER.baseY=SCOOTER.py;
+    player.hasScooter=!!s.hasScooter; player.scooterColor=s.scooterColor||null;
+    SCOOTER.color=player.scooterColor;
     player.hp=Math.min(Number.isFinite(s.hp)?s.hp:30,player.maxhp);   // alte Spielstände (100 HP) migrieren
     if(player.hp<=0) player.hp=player.maxhp;   // Tab während der Todes-Blende geschlossen: nicht tot-aber-unsterblich laden
     player.dead=false; deathFade=0; deathFadeDir=0;
@@ -14889,6 +15037,7 @@ function startGame(fresh){
     player.hasExtraSafe=!!s.hasExtraSafe;
     player.extraSafe=Array.isArray(s.extraSafe)?s.extraSafe.filter(i=>i&&ITEMS[i.id]&&i.n>0):[];
     player.hasChainGold=!!s.hasChainGold; player.hasChainDiamond=!!s.hasChainDiamond; player.hasChainKing=!!s.hasChainKing;
+    player.hasChainCuban=!!s.hasChainCuban;
     player.wornChain=s.wornChain||null;
     // Migration: alte Saves kannten nur ein einzelnes hasChain-Flag (immer die Gold-Kette).
     if(s.hasChain&&!player.hasChainGold){ player.hasChainGold=true; if(!player.wornChain) player.wornChain='gold'; }
@@ -14949,7 +15098,8 @@ function startGame(fresh){
   } else {
     player.px=trapHouse.door.x;
     player.py=trapHouse.baseY+30;
-    placeScooter();   // Roller (Nutzer-Vorgabe): neues Spiel setzt ihn zurueck auf den Standard-Platz neben der Trap
+    // Roller-Kauf (Nutzer-Vorgabe): neues Spiel = noch nicht gekauft, kein Roller bei der Trap.
+    player.hasScooter=false; player.scooterColor=null; SCOOTER.color=null;
     player.hp=player.maxhp; player.money=50;
     player.dead=false; deathFade=0; deathFadeDir=0;
     player.heat=0; player.heatCoolT=0; player.arrested=false; player.custodyReleaseAt=0;
@@ -14964,7 +15114,7 @@ function startGame(fresh){
     player.methLabSlots=0; player.methCooks=[];
     player.hasLaptop=false; player.hasSkimmer=false;
     player.hasExtraSafe=false; player.extraSafe=[];
-    player.hasChainGold=false; player.hasChainDiamond=false; player.hasChainKing=false; player.wornChain=null;
+    player.hasChainGold=false; player.hasChainDiamond=false; player.hasChainKing=false; player.hasChainCuban=false; player.wornChain=null;
     player.hasWatch=false; player.hasGrillz=false;
     player.hasSunglasses=false; player.hasHat=false; player.hasTattoo=false;
     player.hasRunner=false; runnerT=RUNNER_INTERVAL;
@@ -15100,8 +15250,8 @@ async function init(){
   genNPCs();
   placeCigMachines();
   placeAtms();
-  placeScooter();
   buildMinimapStatic();
+  buildScooterColorVariants();   // Roller-Farbvarianten: erst nach loadAssets() moeglich (IMAGES.scooter muss geladen sein)
   const bn=el('btn-new');
   bn.disabled=false;
   bn.textContent=t('start.newGame');
