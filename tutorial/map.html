@@ -1,0 +1,105 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>German Streetz — Karte / Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+<header>
+  <div class="logo">GERMAN <span>STREETZ</span></div>
+  <nav class="nav">
+    <a href="index.html"><span class="lang-de">Start</span><span class="lang-en">Home</span></a>
+    <a href="controls.html"><span class="lang-de">Steuerung</span><span class="lang-en">Controls</span></a>
+    <a href="map.html" class="active"><span class="lang-de">Karte</span><span class="lang-en">Map</span></a>
+    <a href="economy.html"><span class="lang-de">Wirtschaft</span><span class="lang-en">Economy</span></a>
+    <a href="police.html"><span class="lang-de">Polizei &amp; Gangs</span><span class="lang-en">Police &amp; Gangs</span></a>
+  </nav>
+  <div class="spacer"></div>
+  <button id="lang-toggle">EN</button>
+  <a class="play-btn" href="../index.html"><span class="lang-de">SPIELEN</span><span class="lang-en">PLAY</span></a>
+</header>
+
+<main>
+  <section>
+    <h1><span class="lang-de">Karte</span><span class="lang-en">Map</span></h1>
+    <p class="lang-de lede">Stilisierte Übersicht — Norden ist oben, wie im Spiel. Downtown liegt in der Mitte,
+      umgeben von den vier Gang-Territorien. Es gibt keine eigene Vollbild-Kartentaste, nur die Minimap oben in
+      der Ecke — diese Seite ersetzt eine In-Game-Übersichtskarte.</p>
+    <p class="lang-en lede">Stylized overview — north is up, same as in-game. Downtown sits in the middle,
+      surrounded by the four gang territories. There's no dedicated full-screen map key, just the corner
+      minimap — this page stands in for an in-game overview map.</p>
+  </section>
+
+  <section>
+    <div class="map-wrap">
+      <div class="zone zone-outpost">
+        <div class="zone-name">NTL <span class="lang-de">VORPOSTEN</span><span class="lang-en">OUTPOST</span></div>
+        <div class="zone-note lang-de">Zweites NTL-Haus, tief im Norden</div>
+        <div class="zone-note lang-en">Second NTL house, deep in the north</div>
+      </div>
+      <div class="zone zone-war">
+        <div class="zone-name"><span class="lang-de">KRIEGSZONE</span><span class="lang-en">WAR ZONE</span></div>
+        <div class="zone-note">STB vs NTL</div>
+      </div>
+      <div class="zone zone-stb">
+        <div class="zone-name">STB — <span class="lang-de">NORDEN</span><span class="lang-en">NORTH</span></div>
+      </div>
+      <div class="zone zone-ybc">
+        <div class="zone-name">YBC — <span class="lang-de">WESTEN</span><span class="lang-en">WEST</span></div>
+      </div>
+      <div class="zone zone-downtown">
+        <div class="spot">TRAP-HAUS</div>
+        <div class="spot">DEALER <span class="lang-de">(GASSE)</span><span class="lang-en">(ALLEY)</span></div>
+        <div class="spot"><span class="lang-de">JUWELIER</span><span class="lang-en">JEWELER</span></div>
+        <div class="spot">BIKE SHOP</div>
+        <div class="spot">ARMOR SHOP</div>
+        <div class="spot"><span class="lang-de">GROW SHOP</span><span class="lang-en">GROW SHOP</span></div>
+        <div class="spot">DRIP</div>
+        <div class="spot">EL DORADO <span class="lang-de">(CASINO)</span><span class="lang-en">(CASINO)</span></div>
+        <div class="spot"><span class="lang-de">POLIZEI</span><span class="lang-en">POLICE</span></div>
+        <div class="spot">SPÄTI 24 / CORNER SHOP</div>
+        <div class="spot">ROMA</div>
+        <div class="spot"><span class="lang-de">BAHNHOF</span><span class="lang-en">STATION</span></div>
+      </div>
+      <div class="zone zone-btk">
+        <div class="zone-name">BTK — <span class="lang-de">OSTEN</span><span class="lang-en">EAST</span></div>
+      </div>
+      <div class="zone zone-ntl">
+        <div class="zone-name">NTL — <span class="lang-de">SÜDEN (HEIMATBASIS)</span><span class="lang-en">SOUTH (HOME TURF)</span></div>
+      </div>
+    </div>
+    <div class="map-legend">
+      <span><i style="background:var(--ybc)"></i> YBC</span>
+      <span><i style="background:var(--btk)"></i> BTK</span>
+      <span><i style="background:var(--stb)"></i> STB</span>
+      <span><i style="background:var(--ntl)"></i> NTL</span>
+      <span><i style="background:var(--war)"></i> <span class="lang-de">Kriegszone</span><span class="lang-en">War zone</span></span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><span class="lang-de">Downtown</span><span class="lang-en">Downtown</span></h2>
+    <p class="lang-de">Neutrales Zentrum zwischen allen vier Gangs. Hier startest du, hier stehen dein Trap-Haus
+      und fast alle Shops/Jobs. Keine Gang kontrolliert Downtown.</p>
+    <p class="lang-en">Neutral center between all four gangs. This is where you start, and where your trap house
+      and almost every shop/job sit. No gang controls downtown.</p>
+  </section>
+
+  <section class="panel">
+    <h2><span class="lang-de">Gang-Territorien</span><span class="lang-en">Gang territories</span></h2>
+    <ul class="bullets">
+      <li><span class="tag tag-ybc">YBC</span> <span class="lang-de">Westen der Karte.</span><span class="lang-en">West side of the map.</span></li>
+      <li><span class="tag tag-btk">BTK</span> <span class="lang-de">Osten der Karte.</span><span class="lang-en">East side of the map.</span></li>
+      <li><span class="tag tag-stb">STB</span> <span class="lang-de">Norden, direkt oberhalb von Downtown.</span><span class="lang-en">North, right above downtown.</span></li>
+      <li><span class="tag tag-ntl">NTL</span> <span class="lang-de">Heimatbasis im Süden — plus ein zweites Haus weit im Norden, hinter STB.</span><span class="lang-en">Home turf in the south — plus a second house far to the north, behind STB.</span></li>
+      <li><span class="tag tag-war">KRIEGSZONE</span> <span class="lang-de">Feste, dauerhafte Kampfzone zwischen STB und dem NTL-Vorposten — kein Zufalls-Event, sondern permanent auf der Karte.</span><span class="lang-en">Fixed, permanent combat zone between STB and the NTL outpost — not a random event, it's always there.</span></li>
+    </ul>
+  </section>
+</main>
+
+<footer>
+  <span class="lang-de">German Streetz — inoffizielle Spieler-Anleitung.</span>
+  <span class="lang-en">German Streetz — unofficial player guide.</span>
+</footer>
+
+<script src="lang.js"></script>

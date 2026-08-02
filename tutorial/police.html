@@ -1,0 +1,87 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>German Streetz — Polizei &amp; Gangs / Police &amp; Gangs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+<header>
+  <div class="logo">GERMAN <span>STREETZ</span></div>
+  <nav class="nav">
+    <a href="index.html"><span class="lang-de">Start</span><span class="lang-en">Home</span></a>
+    <a href="controls.html"><span class="lang-de">Steuerung</span><span class="lang-en">Controls</span></a>
+    <a href="map.html"><span class="lang-de">Karte</span><span class="lang-en">Map</span></a>
+    <a href="economy.html"><span class="lang-de">Wirtschaft</span><span class="lang-en">Economy</span></a>
+    <a href="police.html" class="active"><span class="lang-de">Polizei &amp; Gangs</span><span class="lang-en">Police &amp; Gangs</span></a>
+  </nav>
+  <div class="spacer"></div>
+  <button id="lang-toggle">EN</button>
+  <a class="play-btn" href="../index.html"><span class="lang-de">SPIELEN</span><span class="lang-en">PLAY</span></a>
+</header>
+
+<main>
+  <section>
+    <h1><span class="lang-de">Polizei &amp; Gangs</span><span class="lang-en">Police &amp; Gangs</span></h1>
+    <p class="lang-de lede">Zwei Risikoquellen: die Polizei (Fahndung, Kontrollen, Verhaftung) und rivalisierende
+      Gangs (Territorien, Raids). Beides hängt zusammen — ein Gang-Kampf zieht auch die Polizei an.</p>
+    <p class="lang-en lede">Two sources of risk: the police (wanted level, stops, arrest) and rival gangs
+      (territories, raids). The two are connected — a gang fight draws police attention too.</p>
+  </section>
+
+  <section class="panel panel-accent">
+    <h2>🚨 <span class="lang-de">Fahndung (Heat)</span><span class="lang-en">Wanted level (heat)</span></h2>
+    <p class="lang-de">Straftaten (Dealen, Diebstahl, Kämpfe, Raubüberfälle, Explosionen im Meth-Labor ...) lassen
+      deine Fahndungssterne steigen. Mehr Sterne bedeuten aggressivere, häufigere Polizei-Reaktionen. Die Sterne
+      bauen sich mit der Zeit von selbst wieder ab, wenn du dich ruhig verhältst.</p>
+    <p class="lang-en">Crimes (dealing, theft, fights, robberies, meth lab explosions ...) raise your wanted stars.
+      More stars mean more aggressive, more frequent police response. Stars decay on their own over time if you
+      lay low.</p>
+  </section>
+
+  <section class="panel">
+    <h2>👮 <span class="lang-de">Verfolgung, Kontrollen &amp; Verhaftung</span><span class="lang-en">Chases, stops &amp; arrest</span></h2>
+    <ul class="bullets">
+      <li><span class="lang-de">Bei genug Sternen jagt dich die Polizei aktiv — entkommen ist möglich (auch per Roller).</span>
+        <span class="lang-en">With enough stars, police actively chase you — you can outrun them (a scooter helps).</span></li>
+      <li><span class="lang-de">Personenkontrolle: dein Inventar wird durchsucht, mitgeführte Drogen/Waffen fliegen dabei auf und zählen als eigene Straftat.</span>
+        <span class="lang-en">Stop &amp; search: your inventory gets checked, any drugs/weapons on you get seized and count as their own offense.</span></li>
+      <li><span class="lang-de">Hausdurchsuchung: trifft Stash-Kiste, Safe-Inhalt und eine laufende Meth-Warteschlange — dein Panzerschrank bleibt davon immer unberührt.</span>
+        <span class="lang-en">House raid: hits the stash box, safe contents and any pending meth batches — your vault is always exempt.</span></li>
+      <li><span class="lang-de">Verhaftung: Zwangsaufenthalt-Dauer richtet sich nach allen offenen Straftaten zusammen (sie stapeln sich) — Gang-Mitglieder bekommen die doppelte Zeit.</span>
+        <span class="lang-en">Arrest: jail time is based on every open offense stacked together — gang members get double time.</span></li>
+      <li><span class="lang-de">Kaution: fester Betrag pro Minute Haftzeit, jederzeit zahlbar, um früher freizukommen.</span>
+        <span class="lang-en">Bail: a fixed rate per minute of jail time, payable any time to get out early.</span></li>
+    </ul>
+  </section>
+
+  <section class="panel">
+    <h2>🏴 <span class="lang-de">Gang-System</span><span class="lang-en">Gang system</span></h2>
+    <ul class="bullets">
+      <li><span class="lang-de">Einer der 4 Gangs (YBC, BTK, STB, NTL) beitreten, dann automatisch deren Farben tragen.</span>
+        <span class="lang-en">Join one of the 4 gangs (YBC, BTK, STB, NTL), you'll automatically wear their colors.</span></li>
+      <li><span class="lang-de">Gang-Meth: die eigene Gang sammelt mit der Zeit von selbst Meth-Bestand an der Basis — als Mitglied holst du ihn dort ab.</span>
+        <span class="lang-en">Gang meth: your own gang slowly stockpiles meth at its base over time — as a member, you collect it there.</span></li>
+      <li><span class="lang-de">"Opps sliden" (Raid): von der eigenen Basis aus einen Angriff auf eine Rivalen-Gang starten.</span>
+        <span class="lang-en">"Opps sliden" (raid): launch an attack on a rival gang from your own base.</span></li>
+    </ul>
+    <h3 style="margin-top:16px;"><span class="lang-de">Ablauf eines Raids — 3 Phasen</span><span class="lang-en">How a raid plays out — 3 phases</span></h3>
+    <table>
+      <tr><th>#</th><th><span class="lang-de">Phase</span><span class="lang-en">Phase</span></th><th><span class="lang-de">Was passiert</span><span class="lang-en">What happens</span></th></tr>
+      <tr><td>1</td><td><span class="lang-de">Hinfahrt</span><span class="lang-en">Drive there</span></td>
+        <td><span class="lang-de">Ein Van fährt sichtbar mit dir und deiner Crew ins Rivalen-Gebiet.</span><span class="lang-en">A van visibly drives you and your crew into rival territory.</span></td></tr>
+      <tr><td>2</td><td><span class="lang-de">Kampf</span><span class="lang-en">Fight</span></td>
+        <td><span class="lang-de">Vor Ort wird deine Crew gegen dort ansässige Rivalen verteilt.</span><span class="lang-en">On site, your crew is paired off against rivals stationed there.</span></td></tr>
+      <tr><td>3</td><td><span class="lang-de">Flucht</span><span class="lang-en">Getaway</span></td>
+        <td><span class="lang-de">Nach 30s holt euch automatisch ein zweiter Van ab — 8s vorher warnt ein Toast "Bullen im Anmarsch".</span><span class="lang-en">After 30s a second van automatically picks you up — 8s before that, a toast warns "cops incoming".</span></td></tr>
+    </table>
+    <p class="lang-de" style="margin-top:12px;font-size:12px;color:var(--dim);">Ein Raid erhöht die Fahndung — die Flucht-Fahrt in Phase 3 ist bewusst auch die Flucht vor der inzwischen alarmierten Polizei.</p>
+    <p class="lang-en" style="margin-top:12px;font-size:12px;color:var(--dim);">A raid raises your wanted level — the getaway drive in phase 3 doubles as your escape from the police it alerted.</p>
+  </section>
+</main>
+
+<footer>
+  <span class="lang-de">German Streetz — inoffizielle Spieler-Anleitung.</span>
+  <span class="lang-en">German Streetz — unofficial player guide.</span>
+</footer>
+
+<script src="lang.js"></script>

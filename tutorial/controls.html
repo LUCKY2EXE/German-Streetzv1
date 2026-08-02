@@ -1,0 +1,79 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>German Streetz — Steuerung / Controls</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+<header>
+  <div class="logo">GERMAN <span>STREETZ</span></div>
+  <nav class="nav">
+    <a href="index.html"><span class="lang-de">Start</span><span class="lang-en">Home</span></a>
+    <a href="controls.html" class="active"><span class="lang-de">Steuerung</span><span class="lang-en">Controls</span></a>
+    <a href="map.html"><span class="lang-de">Karte</span><span class="lang-en">Map</span></a>
+    <a href="economy.html"><span class="lang-de">Wirtschaft</span><span class="lang-en">Economy</span></a>
+    <a href="police.html"><span class="lang-de">Polizei &amp; Gangs</span><span class="lang-en">Police &amp; Gangs</span></a>
+  </nav>
+  <div class="spacer"></div>
+  <button id="lang-toggle">EN</button>
+  <a class="play-btn" href="../index.html"><span class="lang-de">SPIELEN</span><span class="lang-en">PLAY</span></a>
+</header>
+
+<main>
+  <section>
+    <h1><span class="lang-de">Steuerung</span><span class="lang-en">Controls</span></h1>
+    <p class="lang-de lede">Desktop bevorzugt Tastatur + Maus, Mobile nutzt Joystick + 3 Buttons. Beide steuern
+      dieselben Aktionen — Maus/Touch bestimmt zusätzlich die Ziel- bzw. Blickrichtung.</p>
+    <p class="lang-en lede">Desktop favors keyboard + mouse, mobile uses a joystick + 3 buttons. Both trigger the
+      same actions — mouse/touch also sets your aim/facing direction.</p>
+  </section>
+
+  <section class="panel panel-accent">
+    <h2><span class="lang-de">Desktop</span><span class="lang-en">Desktop</span></h2>
+    <table>
+      <tr><th><span class="lang-de">Taste</span><span class="lang-en">Key</span></th><th><span class="lang-de">Aktion</span><span class="lang-en">Action</span></th></tr>
+      <tr><td><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></td>
+        <td><span class="lang-de">Bewegen</span><span class="lang-en">Move</span></td></tr>
+      <tr><td><kbd>Maus</kbd></td><td><span class="lang-de">Zielen (Blick-/Zielrichtung)</span><span class="lang-en">Aim (facing/target direction)</span></td></tr>
+      <tr><td><kbd>Linksklick</kbd></td><td><span class="lang-de">Angreifen (Stich / Schuss, falls Waffe equippt)</span><span class="lang-en">Attack (stab / shoot if a gun is equipped)</span></td></tr>
+      <tr><td><kbd>F</kbd> / <span class="lang-de">Rechtsklick</span><span class="lang-en">Right-click</span></td>
+        <td><span class="lang-de">Angreifen (Schlag/Schnitt)</span><span class="lang-en">Attack (slash)</span></td></tr>
+      <tr><td><kbd>E</kbd> / <kbd>Enter</kbd></td><td><span class="lang-de">Interagieren / Dialog fortsetzen</span><span class="lang-en">Interact / advance dialog</span></td></tr>
+      <tr><td><kbd>B</kbd></td><td><span class="lang-de">Gebäude betreten</span><span class="lang-en">Enter building</span></td></tr>
+      <tr><td><kbd>R</kbd></td><td><span class="lang-de">Nachladen (Schusswaffe)</span><span class="lang-en">Reload (firearm)</span></td></tr>
+      <tr><td><kbd>K</kbd> <span class="lang-de">halten</span><span class="lang-en">hold</span></td>
+        <td><span class="lang-de">Kasse ausrauben / Vitrine aufbrechen (an passender Stelle)</span><span class="lang-en">Rob a register / break a display case (at the right spot)</span></td></tr>
+      <tr><td><kbd>I</kbd></td><td><span class="lang-de">Inventar öffnen/schließen</span><span class="lang-en">Open/close inventory</span></td></tr>
+      <tr><td><kbd>N</kbd></td><td><span class="lang-de">Nokia-Handy öffnen/schließen (nur mit Handy im Inventar)</span><span class="lang-en">Open/close the Nokia phone (only if you carry one)</span></td></tr>
+      <tr><td><kbd>M</kbd></td><td><span class="lang-de">Musik ein/aus</span><span class="lang-en">Toggle music</span></td></tr>
+      <tr><td><kbd>Esc</kbd></td><td><span class="lang-de">Dialog / Handy / Inventar schließen</span><span class="lang-en">Close dialog / phone / inventory</span></td></tr>
+      <tr><td><kbd>F8</kbd></td><td><span class="lang-de">Debug-Konsole (Entwickler)</span><span class="lang-en">Debug console (developer)</span></td></tr>
+    </table>
+    <p class="lang-de" style="margin-top:14px;font-size:12px;color:var(--dim);">Hinweis: Es gibt keine eigene Kartentaste — die Minimap läuft permanent oben in der Ecke mit, eine große Vollbild-Karte öffnet sich nicht per Tastendruck.</p>
+    <p class="lang-en" style="margin-top:14px;font-size:12px;color:var(--dim);">Note: there's no dedicated map key — the minimap runs permanently in the corner, no full-screen map opens via a keypress.</p>
+  </section>
+
+  <section class="panel">
+    <h2><span class="lang-de">Mobile</span><span class="lang-en">Mobile</span></h2>
+    <table>
+      <tr><th><span class="lang-de">Steuerelement</span><span class="lang-en">Control</span></th><th><span class="lang-de">Aktion</span><span class="lang-en">Action</span></th></tr>
+      <tr><td><span class="lang-de">Joystick (links)</span><span class="lang-en">Joystick (left)</span></td>
+        <td><span class="lang-de">Bewegen</span><span class="lang-en">Move</span></td></tr>
+      <tr><td><span class="lang-de">Button [E]-Prompt antippen</span><span class="lang-en">Tap the [E] prompt</span></td>
+        <td><span class="lang-de">Interagieren / Gebäude betreten</span><span class="lang-en">Interact / enter building</span></td></tr>
+      <tr><td>C <span class="lang-de">(oben, grün)</span><span class="lang-en">(top, green)</span></td>
+        <td><span class="lang-de">Angreifen (Stich) / ziehen (Joint/Bier/Drink)</span><span class="lang-en">Attack (stab) / take a drag (joint/beer/drink)</span></td></tr>
+      <tr><td>A <span class="lang-de">(unten, rot)</span><span class="lang-en">(bottom, red)</span></td>
+        <td><span class="lang-de">Angreifen (Schlag/Schnitt)</span><span class="lang-en">Attack (slash)</span></td></tr>
+      <tr><td>B <span class="lang-de">(mitte, blau)</span><span class="lang-en">(middle, blue)</span></td>
+        <td><span class="lang-de">Gebäude betreten / ziehen (Joint/Bier/Drink)</span><span class="lang-en">Enter building / take a drag (joint/beer/drink)</span></td></tr>
+    </table>
+  </section>
+</main>
+
+<footer>
+  <span class="lang-de">German Streetz — inoffizielle Spieler-Anleitung.</span>
+  <span class="lang-en">German Streetz — unofficial player guide.</span>
+</footer>
+
+<script src="lang.js"></script>
