@@ -1520,10 +1520,14 @@ const I18N = {
     },
     gangops: {
       attack: '{gang} angreifen',
-      result: '{n} Mitglieder von dir spawnen direkt bei dir und greifen {gang} an.',
-      vanEnroute: 'Ein weißer Van rollt Richtung {gang}…',
+      result: '{n} Mitglieder deiner Crew greifen {gang} an.',
+      vanEnroute: 'Ein weißer Van rollt mit dir und deiner Crew Richtung {gang}…',
       hint: 'Mehr Angriffe auf eine Gang lassen ihre Gegenwehr härter werden.',
-      colorsOn: 'Gang-Farben tragen', colorsOff: 'Gang-Farben ablegen'
+      colorsOn: 'Gang-Farben tragen', colorsOff: 'Gang-Farben ablegen',
+      busy: 'Dein letzter Raid ist noch nicht zurück.',
+      copsIncoming: 'Bullen im Anmarsch — gleich geht\'s zurück!',
+      getawayStart: 'Der Van holt euch ab — Zeitsprung nach Hause.',
+      getawayDone: 'Zurück in Sicherheit, weg von {gang}.'
     },
     gangmeth: {
       empty: 'Nichts zum Abholen da — noch nicht genug gekocht.',
@@ -1994,10 +1998,14 @@ const I18N = {
     },
     gangops: {
       attack: 'Attack {gang}',
-      result: '{n} of your members spawn right beside you and attack {gang}.',
-      vanEnroute: 'A white van is rolling toward {gang}…',
+      result: '{n} of your crew attack {gang}.',
+      vanEnroute: 'A white van is rolling toward {gang} with you and your crew…',
       hint: 'Attacking a gang more often makes their retaliation harsher.',
-      colorsOn: 'Wear gang colors', colorsOff: 'Take off gang colors'
+      colorsOn: 'Wear gang colors', colorsOff: 'Take off gang colors',
+      busy: 'Your last raid isn\'t back yet.',
+      copsIncoming: 'Cops incoming — heading back any second!',
+      getawayStart: 'The van picks you up — time-skip home.',
+      getawayDone: 'Back safe, away from {gang}.'
     },
     gangmeth: {
       empty: 'Nothing to pick up yet — not enough cooked.',
@@ -7248,7 +7256,7 @@ function updateActiveFights(dt){
   }
 }
 // Würfel-Animation für "opps sliden" (Nutzer-Vorgabe) — opsRoll.val ist jetzt NICHT mehr reines
-// Flavor: die gewürfelte Zahl bestimmt direkt die Anzahl an Backup-NPCs (siehe spawnGangBackup()
+// Flavor: die gewürfelte Zahl bestimmt direkt die Crew-Groesse (siehe resolveGangRaid()
 // im renderGangOpsUI()-Klick-Handler weiter unten).
 let opsRoll={active:false,t:0,dur:1.1,val:1,onDone:null};
 function startOpsRoll(onDone){ opsRoll={active:true,t:0,dur:1.1,val:randi(1,6),onDone}; }
@@ -7297,54 +7305,64 @@ function triggerGangFight(gidA,rectA,gidB,rectB,maxPairs){
   }
   return cnt;
 }
-// "Opps sliden" (Nutzer-Vorgabe): Backup soll SOFORT beim Spieler auftauchen statt erst per Van
-// anzureisen — die Wuerfelzahl (opsRoll.val) bestimmt direkt, wie viele eigene Gang-NPCs mitkaempfen.
-// Nutzt makeNpc() (garantiert alle Felder, die render()/update() erwarten — kein Tag-artiger
-// Absturz möglich) + dieselbe fightTarget/state='gangfight'-Paarung wie triggerGangFight() oben,
-// nur ortsgebunden am Spieler statt an zwei Heimat-Rects.
-function spawnGangBackup(gid,rid,count){
-  const ownRect=Array.isArray(GANGS[gid].zone)?GANGS[gid].zone[0]:GANGS[gid].zone;
-  const ptx=Math.floor(player.px/CFG.TILE), pty=Math.floor(player.py/CFG.TILE);
-  // Bugfix (Nutzer-live-gemeldet, "wo sind die die mitkaempfen, schiessen auch nicht"): "opps sliden"
-  // wird zwangslaeufig am EIGENEN Boss ausgeloest, also an der eigenen Basis -- der 500px-Nahbereich
-  // um den Spieler war dort so gut wie NIE mit Rivalen-NPCs besetzt, das Backup stand nur nutzlos
-  // herum (kein fightTarget, kein Kampf). Fallback: wenn niemand in der Naehe ist, Gegner aus der
-  // GESAMTEN Rivalen-Zone ziehen (gleiches Kriterium wie triggerGangFight()) -- die bestehende
-  // fightTarget-Verfolgung (npcGangFight()) laesst das Backup dann selbststaendig dorthin laufen.
+// Gang-Raid (Nutzer-Vorgabe): "opps sliden" ist jetzt eine echte Drei-Phasen-Aktion statt eines
+// abstrakten Sofort-Effekts — (1) Van faehrt SICHTBAR mit Spieler+Crew zur Rivalen-Zone (siehe
+// renderGangOpsUI()), (2) am Zielort wird die Crew gegen dort ansaessige Rivalen gepaart
+// (resolveGangRaid()), (3) nach GANG_RAID_DURATION Sekunden holt ein zweiter Van Spieler+ueberlebende
+// Crew automatisch wieder ab, bevor die inzwischen alarmierte Polizei eintrifft (updateGangRaidGetaway()).
+const GANG_RAID_DURATION=30, GANG_RAID_WARN_AT=8;
+let gangRaid=null;   // {gid,rid,crew,ownRect,targetRect,t,warned}
+function resolveGangRaid(gid,rid,crew,ownRect,targetRect){
+  // Fallback-Prinzip: zuerst Rivalen direkt in der Ziel-Zone,
+  // sonst irgendwo in deren gesamter Zone (gleiches Kriterium wie triggerGangFight()).
   let enemies=NPCS.filter(n=>n.kind==='gang'&&n.gang===rid&&n.state!=='dead'&&n.state!=='gangfight'&&
-    Math.hypot(n.px-player.px,n.py-player.py)<500);
+    n.homeRect===targetRect);
   if(!enemies.length){
     const rivalZones=Array.isArray(GANGS[rid].zone)?GANGS[rid].zone:[GANGS[rid].zone];
     enemies=NPCS.filter(n=>n.kind==='gang'&&n.gang===rid&&n.state!=='dead'&&n.state!=='gangfight'&&
       rivalZones.includes(n.homeRect));
   }
-  const spawned=[];
-  for(let i=0;i<count;i++){
-    const spot=freeSpot(ptx-3,ptx+3,pty-3,pty+3,20)||{px:player.px+rand(-24,24),py:player.py+rand(-24,24)};
-    // Bugfix (Nutzer-live-gemeldet): tpl muss der Sprite-Template-Key sein ('npc_'+gid, wie ÜBERALL sonst
-    // im Code, z.B. gangHouseCluster()), NICHT der rohe gid-String — sonst ist IMAGES[n.tpl] undefined und
-    // drawNPC() crasht bei drawImage() (v.a. sichtbar sobald ein Backup-NPC stirbt: state==='dead'-Zweig).
-    const n=makeNpc('gang','npc_'+gid.toLowerCase(),spot.px,spot.py,{gang:gid,hp:30,state:'act',homeRect:ownRect,wanderR:200});
-    n.tempT=rand(90,140);   // despawnt wie andere temporaere NPCs, aber nie solange sichtbar (updateTempNpcs())
-    spawned.push(n);
-  }
-  const pairs=Math.min(spawned.length,enemies.length);
+  const pairs=Math.min(crew.length,enemies.length);
   let mx=0,my=0;
   for(let i=0;i<pairs;i++){
-    const x=spawned[i], y=enemies[i];
+    const x=crew[i], y=enemies[i];
     x.fightTarget=y; y.fightTarget=x;
     x.state='gangfight'; y.state='gangfight';
     mx+=(x.px+y.px)/2; my+=(x.py+y.py)/2;
   }
+  for(let i=pairs;i<crew.length;i++) crew[i].state='act';   // unpaarige Crew steht einfach dabei
   if(pairs>0){
     mx/=pairs; my/=pairs;
     activeFights.push({gidA:gid,gidB:rid,x:mx,y:my,t:50});
-    // Gleiches Prinzip wie triggerGangFight(): Navi-Ziel auf den Kampf setzen, falls der Spieler
-    // gerade kein anderes Ziel hat -- sonst weiss man bei einem Fern-Kampf (Backup laeuft erst hin)
-    // nicht, wohin man laufen soll, um mitzukaempfen.
     if(!navTarget) navTarget={x:mx,y:my,key:'gangwar'};
   }
-  return {total:spawned.length, fighting:pairs};
+  gangHeat[rid]=Math.min(10,(gangHeat[rid]||0)+2);
+  toast(t('gangops.result',{n:crew.length,gang:GANGS[rid].name}));
+  // Heat/Polizei (Nutzer-Vorgabe, "vor Polizei wegrennen"): ein Schusswechsel in fremdem Gang-Gebiet
+  // bleibt nicht unbemerkt — die automatische Rueckhol-Fahrt weiter unten IST die Flucht davor.
+  addHeat(POLICE_CFG.heatPerGangRaid);
+  gangRaid={gid,rid,crew,ownRect,targetRect,t:GANG_RAID_DURATION,warned:false};
+}
+function updateGangRaidGetaway(dt){
+  if(!gangRaid) return;
+  gangRaid.t-=dt;
+  if(!gangRaid.warned&&gangRaid.t<=GANG_RAID_WARN_AT){
+    gangRaid.warned=true;
+    toast(t('gangops.copsIncoming'));
+  }
+  if(gangRaid.t>0) return;
+  const {rid,crew,ownRect,targetRect}=gangRaid;
+  gangRaid=null;
+  const alive=crew.filter(n=>n.state!=='dead');
+  for(const n of alive) n.fightTarget=null;   // laufenden Kampf abbrechen, Van holt jetzt ab
+  if(player.driving) dismountScooter();       // Roller wuerde sonst mit player.riding kollidieren
+  const fromX=(targetRect.x0+targetRect.x1)/2*CFG.TILE, fromY=(targetRect.y0+targetRect.y1)/2*CFG.TILE;
+  const toX=(ownRect.x0+ownRect.x1)/2*CFG.TILE, toY=(ownRect.y0+ownRect.y1)/2*CFG.TILE;
+  spawnDriveByVan(fromX,fromY,toX,toY,()=>{
+    for(const n of alive) n.state=n.act?'act':'idle';
+    toast(t('gangops.getawayDone',{gang:GANGS[rid].name}));
+  }, true, alive);
+  toast(t('gangops.getawayStart'));
 }
 let gangWarT=rand(180,300);
 function updateGangWarCheck(dt){
@@ -7909,6 +7927,7 @@ function updateNPCs(dt){
   updateGangWarCheck(dt);
   updateAmbientGangClash(dt);
   updateOpsRoll(dt);
+  updateGangRaidGetaway(dt);
   updateActiveFights(dt);
   updateVans(dt);
   updateGangMethStock(dt);
@@ -8395,14 +8414,17 @@ function drawDog(d){
 // Nutzer-Vorgabe: "opps sliden" soll ein echter Drive-by sein statt eines abstrakten Fernwirkungs-
 // Effekts — ein weisser Van faehrt sichtbar vom eigenen Gang-Haus zur Ziel-Zone, erst bei Ankunft
 // wird der eigentliche Kampf (onArrive) ausgeloest. Gleiches Array/Update/Draw/Cull-Skelett wie DOGS.
-function spawnDriveByVan(fromX,fromY,toX,toY,onArrive,carryPlayer){
+function spawnDriveByVan(fromX,fromY,toX,toY,onArrive,carryPlayer,carryNpcs){
   // Geschwindigkeit bewusst weit ueber realistischem Autotempo (Gang-Zonen koennen ueber 10000px
   // auseinanderliegen) — soll wie ein kurzer, kinoreifer Zeitsprung wirken, nicht wie eine Echtzeit-
   // Fahrt quer durch die ganze Karte.
   // Nutzer-Vorgabe: "der Van muss mich mitnehmen" — carryPlayer haengt player.px/py an die Van-Position,
   // damit man direkt am Zielort landet (und mitkaempfen kann), statt selbst hinlaufen zu muessen.
-  VANS.push({isVan:true,x:fromX,y:fromY,py:fromY,tx:toX,ty:toY,speed:2200,angle:Math.atan2(toY-fromY,toX-fromX),onArrive,carryPlayer:!!carryPlayer});
+  // Gang-Raid (Nutzer-Vorgabe): carryNpcs faehrt zusaetzlich die eigene Crew mit — waehrend der Fahrt
+  // unsichtbar (n.riding, siehe render()), am Zielort erscheinen sie wieder (siehe updateVans()).
+  VANS.push({isVan:true,x:fromX,y:fromY,py:fromY,tx:toX,ty:toY,speed:2200,angle:Math.atan2(toY-fromY,toX-fromX),onArrive,carryPlayer:!!carryPlayer,carryNpcs:carryNpcs||null});
   if(carryPlayer){ player.riding=true; player.px=fromX; player.py=fromY; }
+  if(carryNpcs) for(const n of carryNpcs){ n.riding=true; n.px=fromX; n.py=fromY; }
 }
 function updateVans(dt){
   for(let i=VANS.length-1;i>=0;i--){
@@ -8411,12 +8433,17 @@ function updateVans(dt){
     if(d<24){
       const cb=v.onArrive;
       if(v.carryPlayer){ player.riding=false; player.px=v.x; player.py=v.y; }
+      if(v.carryNpcs) for(const n of v.carryNpcs){
+        if(n.state==='dead') continue;   // Zeitsprung-Rueckfahrt: tote Crew bleibt liegen, siehe resolveGangRaidGetaway()
+        n.riding=false; n.px=v.x+rand(-20,20); n.py=v.y+rand(-10,10);
+      }
       VANS.splice(i,1); if(cb) cb(); continue;
     }
     v.angle=Math.atan2(dy,dx);
     v.x+=(dx/d)*v.speed*dt; v.y+=(dy/d)*v.speed*dt;
     v.py=v.y;   // Tiefensortierung im Draw-Loop nutzt .py (analog DOGS), muss mit der echten Y-Position mitwandern
     if(v.carryPlayer){ player.px=v.x; player.py=v.y; }
+    if(v.carryNpcs) for(const n of v.carryNpcs){ if(n.state!=='dead'){ n.px=v.x; n.py=v.y; } }
   }
 }
 function drawVan(v){
@@ -8933,6 +8960,7 @@ const POLICE_CFG={
   heatPerExplosion: 30,
   heatPerDeal: 12,
   heatPerRunnerCaught: 8,      // Runner bewegt pro Zyklus weniger Ware als ein bewusster Deal -> unter heatPerDeal(12)
+  heatPerGangRaid: 20,         // Gang-Raid (Nutzer-Vorgabe): Schusswechsel in fremdem Gebiet, deutlich ueber heatPerDeal
   heatPerGunOutPerSec: 0.5,
   decayPerSec: 2,
   coolDelay: 6,                // Sekunden ohne neue Tat, bevor Decay einsetzt
@@ -12134,13 +12162,24 @@ function renderGangOpsUI(gid){
     btn.className='roll-btn';
     btn.textContent=t('gangops.attack',{gang:GANGS[rid].name})+(heat>0?' 🔥'+heat:'');
     btn.addEventListener('click',()=>{
+      if(gangRaid){ toast(t('gangops.busy')); return; }   // vorheriger Raid noch nicht zurueck
       box.querySelectorAll('button').forEach(b=>b.disabled=true);
       startOpsRoll(()=>{
-        // Nutzer-Vorgabe: Backup spawnt jetzt SOFORT direkt beim Spieler statt erst per Van
-        // anzureisen — die Wuerfelzahl (opsRoll.val) bestimmt direkt die Anzahl mitkaempfender NPCs.
-        spawnGangBackup(gid,rid,opsRoll.val);
-        gangHeat[rid]=Math.min(10,(gangHeat[rid]||0)+2);
-        toast(t('gangops.result',{n:opsRoll.val,gang:GANGS[rid].name}));
+        // Nutzer-Vorgabe: echter Drive-by — Van faehrt sichtbar mit Spieler+Crew zur Rivalen-Zone,
+        // Kampf beginnt erst dort (siehe resolveGangRaid()). Wuerfelzahl (opsRoll.val) bestimmt die
+        // Crew-Groesse.
+        const ownRect=Array.isArray(GANGS[gid].zone)?GANGS[gid].zone[0]:GANGS[gid].zone;
+        const targetRect=Array.isArray(GANGS[rid].zone)?GANGS[rid].zone[0]:GANGS[rid].zone;
+        const fromX=(ownRect.x0+ownRect.x1)/2*CFG.TILE, fromY=(ownRect.y0+ownRect.y1)/2*CFG.TILE;
+        const toX=(targetRect.x0+targetRect.x1)/2*CFG.TILE, toY=(targetRect.y0+targetRect.y1)/2*CFG.TILE;
+        const crew=[];
+        for(let i=0;i<opsRoll.val;i++){
+          crew.push(makeNpc('gang','npc_'+gid.toLowerCase(),fromX,fromY,{gang:gid,hp:30,state:'idle',homeRect:ownRect,wanderR:200}));
+        }
+        spawnDriveByVan(fromX,fromY,toX,toY,()=>{
+          resolveGangRaid(gid,rid,crew,ownRect,targetRect);
+        }, true, crew);
+        toast(t('gangops.vanEnroute',{gang:GANGS[rid].name}));
         closeGangOpsUI();
       });
     });
@@ -14448,7 +14487,7 @@ function render(time){
         }
       }
     } else if(e.isNpc){
-      drawNPC(e);
+      if(!e.riding) drawNPC(e);   // Gang-Raid: waehrend der Van-Mitfahrt unsichtbar, gleiches Prinzip wie player.riding
     } else if(e.isDog){
       drawDog(e);
     } else if(e.isVan){
