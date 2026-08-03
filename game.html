@@ -591,7 +591,7 @@ canvas#game{
 #roll-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
 
 /* ---------- Grow-Shop-UI + Pack-UI: gleiche Panel-Familie wie Roll-UI ---------- */
-#growshop-box, #pack-box, #kiosk-box, #chemshop-box, #dripshop-box, #armor-box, #casino-box, #blackjack-box, #dealershop-box, #police-station-box, #gangjoin-box, #gangops-box, #scammershop-box, #carding-box, #atm-box, #jewelershop-box, #bikeshop-box{
+#growshop-box, #pack-box, #kiosk-box, #chemshop-box, #dripshop-box, #armor-box, #casino-box, #blackjack-box, #casino2-box, #dealershop-box, #police-station-box, #gangjoin-box, #gangops-box, #scammershop-box, #carding-box, #atm-box, #jewelershop-box, #bikeshop-box{
   position: fixed;
   left: 50%;
   top: 50%;
@@ -606,7 +606,7 @@ canvas#game{
   z-index: 47;
   box-shadow: 0 6px 0 rgba(0,0,0,.55);
 }
-#growshop-title, #pack-title, #kiosk-title, #chemshop-title, #dripshop-title, #armor-title, #blackjack-title, #dealershop-title, #police-station-title, #gangjoin-title, #gangops-title, #scammershop-title, #carding-title, #atm-title, #jewelershop-title{ font-size: 11px; margin-bottom: 10px; text-shadow: 1px 1px 0 #000; }
+#growshop-title, #pack-title, #kiosk-title, #chemshop-title, #dripshop-title, #armor-title, #blackjack-title, #casino2-title, #dealershop-title, #police-station-title, #gangjoin-title, #gangops-title, #scammershop-title, #carding-title, #atm-title, #jewelershop-title{ font-size: 11px; margin-bottom: 10px; text-shadow: 1px 1px 0 #000; }
 #police-station-content{ font-size: 9px; line-height: 1.7; }
 #police-station-content .roll-btn{ display: block; width: 100%; margin-top: 10px; text-align: center; }
 .shop-row{
@@ -632,7 +632,7 @@ canvas#game{
   cursor: pointer;
 }
 .shop-row button:disabled{ opacity: .35; cursor: default; }
-#growshop-hint, #pack-hint, #kiosk-hint, #chemshop-hint, #dripshop-hint, #armor-hint, #casino-hint, #blackjack-hint, #dealershop-hint, #police-station-hint, #gangjoin-hint, #gangops-hint, #scammershop-hint, #carding-hint, #atm-hint, #jewelershop-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
+#growshop-hint, #pack-hint, #kiosk-hint, #chemshop-hint, #dripshop-hint, #armor-hint, #casino-hint, #blackjack-hint, #casino2-hint, #dealershop-hint, #police-station-hint, #gangjoin-hint, #gangops-hint, #scammershop-hint, #carding-hint, #atm-hint, #jewelershop-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
 #carding-content{ font-size: 9px; line-height: 1.7; text-align: center; }
 #carding-content .roll-btn{ display: block; width: 100%; margin-top: 10px; }
 #atm-pin-row{ display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
@@ -661,6 +661,78 @@ canvas#game{
 #blackjack-table{ display: block; margin: 0 auto 10px; border: 1px solid rgba(255,255,255,.2); }
 #blackjack-box .roll-step{ display: flex; gap: 6px; }
 #blackjack-box .roll-step .roll-btn{ flex: 1; }
+#casino2-reels{ display: block; margin: 0 auto 10px; border: 1px solid rgba(255,255,255,.2); image-rendering: pixelated; }
+#casino2-paytable{ margin-bottom: 10px; }
+#casino2-bet-row{ display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+#casino2-bet-row .roll-btn{ padding: 7px 12px; }
+#casino2-bet-input{
+  font-family: inherit; font-size: 10px; width: 64px; text-align: center;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2); color: var(--text);
+  padding: 7px 4px;
+}
+/* Roulette (Nutzer-Vorgabe: vollstaendiges Wettangebot) — eigene, breitere Panel-Regel statt der
+   gemeinsamen 380px-Selektorliste, weil das Zahlenraster (12 Spalten) sonst zu eng wird. */
+#roulette-box{
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  width: min(560px,94vw); max-height: 88vh; overflow-y: auto;
+  background: var(--panel); border: 3px solid #d8d5cc; outline: 3px solid #000;
+  padding: 14px 16px; z-index: 47; box-shadow: 0 6px 0 rgba(0,0,0,.55);
+}
+#roulette-title{ font-size: 11px; margin-bottom: 10px; text-shadow: 1px 1px 0 #000; }
+#roulette-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
+#roulette-wheel{ display: block; margin: 0 auto 10px; border: 1px solid rgba(255,255,255,.2); border-radius: 50%; }
+#roulette-board{ display: flex; gap: 4px; margin-bottom: 6px; align-items: stretch; }
+#roulette-numbers{ display: grid; grid-template-columns: repeat(12,1fr); gap: 2px; flex: 1; }
+.roulette-num{
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; padding: 6px 2px; cursor: pointer; color: #fff;
+  border: 1px solid rgba(255,255,255,.2);
+}
+.roulette-num.roulette-red{ background: #7a1e26; }
+.roulette-num.roulette-black{ background: #1a1a1a; }
+.roulette-num.roulette-green{ background: #1a5c30; width: 30px; flex-shrink: 0; font-size: 11px; }
+.roulette-num:hover{ filter: brightness(1.3); }
+#roulette-outside{ display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+#roulette-outside .roll-btn{ font-size: 8px; padding: 7px 8px; }
+#roulette-bets{ max-height: 90px; overflow-y: auto; margin-bottom: 6px; }
+.roulette-bet-row{
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 9px; padding: 4px 2px; border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.roulette-bet-remove{
+  font-family: inherit; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2);
+  color: var(--text); cursor: pointer; padding: 2px 8px;
+}
+#roulette-total{ font-size: 9px; color: var(--money); text-align: right; margin-bottom: 8px; }
+#roulette-chip-row{ display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+#roulette-chip-row .roll-btn{ padding: 7px 12px; }
+#roulette-chip-input{
+  font-family: inherit; font-size: 10px; width: 64px; text-align: center;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2); color: var(--text);
+  padding: 7px 4px;
+}
+#roulette-box .roll-step{ display: flex; gap: 6px; }
+#roulette-box .roll-step .roll-btn{ flex: 1; }
+/* Durak — eigene, mittelbreite Panel-Regel (Hand von bis zu 6 Karten muss nebeneinander passen). */
+#durak-box{
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  width: min(420px,94vw); max-height: 88vh; overflow-y: auto;
+  background: var(--panel); border: 3px solid #d8d5cc; outline: 3px solid #000;
+  padding: 14px 16px; z-index: 47; box-shadow: 0 6px 0 rgba(0,0,0,.55);
+}
+#durak-title{ font-size: 11px; margin-bottom: 10px; text-shadow: 1px 1px 0 #000; }
+#durak-hint{ margin-top: 8px; font-size: 7px; color: #8f8d85; text-align: center; }
+#durak-info{ font-size: 9px; color: #cfcdc6; margin-bottom: 8px; text-align: center; }
+#durak-ai-hand{ display: flex; justify-content: center; align-items: center; margin-bottom: 10px; }
+.durak-card{ border-radius: 3px; margin-left: -10px; }
+.durak-card:first-child{ margin-left: 0; }
+.durak-card.selected{ outline: 2px solid #39ff64; position: relative; top: -4px; }
+.durak-count{ font-size: 9px; color: var(--text); margin-left: 10px; }
+#durak-table{ display: flex; justify-content: center; gap: 8px; min-height: 56px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+.durak-pair{ display: flex; gap: 2px; }
+#durak-player-hand{ display: flex; justify-content: center; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; cursor: pointer; }
+#durak-box .roll-step{ display: flex; gap: 6px; flex-wrap: wrap; }
+#durak-box .roll-step .roll-btn{ flex: 1; min-width: 80px; }
 
 /* ---------- Panel-Schließen (mobile): sichtbarer X-Button + Klick-daneben-Backdrop ---------- */
 #panel-backdrop{
@@ -1159,6 +1231,65 @@ canvas#game{
   <div id="blackjack-hint"></div>
 </div>
 
+<!-- Casino-UI: Automat 2 "Diamant-Deluxe", 5 Walzen/5 Gewinnlinien, eigenes Panel/State -->
+<div id="casino2-box" class="hidden">
+  <button id="casino2-close" class="panel-close-btn" title="Schließen">✕</button>
+  <div id="casino2-title">DIAMANT-DELUXE</div>
+  <canvas id="casino2-reels" width="220" height="90"></canvas>
+  <div id="casino2-paytable"></div>
+  <div id="casino2-bet-row">
+    <button id="casino2-bet-minus" class="roll-btn">−</button>
+    <input id="casino2-bet-input" type="number" min="20" max="1000" step="20" value="100">
+    <button id="casino2-bet-plus" class="roll-btn">+</button>
+  </div>
+  <div class="roll-step"><button id="casino2-spin" class="roll-btn roll-main"></button></div>
+  <div id="casino2-hint"></div>
+</div>
+
+<!-- Roulette-UI: vollstaendiger Tisch (Zahl/Farbe/Gerade-Ungerade/Hoch-Niedrig/Dutzend/Kolonne),
+     eigene Panel-Breite (siehe CSS, breiter als die 380px-Standardpanels), Rad-Animation im Canvas -->
+<div id="roulette-box" class="hidden">
+  <button id="roulette-close" class="panel-close-btn" title="Schließen">✕</button>
+  <div id="roulette-title">ROULETTE</div>
+  <canvas id="roulette-wheel" width="220" height="220"></canvas>
+  <div id="roulette-board">
+    <div class="roulette-num roulette-green" data-bet="number:0">0</div>
+    <div id="roulette-numbers"></div>
+  </div>
+  <div id="roulette-outside"></div>
+  <div id="roulette-bets"></div>
+  <div id="roulette-total"></div>
+  <div id="roulette-chip-row">
+    <button id="roulette-chip-minus" class="roll-btn">−</button>
+    <input id="roulette-chip-input" type="number" min="10" max="500" step="10" value="20">
+    <button id="roulette-chip-plus" class="roll-btn">+</button>
+  </div>
+  <div class="roll-step">
+    <button id="roulette-spin" class="roll-btn roll-main"></button>
+    <button id="roulette-clear" class="roll-btn"></button>
+  </div>
+  <div id="roulette-hint"></div>
+</div>
+
+<!-- Durak-UI: russisches Kartenspiel (Podkidnoy-Variante mit Zuwerfen) gegen einen NPC-Gegner —
+     keine RAF-Animation noetig (rundenbasiert), Neu-Rendern nur bei Zustandsaenderung. -->
+<div id="durak-box" class="hidden">
+  <button id="durak-close" class="panel-close-btn" title="Schließen">✕</button>
+  <div id="durak-title">DURAK</div>
+  <div id="durak-info"></div>
+  <div id="durak-ai-hand"></div>
+  <div id="durak-table"></div>
+  <div id="durak-player-hand"></div>
+  <div class="roll-step">
+    <button id="durak-start" class="roll-btn roll-main"></button>
+    <button id="durak-action-attack" class="roll-btn roll-main hidden"></button>
+    <button id="durak-action-defend" class="roll-btn roll-main hidden"></button>
+    <button id="durak-action-take" class="roll-btn hidden"></button>
+    <button id="durak-action-pass" class="roll-btn hidden"></button>
+  </div>
+  <div id="durak-hint"></div>
+</div>
+
 <!-- Pack-UI: Gras in Baggies abwiegen -->
 <div id="pack-box" class="hidden">
   <button id="pack-close" class="panel-close-btn" title="Schließen">✕</button>
@@ -1421,6 +1552,30 @@ const I18N = {
       dealer: 'DEALER', you: 'DU', total: '{n}',
       win: '+{amount}$ gewonnen!', natural: 'BLACKJACK! +{amount}$!!',
       push: 'Unentschieden — Einsatz zurück.', lose: 'Verloren — nächstes Mal.'
+    },
+    casino2: {
+      title: 'DIAMANT-DELUXE', hint: 'ESC — SCHLIESSEN',
+      spin: 'SPIN — {bet}$',
+      win: '+{amount}$ gewonnen!', jackpot: 'JACKPOT! +{amount}$!!', lose: 'Verloren — nächstes Mal.',
+      sym: { sapphire: 'Saphir', emerald: 'Smaragd', ruby: 'Rubin', star: 'Stern', diamond: 'Diamant' }
+    },
+    roulette: {
+      title: 'ROULETTE', hint: 'Zahl oder Feld anklicken, dann SPIN.',
+      totalStake: 'Einsatz gesamt: {n}$', betNumber: 'Zahl {n}',
+      win: '+{amount}$ gewonnen! ({n})', lose: 'Verloren — Kugel auf {n}.',
+      bet: {
+        red: 'Rot', black: 'Schwarz', odd: 'Ungerade', even: 'Gerade',
+        low: '1-18', high: '19-36', dozen1: '1. Dutzend', dozen2: '2. Dutzend', dozen3: '3. Dutzend',
+        col1: 'Kolonne 1', col2: 'Kolonne 2', col3: 'Kolonne 3'
+      }
+    },
+    durak: {
+      title: 'DURAK', hint: 'Kartenspiel gegen einen Gegner — Einsatz {stake}$, Gewinner nimmt den Pott.',
+      start: 'SPIELEN — {stake}$', trump: 'Trumpf: {suit}', deckCount: 'Stapel: {n}',
+      attack: 'ANGREIFEN', throwIn: 'ZUWERFEN', defend: 'SCHLAGEN', take: 'AUFNEHMEN', pass: 'FERTIG',
+      yourTurnAttack: 'Du greifst an — Karte wählen.', yourTurnDefend: 'Du verteidigst — Karte wählen oder aufnehmen.',
+      aiTurn: 'Gegner ist am Zug …', invalidCard: 'Diese Karte geht hier nicht.',
+      win: 'Gewonnen! +{amount}$', lose: 'Verloren — du bist der Durak.', draw: 'Unentschieden — Stapel leer, beide fertig.'
     },
     methlab: {
       alreadyOwned: 'Läuft schon — kein zweites Labor nötig.',
@@ -1903,6 +2058,30 @@ const I18N = {
       dealer: 'DEALER', you: 'YOU', total: '{n}',
       win: '+${amount} won!', natural: 'BLACKJACK! +${amount}!!',
       push: 'Push — bet returned.', lose: 'No luck — try again.'
+    },
+    casino2: {
+      title: 'DIAMOND DELUXE', hint: 'ESC — CLOSE',
+      spin: 'SPIN — ${bet}',
+      win: '+${amount} won!', jackpot: 'JACKPOT! +${amount}!!', lose: 'No luck — try again.',
+      sym: { sapphire: 'Sapphire', emerald: 'Emerald', ruby: 'Ruby', star: 'Star', diamond: 'Diamond' }
+    },
+    roulette: {
+      title: 'ROULETTE', hint: 'Click a number or field, then SPIN.',
+      totalStake: 'Total stake: ${n}', betNumber: 'Number {n}',
+      win: '+${amount} won! ({n})', lose: 'No luck — ball landed on {n}.',
+      bet: {
+        red: 'Red', black: 'Black', odd: 'Odd', even: 'Even',
+        low: '1-18', high: '19-36', dozen1: '1st dozen', dozen2: '2nd dozen', dozen3: '3rd dozen',
+        col1: 'Column 1', col2: 'Column 2', col3: 'Column 3'
+      }
+    },
+    durak: {
+      title: 'DURAK', hint: 'Card game against an opponent — stake ${stake}, winner takes the pot.',
+      start: 'PLAY — ${stake}', trump: 'Trump: {suit}', deckCount: 'Deck: {n}',
+      attack: 'ATTACK', throwIn: 'THROW IN', defend: 'BEAT', take: 'TAKE', pass: 'DONE',
+      yourTurnAttack: 'Your attack — pick a card.', yourTurnDefend: 'Your defense — pick a card or take.',
+      aiTurn: 'Opponent is thinking …', invalidCard: "That card doesn't work here.",
+      win: 'You won! +${amount}', lose: "You lost — you're the fool.", draw: 'Draw — deck empty, both out.'
     },
     methlab: {
       alreadyOwned: 'Already running — no need for a second lab.',
@@ -3758,44 +3937,57 @@ function makeInterior(type){
       I.lights.push({x:3,y:3,r:90,c:'rgba(245,230,163,0.14)'},{x:11,y:5,r:90,c:'rgba(245,230,163,0.14)'});
       break;
     }
-    /* ===== CASINO "EL DORADO SPIELHALLE" (Paket 17) ===== */
+    /* ===== CASINO "EL DORADO SPIELHALLE" (Paket 17, erweitert um Automat 2/Roulette/Durak) ===== */
     case 'shop_casino':{
-      I.w=14; I.h=9; I.floor='tile_check'; I.ambientColor='rgba(40,10,30,0.18)';
+      I.w=18; I.h=12; I.floor='tile_check'; I.ambientColor='rgba(40,10,30,0.18)';
       I.furniture.push(
-        // Spielautomaten — Nutzer-Vorgabe: mehrere Automaten statt nur einem (v1-Limit aufgehoben).
-        // Alle drei öffnen dasselbe Panel/denselben State (kein eigenes Spiel pro Automat nötig).
-        {k:'slotmachine',x:6,y:3,w:2,h:2,c:'#2a1220',interactive:'casino_slot',
+        // Spielautomaten (Automat 1) — 3 Kabinette, alle oeffnen weiterhin dasselbe Panel/denselben
+        // State (Nutzer-Vorgabe von vorher, unveraendert, "v1-Limit aufgehoben").
+        {k:'slotmachine',x:2,y:1.6,w:1.8,h:1.8,c:'#2a1220',interactive:'casino_slot',
          label:{de:'Spielautomat',en:'Slot machine'},dialog:{de:'Spielen?',en:'Play?'},
          glow:true,glowColor:'rgba(255,215,0,0.35)',glowR:70},
-        {k:'slotmachine',x:3.3,y:5.2,w:1.8,h:1.8,c:'#2a1220',interactive:'casino_slot',
+        {k:'slotmachine',x:5,y:1.6,w:1.8,h:1.8,c:'#2a1220',interactive:'casino_slot',
          label:{de:'Spielautomat',en:'Slot machine'},dialog:{de:'Spielen?',en:'Play?'},
          glow:true,glowColor:'rgba(255,215,0,0.35)',glowR:70},
-        {k:'slotmachine',x:11,y:1.3,w:1.8,h:1.8,c:'#2a1220',interactive:'casino_slot',
+        {k:'slotmachine',x:8,y:1.6,w:1.8,h:1.8,c:'#2a1220',interactive:'casino_slot',
          label:{de:'Spielautomat',en:'Slot machine'},dialog:{de:'Spielen?',en:'Play?'},
          glow:true,glowColor:'rgba(255,215,0,0.35)',glowR:70},
-        {k:'blackjacktable',x:9,y:4,w:2,h:2,c:'#0d3d1f',interactive:'casino_blackjack',
+        // Automat 2 (Nutzer-Vorgabe): eigenstaendiges 5-Walzen-Spiel mit mehreren Gewinnlinien,
+        // eigenes Panel/State (siehe interactSlotMachine2()) — optisch abgesetzt (lila statt rot/gold).
+        {k:'slotmachine2',x:12,y:1.4,w:2.2,h:2.2,c:'#221030',interactive:'casino_slot2',
+         label:{de:'Diamant-Automat',en:'Diamond machine'},dialog:{de:'Spielen?',en:'Play?'},
+         glow:true,glowColor:'rgba(180,80,255,0.4)',glowR:75},
+        {k:'blackjacktable',x:2,y:4.6,w:2,h:2,c:'#0d3d1f',interactive:'casino_blackjack',
          label:{de:'Blackjack-Tisch',en:'Blackjack table'},dialog:{de:'Mitspielen?',en:'Join the game?'},
          glow:true,glowColor:'rgba(46,163,74,0.35)',glowR:70},
-        // Bar-Ecke links, rein dekorativ
-        {k:'bar',x:1,y:2,w:1,h:4,c:'#3a2030'},
-        {k:'barstool',x:2.2,y:2,w:1,h:1,c:'#4a2a3a'},
-        {k:'barstool',x:2.2,y:4.5,w:1,h:1,c:'#4a2a3a'},
+        // Roulette (Nutzer-Vorgabe): vollstaendiger Tisch mit Rad-Animation, siehe interactRoulette()/
+        // renderRouletteWheel().
+        {k:'roulettetable',x:5.5,y:4.3,w:2.8,h:2.4,c:'#0d3d1f',interactive:'casino_roulette',
+         label:{de:'Roulette-Tisch',en:'Roulette table'},dialog:{de:'Mitspielen?',en:'Join the game?'},
+         glow:true,glowColor:'rgba(245,197,66,0.3)',glowR:75},
+        // Durak (Nutzer-Vorgabe): russisches Kartenspiel gegen einen NPC, siehe interactDurak().
+        {k:'durakTable',x:9.5,y:4.6,w:2,h:1.6,c:'#2a2230',interactive:'casino_durak',
+         label:{de:'Kartentisch (Durak)',en:'Card table (Durak)'},dialog:{de:'Mitspielen?',en:'Join the game?'}},
+        // Bar-Ecke rechts, rein dekorativ
+        {k:'bar',x:13.5,y:4,w:1,h:4,c:'#3a2030'},
+        {k:'barstool',x:14.7,y:4.3,w:1,h:1,c:'#4a2a3a'},
+        {k:'barstool',x:14.7,y:6.8,w:1,h:1,c:'#4a2a3a'},
         // Kassen-Cage — Nutzer-Vorgabe: auch das Casino ausraubbar (Taste K halten)
-        {k:'counter',x:6,y:6.6,w:2,h:1,c:'#3a2a10',detail:'cash',interactive:'rob_only',robbable:true,
+        {k:'counter',x:8,y:7.6,w:2,h:1,c:'#3a2a10',detail:'cash',interactive:'rob_only',robbable:true,
          label:{de:'Kasse',en:'Register'}},
         // Neon-Schild
-        {k:'sign',x:4,y:0,w:6,h:0.6,c:'#ff2ec4',detail:'neon',text:'EL DORADO SPIELHALLE',
+        {k:'sign',x:5,y:0,w:8,h:0.6,c:'#ff2ec4',detail:'neon',text:'EL DORADO SPIELHALLE',
          glow:true,glowColor:'rgba(255,46,196,0.4)',glowR:70},
-        {k:'lamp',x:3,y:2,w:0,h:0,c:'#ff2ec4',detail:'cold',glow:true,glowColor:'rgba(255,46,196,0.2)',glowR:90},
-        {k:'lamp',x:11,y:2,w:0,h:0,c:'#f5c542',detail:'warm',glow:true,glowColor:'rgba(245,197,66,0.2)',glowR:90},
-        // Zusätzliche Deko (Paket 10)
-        {k:'plant',x:12,y:6,w:0.6,h:1,c:'#2e6a2e'},
-        {k:'bottles',x:2.3,y:5.6,w:0.5,h:0.4,c:'#2e5a2e'},
-        {k:'trash',x:12.5,y:6.6,w:1,h:1,c:'#2a2a22'},
-        {k:'door',x:6,y:8,w:2,h:0.5,c:'#2a1e12',detail:'exit'}
+        {k:'lamp',x:4,y:1,w:0,h:0,c:'#ff2ec4',detail:'cold',glow:true,glowColor:'rgba(255,46,196,0.2)',glowR:90},
+        {k:'lamp',x:14,y:1,w:0,h:0,c:'#f5c542',detail:'warm',glow:true,glowColor:'rgba(245,197,66,0.2)',glowR:90},
+        // Zusätzliche Deko
+        {k:'plant',x:16,y:8,w:0.6,h:1,c:'#2e6a2e'},
+        {k:'bottles',x:2.3,y:8.5,w:0.5,h:0.4,c:'#2e5a2e'},
+        {k:'trash',x:16.5,y:8.6,w:1,h:1,c:'#2a2a22'},
+        {k:'door',x:8,y:11,w:2,h:0.5,c:'#2a1e12',detail:'exit'}
       );
-      I.exits=[{x:6,y:8,w:2,h:1}];
-      I.lights.push({x:3,y:2,r:90,c:'rgba(255,46,196,0.15)'},{x:11,y:2,r:90,c:'rgba(245,197,66,0.15)'});
+      I.exits=[{x:8,y:11,w:2,h:1}];
+      I.lights.push({x:4,y:1,r:90,c:'rgba(255,46,196,0.15)'},{x:14,y:1,r:90,c:'rgba(245,197,66,0.15)'});
       break;
     }
     /* ===== METH-LABOR (Paket 11) ===== */
@@ -4253,6 +4445,63 @@ function drawInteriorFurniture(ctx, f, time){
       ctx.beginPath();
       ctx.arc(tx+tw/2,ty+th*0.78,tw*0.11,0,Math.PI*2);
       ctx.fill();
+      break;
+    }
+    /* Automat 2 (Nutzer-Vorgabe): eigenes Kabinett, lila/Diamant-Optik statt rot/gold, damit es sich
+       auch im Raum klar vom 3-Walzen-Automaten unterscheidet — Walzen-Animation läuft wieder nur im
+       UI-Panel (renderCasino2Reels()), gleiches Prinzip wie beim ersten Automaten. */
+    case 'slotmachine2':{
+      if(f.glow){
+        const pulse=0.8+0.2*Math.sin(time/200);
+        const rad=ctx.createRadialGradient(tx+tw/2,ty+th/2,4,tx+tw/2,ty+th/2,f.glowR);
+        const alpha=parseFloat((f.glowColor.match(/[\d.]+\)/)||['0.3)'])[0])*pulse;
+        rad.addColorStop(0,f.glowColor.replace(/[\d.]+\)/,alpha.toFixed(2)+')'));
+        rad.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=rad;
+        ctx.fillRect(tx-f.glowR,ty-f.glowR,f.glowR*2,f.glowR*2);
+      }
+      ctx.fillStyle=f.c;
+      ctx.fillRect(tx,ty,tw,th);
+      ctx.fillStyle='#0a0a0a';
+      ctx.fillRect(tx+tw*0.1,ty+th*0.08,tw*0.8,th*0.5);
+      ctx.fillStyle='#c060ff';
+      ctx.font='bold '+Math.round(th*0.16)+'px monospace';
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      ctx.fillText('◆◆◆◆◆',tx+tw/2,ty+th*0.3);
+      ctx.fillStyle='#ffd23a';
+      ctx.beginPath();
+      ctx.arc(tx+tw/2,ty+th*0.78,tw*0.1,0,Math.PI*2);
+      ctx.fill();
+      break;
+    }
+    /* Roulette-Tisch (Nutzer-Vorgabe): gruener Filz + angedeutetes Rad von oben — das eigentliche
+       Rad mit der Dreh-Animation existiert nur im UI-Panel (renderRouletteWheel()). */
+    case 'roulettetable':{
+      if(f.glow){
+        const pulse=0.85+0.15*Math.sin(time/260);
+        const rad=ctx.createRadialGradient(tx+tw/2,ty+th/2,4,tx+tw/2,ty+th/2,f.glowR);
+        const alpha=parseFloat((f.glowColor.match(/[\d.]+\)/)||['0.3)'])[0])*pulse;
+        rad.addColorStop(0,f.glowColor.replace(/[\d.]+\)/,alpha.toFixed(2)+')'));
+        rad.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=rad;
+        ctx.fillRect(tx-f.glowR,ty-f.glowR,f.glowR*2,f.glowR*2);
+      }
+      ctx.fillStyle=f.c;
+      ctx.fillRect(tx,ty,tw,th);
+      const rcx=tx+tw/2, rcy=ty+th/2, rr=Math.min(tw,th)*0.36;
+      ctx.fillStyle='#1a1a1a';
+      ctx.beginPath(); ctx.arc(rcx,rcy,rr,0,Math.PI*2); ctx.fill();
+      for(let i=0;i<8;i++){
+        ctx.fillStyle=i%2===0?'#c0303a':'#0a0a0a';
+        ctx.beginPath();
+        ctx.moveTo(rcx,rcy);
+        ctx.arc(rcx,rcy,rr,(i/8)*Math.PI*2,((i+1)/8)*Math.PI*2);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.fillStyle='#e8d23a';
+      ctx.beginPath(); ctx.arc(rcx,rcy,rr*0.18,0,Math.PI*2); ctx.fill();
       break;
     }
     case 'lamp':{
@@ -6349,6 +6598,18 @@ function interactInterior(){
   }
   if(f.interactive==='casino_blackjack'){
     interactBlackjack();
+    return;
+  }
+  if(f.interactive==='casino_slot2'){
+    interactSlotMachine2();
+    return;
+  }
+  if(f.interactive==='casino_roulette'){
+    interactRoulette();
+    return;
+  }
+  if(f.interactive==='casino_durak'){
+    interactDurak();
     return;
   }
   if(f.interactive==='carding_laptop'){
@@ -12428,6 +12689,182 @@ function renderCasinoReels(){
   if(casinoOpen) casinoRAF=requestAnimationFrame(renderCasinoReels);
 }
 
+/* ---------------- Automat 2 "Diamant-Deluxe": 5 Walzen, 5 Gewinnlinien ----------------
+   Nutzer-Vorgabe: ein zweites, andersartiges Automatenspiel (nicht nur mehr Kabinette vom
+   bestehenden 3-Walzen-Spiel). Gleiche Nicht-Persistenz-Philosophie wie Automat 1 (SLOT_*) —
+   eine Runde dauert nur Sekunden. Raster 5 Walzen x 3 Reihen, Gewinn zaehlt fuer eine Linie, wenn
+   ab Walze 1 mindestens 3 gleiche Symbole zusammenhaengend liegen (Standard-Video-Slot-Konvention). */
+const SLOT2_SYMBOLS = ['sapphire','emerald','ruby','star','diamond'];
+const SLOT2_WEIGHTS = {sapphire:36, emerald:26, ruby:18, star:12, diamond:8};   // Summe 100
+const SLOT2_PAY_5 = {sapphire:10, emerald:18, ruby:35, star:80, diamond:400};   // ×Einsatz bei 5 gleichen
+const SLOT2_PAY_4 = {sapphire:4,  emerald:7,  ruby:14, star:30, diamond:120};   // ×Einsatz bei 4 gleichen
+const SLOT2_PAY_3 = {sapphire:1,  emerald:2,  ruby:4,  star:9,  diamond:30};    // ×Einsatz bei 3 gleichen
+// 5 Gewinnlinien im 5x3-Raster (Reihen-Index 0=oben,1=mitte,2=unten je Walze 0-4).
+const SLOT2_PAYLINES = [
+  [0,0,0,0,0], [1,1,1,1,1], [2,2,2,2,2], [0,1,2,1,0], [2,1,0,1,2]
+];
+const SLOT2_BET_MIN=20, SLOT2_BET_MAX=1000;
+let slot2Bet=100;
+function clampSlot2Bet(v){
+  v=Math.round(v);
+  if(!Number.isFinite(v)) v=100;
+  return Math.min(SLOT2_BET_MAX,Math.max(SLOT2_BET_MIN,v));
+}
+function setSlot2Bet(v){
+  slot2Bet=clampSlot2Bet(v);
+  el('casino2-bet-input').value=slot2Bet;
+  el('casino2-spin').textContent=t('casino2.spin',{bet:slot2Bet});
+}
+function rollSlot2Symbol(){
+  const total=Object.values(SLOT2_WEIGHTS).reduce((s,w)=>s+w,0);
+  let r=Math.random()*total;
+  for(const sym of SLOT2_SYMBOLS){
+    r-=SLOT2_WEIGHTS[sym];
+    if(r<=0) return sym;
+  }
+  return SLOT2_SYMBOLS[SLOT2_SYMBOLS.length-1];
+}
+// grid[reel][row] — 5x3. Prueft jede Payline: laengster zusammenhaengender Lauf gleicher Symbole
+// ab Walze 0, zahlt nach SLOT2_PAY_5/4/3 (0 bei <3 Treffern).
+function slot2Payout(grid,bet){
+  let total=0;
+  for(const line of SLOT2_PAYLINES){
+    const first=grid[0][line[0]];
+    let run=1;
+    for(let i=1;i<5;i++){ if(grid[i][line[i]]===first) run++; else break; }
+    if(run>=5) total+=(SLOT2_PAY_5[first]||0)*bet;
+    else if(run===4) total+=(SLOT2_PAY_4[first]||0)*bet;
+    else if(run===3) total+=(SLOT2_PAY_3[first]||0)*bet;
+  }
+  return total;
+}
+let casino2Open=false, casino2RAF=null;
+function interactSlotMachine2(){
+  if(dialog.active) return;
+  el('casino2-title').textContent=t('casino2.title');
+  el('casino2-hint').textContent=t('casino2.hint');
+  setSlot2Bet(slot2Bet);
+  renderCasino2Paytable();
+  casino2Open=true;
+  renderCasino2Reels();
+  el('casino2-box').classList.remove('hidden');
+  showPanelBackdrop(closeCasino2UI);
+}
+el('casino2-bet-minus').addEventListener('click',()=>{ if(!player.slot2Spin) setSlot2Bet(slot2Bet-20); });
+el('casino2-bet-plus').addEventListener('click',()=>{ if(!player.slot2Spin) setSlot2Bet(slot2Bet+20); });
+el('casino2-bet-input').addEventListener('change',(e)=>{ if(!player.slot2Spin) setSlot2Bet(parseInt(e.target.value,10)); });
+function renderCasino2Paytable(){
+  const box=el('casino2-paytable'); if(!box) return;
+  box.innerHTML='';
+  for(const sym of ['diamond','star','ruby','emerald','sapphire']){
+    const row=document.createElement('div');
+    row.className='casino-pay-row';
+    row.textContent=t('casino2.sym.'+sym)+' × 5  →  '+SLOT2_PAY_5[sym]+'×  (4× '+SLOT2_PAY_4[sym]+'×, 3× '+SLOT2_PAY_3[sym]+'×)';
+    box.appendChild(row);
+  }
+}
+function closeCasino2UI(){
+  el('casino2-box').classList.add('hidden');
+  casino2Open=false;
+  hidePanelBackdrop();
+  if(casino2RAF){ cancelAnimationFrame(casino2RAF); casino2RAF=null; }
+}
+function spinSlotMachine2(){
+  if(player.slot2Spin){ toast(t('casino.busy')); return; }
+  if(player.money<slot2Bet){ toast(t('casino.noMoney')); return; }
+  player.money-=slot2Bet;
+  const grid=[];
+  for(let i=0;i<5;i++) grid.push([rollSlot2Symbol(),rollSlot2Symbol(),rollSlot2Symbol()]);
+  player.slot2Spin={phase:'spinning', phaseT:0, grid, bet:slot2Bet, payout:0, reelOffset:[0,0,0,0,0]};
+  saveGame();
+}
+const SLOT2_REEL_STOPS=[0.6,0.85,1.1,1.35,1.6];
+const SLOT2_RESULT_HOLD=1.2;
+function updateSlot2Spin(dt){
+  if(!player.slot2Spin) return;
+  const s=player.slot2Spin;
+  s.phaseT+=dt;
+  if(!s.reelOffset) s.reelOffset=[0,0,0,0,0];
+  for(let i=0;i<5;i++){
+    if(s.phase==='spinning'&&s.phaseT<SLOT2_REEL_STOPS[i]) s.reelOffset[i]+=dt*(560-i*30);
+  }
+  if(s.phase==='spinning'&&s.phaseT>=SLOT2_REEL_STOPS[4]){
+    s.payout=slot2Payout(s.grid,s.bet);
+    if(s.payout>0){
+      player.money+=s.payout;
+      toast(s.payout>=SLOT2_PAY_5.diamond*s.bet ? t('casino2.jackpot',{amount:s.payout}) : t('casino2.win',{amount:s.payout}));
+    } else {
+      toast(t('casino2.lose'));
+    }
+    saveGame();
+    s.phase='result'; s.phaseT=0;
+  } else if(s.phase==='result'&&s.phaseT>=SLOT2_RESULT_HOLD){
+    player.slot2Spin=null;
+  }
+}
+el('casino2-close').addEventListener('click', closeCasino2UI);
+el('casino2-spin').addEventListener('click', spinSlotMachine2);
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!el('casino2-box').classList.contains('hidden')) closeCasino2UI();
+});
+const SLOT2_SYMBOL_COLOR={sapphire:'#3a6bd8',emerald:'#2ea34a',ruby:'#c0303a',star:'#f5c542',diamond:'#dfefff'};
+function drawSlot2Symbol(ctx,symbolId,cx,cy,size){
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.fillStyle=SLOT2_SYMBOL_COLOR[symbolId]||'#fff';
+  if(symbolId==='star'){
+    ctx.beginPath();
+    for(let i=0;i<5;i++){
+      const a=-Math.PI/2+i*(Math.PI*2/5), a2=a+Math.PI/5;
+      ctx.lineTo(Math.cos(a)*size*0.42,Math.sin(a)*size*0.42);
+      ctx.lineTo(Math.cos(a2)*size*0.18,Math.sin(a2)*size*0.18);
+    }
+    ctx.closePath(); ctx.fill();
+  } else {
+    // Diamant/Edelstein-Silhouette (Raute mit angeschnittener Spitze) — fuer sapphire/emerald/ruby/diamond
+    const w=size*0.34, h=size*0.44;
+    ctx.beginPath();
+    ctx.moveTo(0,-h); ctx.lineTo(w,-h*0.25); ctx.lineTo(w*0.55,h); ctx.lineTo(-w*0.55,h); ctx.lineTo(-w,-h*0.25);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0,-h); ctx.lineTo(0,h*0.7); ctx.stroke();
+  }
+  ctx.restore();
+}
+function renderCasino2Reels(){
+  const cv=el('casino2-reels'); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#0a0a0a';
+  ctx.fillRect(0,0,cv.width,cv.height);
+  const s=player.slot2Spin;
+  const cellW=cv.width/5, rowH=cv.height/3, size=Math.min(cellW,rowH)*0.85;
+  for(let i=0;i<5;i++){
+    const cx=cellW*i+cellW/2;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(cellW*i,0,cellW,cv.height); ctx.clip();
+    if(s&&s.phase==='spinning'&&s.phaseT<SLOT2_REEL_STOPS[i]){
+      const off=(s.reelOffset&&s.reelOffset[i])||0;
+      const scrollY=off%rowH;
+      const baseIdx=Math.floor(off/rowH);
+      for(let k=-1;k<=3;k++){
+        const sym=SLOT2_SYMBOLS[(baseIdx+k+SLOT2_SYMBOLS.length*1000)%SLOT2_SYMBOLS.length];
+        drawSlot2Symbol(ctx,sym,cx,rowH*1.5-scrollY+k*rowH,size);
+      }
+    } else {
+      for(let row=0;row<3;row++){
+        const sym=s?s.grid[i][row]:'diamond';
+        drawSlot2Symbol(ctx,sym,cx,rowH*row+rowH/2,size);
+      }
+    }
+    ctx.restore();
+  }
+  ctx.strokeStyle='rgba(255,255,255,.15)';
+  for(let i=1;i<5;i++){ ctx.beginPath(); ctx.moveTo(cellW*i,0); ctx.lineTo(cellW*i,cv.height); ctx.stroke(); }
+  for(let i=1;i<3;i++){ ctx.beginPath(); ctx.moveTo(0,rowH*i); ctx.lineTo(cv.width,rowH*i); ctx.stroke(); }
+  if(casino2Open) casino2RAF=requestAnimationFrame(renderCasino2Reels);
+}
+
 /* ---------------- Blackjack-Tisch: zweite Casino-Station neben dem Spielautomaten ----------------
    Einfache Version mit unendlichem Kartenstapel (Ziehen mit Zurücklegen) statt echtem Deck-Tracking —
    passt zum bestehenden Slot-Automat-Stil ("Platzhalter-Zahlen", kein Save/Load-Zwischenstand nötig,
@@ -12607,6 +13044,542 @@ function renderBlackjackTable(){
   }
   if(blackjackOpen) blackjackRAF=requestAnimationFrame(renderBlackjackTable);
 }
+
+/* ---------------- Roulette (europäisch, 37 Felder, vollständiges Wettangebot) ----------------
+   Nutzer-Vorgabe: volle Wett-Palette statt nur Zahl/Farbe. Mehrere gleichzeitige Wetten moeglich
+   (wie am echten Tisch) — player.rouletteBets sammelt sie, bis SPIN gedrueckt wird; player.rouletteSpin
+   uebernimmt dann eine Kopie fuer die Auswertung. Ergebnis wird ZUERST gewuerfelt, die Rad-Drehung
+   ist rein visuell und landet per Ease-Out-Kubik exakt darauf (kein bestehendes Rotations-Animations-
+   Muster im Code zum Wiederverwenden, siehe Code-Review — Slot-Walzen scrollen nur linear). */
+const ROULETTE_RED = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+function rouletteColor(n){ return n===0 ? 'green' : (ROULETTE_RED.has(n) ? 'red' : 'black'); }
+// Standard-europaeische Rad-Reihenfolge (reale Tatsache, nicht erfunden) — bestimmt nur die visuelle
+// Wedge-Position fuer die Animation, hat KEINEN Einfluss auf die Gewinnberechnung.
+const ROULETTE_WHEEL_ORDER=[0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+const ROULETTE_PAYOUT_RATIO={number:35, red:1, black:1, odd:1, even:1, low:1, high:1,
+  dozen1:2, dozen2:2, dozen3:2, col1:2, col2:2, col3:2};
+const ROULETTE_OUTSIDE_BETS=['red','black','odd','even','low','high','dozen1','dozen2','dozen3','col1','col2','col3'];
+function rouletteBetWins(bet,n){
+  const color=rouletteColor(n);
+  switch(bet.type){
+    case 'number': return bet.number===n;
+    case 'red': return color==='red';
+    case 'black': return color==='black';
+    case 'odd': return n!==0&&n%2===1;
+    case 'even': return n!==0&&n%2===0;
+    case 'low': return n>=1&&n<=18;
+    case 'high': return n>=19&&n<=36;
+    case 'dozen1': return n>=1&&n<=12;
+    case 'dozen2': return n>=13&&n<=24;
+    case 'dozen3': return n>=25&&n<=36;
+    case 'col1': return n>0&&n%3===1;
+    case 'col2': return n>0&&n%3===2;
+    case 'col3': return n>0&&n%3===0;
+  }
+  return false;
+}
+function rouletteBetPayout(bet,n){
+  return rouletteBetWins(bet,n) ? bet.amount*(ROULETTE_PAYOUT_RATIO[bet.type]+1) : 0;
+}
+function rouletteBetLabel(bet){
+  if(bet.type==='number') return t('roulette.betNumber',{n:bet.number});
+  return t('roulette.bet.'+bet.type);
+}
+const ROULETTE_CHIP_MIN=10, ROULETTE_CHIP_MAX=500;
+let rouletteChip=20, rouletteOpen=false, rouletteRAF=null, rouletteWheelAngle=0;
+function clampRouletteChip(v){
+  v=Math.round(v);
+  if(!Number.isFinite(v)) v=20;
+  return Math.min(ROULETTE_CHIP_MAX,Math.max(ROULETTE_CHIP_MIN,v));
+}
+function setRouletteChip(v){
+  rouletteChip=clampRouletteChip(v);
+  el('roulette-chip-input').value=rouletteChip;
+}
+function renderRouletteBoard(){
+  const box=el('roulette-numbers'); if(!box) return;
+  box.innerHTML='';
+  const rows=[[3,6,9,12,15,18,21,24,27,30,33,36],[2,5,8,11,14,17,20,23,26,29,32,35],[1,4,7,10,13,16,19,22,25,28,31,34]];
+  for(const row of rows){
+    for(const n of row){
+      const cell=document.createElement('div');
+      cell.className='roulette-num roulette-'+rouletteColor(n);
+      cell.textContent=n;
+      cell.dataset.bet='number:'+n;
+      box.appendChild(cell);
+    }
+  }
+}
+function renderRouletteOutside(){
+  const box=el('roulette-outside'); if(!box) return;
+  box.innerHTML='';
+  for(const type of ROULETTE_OUTSIDE_BETS){
+    const btn=document.createElement('button');
+    btn.className='roll-btn';
+    btn.textContent=t('roulette.bet.'+type);
+    btn.dataset.bet=type;
+    box.appendChild(btn);
+  }
+}
+function addRouletteBet(betKey){
+  if(player.rouletteSpin) return;
+  let type=betKey, number=null;
+  if(betKey.startsWith('number:')){ type='number'; number=parseInt(betKey.slice(7),10); }
+  player.rouletteBets.push({type,number,amount:rouletteChip});
+  renderRouletteBetsList();
+}
+function renderRouletteBetsList(){
+  const box=el('roulette-bets'); if(!box) return;
+  box.innerHTML='';
+  let total=0;
+  player.rouletteBets.forEach((bet,i)=>{
+    total+=bet.amount;
+    const row=document.createElement('div');
+    row.className='roulette-bet-row';
+    const label=document.createElement('span');
+    label.textContent=rouletteBetLabel(bet)+': '+bet.amount+'$';
+    const rm=document.createElement('button');
+    rm.className='roulette-bet-remove';
+    rm.textContent='×';
+    rm.addEventListener('click',()=>{ player.rouletteBets.splice(i,1); renderRouletteBetsList(); });
+    row.appendChild(label); row.appendChild(rm);
+    box.appendChild(row);
+  });
+  el('roulette-total').textContent=t('roulette.totalStake',{n:total});
+  el('roulette-spin').disabled=total<=0||!!player.rouletteSpin;
+}
+function interactRoulette(){
+  if(dialog.active) return;
+  if(!player.rouletteBets) player.rouletteBets=[];
+  el('roulette-title').textContent=t('roulette.title');
+  el('roulette-hint').textContent=t('roulette.hint');
+  setRouletteChip(rouletteChip);
+  renderRouletteBoard();
+  renderRouletteOutside();
+  renderRouletteBetsList();
+  rouletteOpen=true;
+  renderRouletteWheel();
+  el('roulette-box').classList.remove('hidden');
+  showPanelBackdrop(closeRouletteUI);
+}
+function closeRouletteUI(){
+  el('roulette-box').classList.add('hidden');
+  rouletteOpen=false;
+  hidePanelBackdrop();
+  if(rouletteRAF){ cancelAnimationFrame(rouletteRAF); rouletteRAF=null; }
+}
+function clearRouletteBets(){
+  if(player.rouletteSpin) return;
+  player.rouletteBets=[];
+  renderRouletteBetsList();
+}
+function spinRoulette(){
+  if(player.rouletteSpin) return;
+  const total=player.rouletteBets.reduce((s,b)=>s+b.amount,0);
+  if(total<=0) return;
+  if(player.money<total){ toast(t('casino.noMoney')); return; }
+  player.money-=total;
+  const resultNumber=Math.floor(Math.random()*37);
+  const wedgeIdx=ROULETTE_WHEEL_ORDER.indexOf(resultNumber);
+  const wedgeAngle=(Math.PI*2)/37;
+  // Zeiger steht fest oben (Bildschirm-Winkel -PI/2) — Ziel ist, die Mitte des Ergebnis-Wedges
+  // (im ungedrehten Rad bei wedgeIdx*wedgeAngle+wedgeAngle/2) exakt dorthin zu drehen.
+  const targetLocalAngle=-Math.PI/2-(wedgeIdx*wedgeAngle+wedgeAngle/2);
+  const curMod=((rouletteWheelAngle%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
+  const targetMod=((targetLocalAngle%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
+  let delta=targetMod-curMod;
+  if(delta<0) delta+=Math.PI*2;
+  const extraSpins=4+Math.floor(Math.random()*3);
+  player.rouletteSpin={
+    phase:'spinning', phaseT:0, duration:3.5,
+    startAngle:rouletteWheelAngle, totalRotation:extraSpins*Math.PI*2+delta,
+    resultNumber, bets:player.rouletteBets.slice(), payout:0
+  };
+  player.rouletteBets=[];
+  renderRouletteBetsList();
+  saveGame();
+}
+function updateRoulette(dt){
+  if(!player.rouletteSpin) return;
+  const s=player.rouletteSpin;
+  s.phaseT+=dt;
+  if(s.phase==='spinning'){
+    const p=Math.min(1,s.phaseT/s.duration);
+    const eased=1-Math.pow(1-p,3);
+    rouletteWheelAngle=s.startAngle+s.totalRotation*eased;
+    if(p>=1){
+      let payout=0;
+      for(const bet of s.bets) payout+=rouletteBetPayout(bet,s.resultNumber);
+      s.payout=payout;
+      if(payout>0){ player.money+=payout; toast(t('roulette.win',{amount:payout,n:s.resultNumber})); }
+      else toast(t('roulette.lose',{n:s.resultNumber}));
+      saveGame();
+      s.phase='result'; s.phaseT=0;
+      renderRouletteBetsList();
+    }
+  } else if(s.phase==='result'&&s.phaseT>=2.5){
+    player.rouletteSpin=null;
+    // Bugfix (Selbst-Review): ohne diesen Aufruf blieb der SPIN-Button dauerhaft deaktiviert, weil
+    // renderRouletteBetsList() (die .disabled anhand von player.rouletteSpin setzt) sonst nie erneut
+    // liefe, nachdem der Spin fertig war.
+    renderRouletteBetsList();
+  }
+}
+el('roulette-close').addEventListener('click', closeRouletteUI);
+el('roulette-spin').addEventListener('click', spinRoulette);
+el('roulette-clear').addEventListener('click', clearRouletteBets);
+el('roulette-chip-minus').addEventListener('click',()=>{ if(!player.rouletteSpin) setRouletteChip(rouletteChip-10); });
+el('roulette-chip-plus').addEventListener('click',()=>{ if(!player.rouletteSpin) setRouletteChip(rouletteChip+10); });
+el('roulette-chip-input').addEventListener('change',(e)=>{ if(!player.rouletteSpin) setRouletteChip(parseInt(e.target.value,10)); });
+el('roulette-board').addEventListener('click',e=>{
+  const cell=e.target.closest('[data-bet]'); if(!cell) return;
+  addRouletteBet(cell.dataset.bet);
+});
+el('roulette-outside').addEventListener('click',e=>{
+  const btn=e.target.closest('[data-bet]'); if(!btn) return;
+  addRouletteBet(btn.dataset.bet);
+});
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!el('roulette-box').classList.contains('hidden')) closeRouletteUI();
+});
+function renderRouletteWheel(){
+  const cv=el('roulette-wheel'); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const cx=cv.width/2, cy=cv.height/2, r=Math.min(cx,cy)-4;
+  const wedgeAngle=(Math.PI*2)/37;
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(rouletteWheelAngle);
+  for(let i=0;i<37;i++){
+    const n=ROULETTE_WHEEL_ORDER[i];
+    ctx.fillStyle=n===0?'#1a5c30':(ROULETTE_RED.has(n)?'#7a1e26':'#141414');
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.arc(0,0,r,i*wedgeAngle,(i+1)*wedgeAngle);
+    ctx.closePath();
+    ctx.fill();
+    ctx.save();
+    ctx.rotate(i*wedgeAngle+wedgeAngle/2);
+    ctx.fillStyle='#fff';
+    ctx.font='9px monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(String(n),r*0.78,0);
+    ctx.restore();
+  }
+  ctx.strokeStyle='rgba(255,255,255,.3)';
+  ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
+  // Zeiger — fest, oben
+  ctx.fillStyle='#ffd23a';
+  ctx.beginPath();
+  ctx.moveTo(cx-6,cy-r-2); ctx.lineTo(cx+6,cy-r-2); ctx.lineTo(cx,cy-r+12);
+  ctx.closePath(); ctx.fill();
+  if(player.rouletteSpin&&player.rouletteSpin.phase==='result'){
+    ctx.fillStyle='rgba(0,0,0,.6)';
+    ctx.beginPath(); ctx.arc(cx,cy,r*0.32,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='bold 16px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(String(player.rouletteSpin.resultNumber),cx,cy);
+  }
+  if(rouletteOpen) rouletteRAF=requestAnimationFrame(renderRouletteWheel);
+}
+
+/* ---------------- Durak (Podkidnoy-Variante) gegen einen NPC-Gegner ----------------
+   Echtes 2-Spieler-Durak, 36-Karten-Deck (6-A, kein 2-5), Zuwerfen erlaubt (Nutzer-Vorgabe:
+   "klassisch mit Zuwerfen" statt vereinfachtes 1v1 ohne Nachlegen). Rundenbasiert, KEIN RAF-Loop —
+   Neu-Rendern passiert nur bei tatsaechlicher Zustandsaenderung (Zug gespielt), nicht pro Frame.
+   Feste Einsatz-Summe wie beim Automaten/Blackjack, Gewinner nimmt den doppelten Einsatz. */
+const DURAK_STAKE=100;
+const DURAK_RANKS=['6','7','8','9','10','J','Q','K','A'];
+const DURAK_RANK_VALUE={'6':0,'7':1,'8':2,'9':3,'10':4,'J':5,'Q':6,'K':7,'A':8};
+function buildDurakDeck(){
+  const deck=[];
+  for(const su of BJ_SUITS) for(const rank of DURAK_RANKS) deck.push({rank,suit:su.s,red:su.red});
+  for(let i=deck.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; const tmp=deck[i]; deck[i]=deck[j]; deck[j]=tmp; }
+  return deck;
+}
+// Schlaegt 'def' die Karte 'atk'? Gleiche Farbe+hoeherer Rang, oder Trumpf gegen Nicht-Trumpf.
+function durakBeats(atk,def,trumpSuit){
+  if(def.suit===atk.suit) return DURAK_RANK_VALUE[def.rank]>DURAK_RANK_VALUE[atk.rank];
+  return def.suit===trumpSuit&&atk.suit!==trumpSuit;
+}
+function durakRefillHands(firstId){
+  const s=player.durak;
+  const order = firstId==='player' ? ['playerHand','aiHand'] : ['aiHand','playerHand'];
+  for(const key of order){ while(s[key].length<6&&s.deck.length>0) s[key].push(s.deck.pop()); }
+}
+// Wer ist gerade am Zug: liegt eine noch unbeantwortete Angriffskarte auf dem Tisch, ist der
+// VERTEIDIGER dran (schlagen oder aufnehmen); sonst der ANGREIFER (erste Karte/Zuwerfen/Fertig).
+function durakTurnIs(){
+  const s=player.durak;
+  if(!s||s.phase==='over') return null;
+  const pending=s.table.length>0&&s.table[s.table.length-1].def===null;
+  if(pending) return s.attackerIs==='player' ? 'ai' : 'player';
+  return s.attackerIs;
+}
+function durakCanThrowIn(hand){
+  const s=player.durak;
+  if(s.table.length===0) return true;
+  if(s.table.length>=6) return false;
+  const limit = s.defenderHandSizeAtStart==null ? (s.attackerIs==='player'?s.aiHand.length:s.playerHand.length) : s.defenderHandSizeAtStart;
+  if(s.table.length>=limit) return false;
+  const tableRanks=new Set(s.table.flatMap(p=>[p.atk.rank,p.def&&p.def.rank].filter(Boolean)));
+  return hand.some(c=>tableRanks.has(c.rank));
+}
+function durakCheckGameOver(){
+  const s=player.durak;
+  if(s.deck.length>0) return false;
+  if(s.playerHand.length>0&&s.aiHand.length>0) return false;
+  s.phase='over';
+  s.winner = (s.playerHand.length===0&&s.aiHand.length===0) ? 'draw' : (s.playerHand.length===0?'player':'ai');
+  if(s.winner==='player'){ player.money+=DURAK_STAKE*2; toast(t('durak.win',{amount:DURAK_STAKE*2})); }
+  else if(s.winner==='ai') toast(t('durak.lose'));
+  else { player.money+=DURAK_STAKE; toast(t('durak.draw')); }   // Unentschieden: keiner ist der Durak, Einsatz zurueck
+  saveGame();
+  return true;
+}
+function durakEndRoundBeaten(){
+  const s=player.durak;
+  const prevAttacker=s.attackerIs, prevDefender=prevAttacker==='player'?'ai':'player';
+  s.table=[]; s.defenderHandSizeAtStart=null; s.selectedIdx=null;
+  durakRefillHands(prevAttacker);
+  s.attackerIs=prevDefender;
+  if(durakCheckGameOver()) return;
+  if(s.attackerIs==='ai') scheduleDurakAiTurn();
+}
+function durakEndRoundTaken(){
+  const s=player.durak;
+  const defenderIs=s.attackerIs==='player'?'ai':'player';
+  const handKey=defenderIs==='player'?'playerHand':'aiHand';
+  for(const pair of s.table){ s[handKey].push(pair.atk); if(pair.def) s[handKey].push(pair.def); }
+  s.table=[]; s.defenderHandSizeAtStart=null; s.selectedIdx=null;
+  durakRefillHands(s.attackerIs);
+  if(durakCheckGameOver()) return;
+  if(s.attackerIs==='ai') scheduleDurakAiTurn();
+}
+function startDurak(){
+  if(player.durak&&player.durak.phase!=='over') return;
+  if(player.money<DURAK_STAKE){ toast(t('casino.noMoney')); return; }
+  player.money-=DURAK_STAKE;
+  const deck=buildDurakDeck();
+  const playerHand=[], aiHand=[];
+  for(let i=0;i<6;i++){ playerHand.push(deck.pop()); aiHand.push(deck.pop()); }
+  const trumpCard=deck[0];   // bleibt an Index 0 im Deck-Array -> wird per deck.pop() zuletzt gezogen
+  player.durak={
+    phase:'playing', deck, trumpSuit:trumpCard.suit, trumpCard,
+    playerHand, aiHand, table:[], attackerIs: Math.random()<0.5?'player':'ai',
+    defenderHandSizeAtStart:null, selectedIdx:null, winner:null
+  };
+  saveGame();
+  if(player.durak.attackerIs==='ai') scheduleDurakAiTurn();
+  renderDurakTable();
+}
+function durakSelectCard(idx){
+  const s=player.durak;
+  if(!s||s.phase==='over'||durakTurnIs()!=='player') return;
+  s.selectedIdx = s.selectedIdx===idx ? null : idx;
+  renderDurakTable();
+}
+function durakPlayerAttackOrThrow(){
+  const s=player.durak;
+  if(!s||durakTurnIs()!=='player'||s.attackerIs!=='player'||s.selectedIdx==null) return;
+  const card=s.playerHand[s.selectedIdx];
+  const isFirst=s.table.length===0;
+  if(!isFirst){
+    const tableRanks=new Set(s.table.flatMap(p=>[p.atk.rank,p.def&&p.def.rank].filter(Boolean)));
+    if(!tableRanks.has(card.rank)||!durakCanThrowIn(s.playerHand)){ toast(t('durak.invalidCard')); return; }
+  } else {
+    s.defenderHandSizeAtStart=s.aiHand.length;
+  }
+  s.playerHand.splice(s.selectedIdx,1);
+  s.table.push({atk:card,def:null});
+  s.selectedIdx=null;
+  renderDurakTable();
+  scheduleDurakAiTurn();
+}
+function durakPlayerDefend(){
+  const s=player.durak;
+  if(!s||durakTurnIs()!=='player'||s.attackerIs!=='ai'||s.selectedIdx==null) return;
+  const pairIdx=s.table.length-1;
+  const atk=s.table[pairIdx].atk;
+  const card=s.playerHand[s.selectedIdx];
+  if(!durakBeats(atk,card,s.trumpSuit)){ toast(t('durak.invalidCard')); return; }
+  s.playerHand.splice(s.selectedIdx,1);
+  s.table[pairIdx].def=card;
+  s.selectedIdx=null;
+  renderDurakTable();
+  scheduleDurakAiTurn();
+}
+function durakPlayerTake(){
+  const s=player.durak;
+  if(!s||durakTurnIs()!=='player'||s.attackerIs!=='ai') return;
+  durakEndRoundTaken();
+  renderDurakTable();
+}
+function durakPlayerPass(){
+  const s=player.durak;
+  if(!s||durakTurnIs()!=='player'||s.attackerIs!=='player'||s.table.length===0) return;
+  if(s.table.some(p=>!p.def)) return;
+  durakEndRoundBeaten();
+  renderDurakTable();
+}
+function durakAiChooseDefendCard(hand,atk,trumpSuit){
+  const candidates=hand.filter(c=>durakBeats(atk,c,trumpSuit));
+  if(!candidates.length) return null;
+  candidates.sort((a,b)=>{
+    const aTrump=(a.suit===trumpSuit&&atk.suit!==trumpSuit)?1:0;
+    const bTrump=(b.suit===trumpSuit&&atk.suit!==trumpSuit)?1:0;
+    if(aTrump!==bTrump) return aTrump-bTrump;
+    return DURAK_RANK_VALUE[a.rank]-DURAK_RANK_VALUE[b.rank];
+  });
+  return candidates[0];
+}
+function durakAiChooseAttackCard(hand,tableRanks){
+  let pool = tableRanks ? hand.filter(c=>tableRanks.has(c.rank)) : hand;
+  if(!pool.length) return null;
+  const trumpSuit=player.durak.trumpSuit;
+  const nonTrump=pool.filter(c=>c.suit!==trumpSuit);
+  const usePool=nonTrump.length?nonTrump:pool;
+  usePool.sort((a,b)=>DURAK_RANK_VALUE[a.rank]-DURAK_RANK_VALUE[b.rank]);
+  return usePool[0];
+}
+function scheduleDurakAiTurn(){
+  const s=player.durak;
+  if(!s||s.phase==='over'||durakTurnIs()!=='ai') return;
+  s.aiThinkT=0.7;   // kurze "Denk"-Pause, macht KI-Zuege nachvollziehbar statt sofort
+}
+function updateDurak(dt){
+  const s=player.durak;
+  if(!s||s.phase==='over'||!(s.aiThinkT>0)) return;
+  s.aiThinkT-=dt;
+  if(s.aiThinkT<=0) durakRunAiTurn();
+}
+function durakRunAiTurn(){
+  const s=player.durak;
+  if(!s||s.phase==='over'||durakTurnIs()!=='ai') return;
+  if(s.attackerIs==='ai'){
+    if(s.table.length===0){
+      const card=durakAiChooseAttackCard(s.aiHand,null);
+      s.defenderHandSizeAtStart=s.playerHand.length;
+      s.aiHand.splice(s.aiHand.indexOf(card),1);
+      s.table.push({atk:card,def:null});
+    } else {
+      const tableRanks=new Set(s.table.flatMap(p=>[p.atk.rank,p.def&&p.def.rank].filter(Boolean)));
+      const card = durakCanThrowIn(s.aiHand) ? durakAiChooseAttackCard(s.aiHand,tableRanks) : null;
+      if(card){ s.aiHand.splice(s.aiHand.indexOf(card),1); s.table.push({atk:card,def:null}); }
+      else { durakEndRoundBeaten(); }
+    }
+  } else {
+    const pairIdx=s.table.length-1;
+    const atk=s.table[pairIdx].atk;
+    const beatCard=durakAiChooseDefendCard(s.aiHand,atk,s.trumpSuit);
+    if(beatCard){ s.aiHand.splice(s.aiHand.indexOf(beatCard),1); s.table[pairIdx].def=beatCard; }
+    else { durakEndRoundTaken(); }
+  }
+  renderDurakTable();
+  saveGame();
+}
+let durakOpen=false;
+function interactDurak(){
+  if(dialog.active) return;
+  el('durak-title').textContent=t('durak.title');
+  durakOpen=true;
+  if(player.durak&&player.durak.phase!=='over') renderDurakTable();
+  else {
+    el('durak-info').innerHTML=''; el('durak-ai-hand').innerHTML='';
+    el('durak-table').innerHTML=''; el('durak-player-hand').innerHTML='';
+    renderDurakActions();
+  }
+  el('durak-box').classList.remove('hidden');
+  showPanelBackdrop(closeDurakUI);
+}
+function closeDurakUI(){
+  el('durak-box').classList.add('hidden');
+  durakOpen=false;
+  hidePanelBackdrop();
+}
+function makeDurakCardEl(card,faceDown,w,h){
+  const cv=document.createElement('canvas');
+  cv.width=w; cv.height=h;
+  cv.className='durak-card';
+  drawCardBJVisual(cv.getContext('2d'),card,0,0,w,h,faceDown);
+  return cv;
+}
+function renderDurakTable(){
+  const s=player.durak;
+  if(!s) return;
+  el('durak-info').innerHTML='';
+  const info=document.createElement('div');
+  info.textContent=t('durak.trump',{suit:s.trumpSuit})+' · '+t('durak.deckCount',{n:s.deck.length});
+  el('durak-info').appendChild(info);
+
+  const aiBox=el('durak-ai-hand'); aiBox.innerHTML='';
+  const dummyBack={rank:'6',suit:'♠',red:false};
+  for(let i=0;i<s.aiHand.length;i++) aiBox.appendChild(makeDurakCardEl(dummyBack,true,26,36));
+  const aiCount=document.createElement('span'); aiCount.className='durak-count'; aiCount.textContent=s.aiHand.length;
+  aiBox.appendChild(aiCount);
+
+  const tableBox=el('durak-table'); tableBox.innerHTML='';
+  for(const pair of s.table){
+    const pairEl=document.createElement('div'); pairEl.className='durak-pair';
+    pairEl.appendChild(makeDurakCardEl(pair.atk,false,34,48));
+    if(pair.def) pairEl.appendChild(makeDurakCardEl(pair.def,false,34,48));
+    tableBox.appendChild(pairEl);
+  }
+
+  const handBox=el('durak-player-hand'); handBox.innerHTML='';
+  s.playerHand.forEach((card,i)=>{
+    const cv=makeDurakCardEl(card,false,36,50);
+    cv.dataset.idx=i;
+    if(s.selectedIdx===i) cv.classList.add('selected');
+    handBox.appendChild(cv);
+  });
+
+  renderDurakActions();
+}
+function renderDurakActions(){
+  const s=player.durak;
+  const startBtn=el('durak-start'), attackBtn=el('durak-action-attack'), defendBtn=el('durak-action-defend'),
+    takeBtn=el('durak-action-take'), passBtn=el('durak-action-pass');
+  if(!s||s.phase==='over'){
+    startBtn.classList.remove('hidden');
+    attackBtn.classList.add('hidden'); defendBtn.classList.add('hidden');
+    takeBtn.classList.add('hidden'); passBtn.classList.add('hidden');
+    startBtn.textContent=t('durak.start',{stake:DURAK_STAKE});
+    el('durak-hint').textContent = s&&s.winner ?
+      (s.winner==='player'?t('durak.win',{amount:DURAK_STAKE*2}):s.winner==='ai'?t('durak.lose'):t('durak.draw')) :
+      t('durak.hint',{stake:DURAK_STAKE});
+    return;
+  }
+  startBtn.classList.add('hidden');
+  const turn=durakTurnIs();
+  const isPlayerAttacker=s.attackerIs==='player';
+  const pending=s.table.length>0&&s.table[s.table.length-1].def===null;
+  attackBtn.classList.toggle('hidden', !(turn==='player'&&isPlayerAttacker&&!pending));
+  defendBtn.classList.toggle('hidden', !(turn==='player'&&!isPlayerAttacker&&pending));
+  takeBtn.classList.toggle('hidden', !(turn==='player'&&!isPlayerAttacker&&pending));
+  passBtn.classList.toggle('hidden', !(turn==='player'&&isPlayerAttacker&&!pending&&s.table.length>0));
+  attackBtn.textContent=t(s.table.length===0?'durak.attack':'durak.throwIn');
+  defendBtn.textContent=t('durak.defend');
+  takeBtn.textContent=t('durak.take');
+  passBtn.textContent=t('durak.pass');
+  attackBtn.disabled=s.selectedIdx==null;
+  defendBtn.disabled=s.selectedIdx==null;
+  el('durak-hint').textContent = turn==='player' ? t(isPlayerAttacker?'durak.yourTurnAttack':'durak.yourTurnDefend') : t('durak.aiTurn');
+}
+el('durak-close').addEventListener('click', closeDurakUI);
+el('durak-start').addEventListener('click', startDurak);
+el('durak-action-attack').addEventListener('click', durakPlayerAttackOrThrow);
+el('durak-action-defend').addEventListener('click', durakPlayerDefend);
+el('durak-action-take').addEventListener('click', durakPlayerTake);
+el('durak-action-pass').addEventListener('click', durakPlayerPass);
+el('durak-player-hand').addEventListener('click', e=>{
+  const cv=e.target.closest('[data-idx]'); if(!cv) return;
+  durakSelectCard(parseInt(cv.dataset.idx,10));
+});
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!el('durak-box').classList.contains('hidden')) closeDurakUI();
+});
 
 /* ---------------- Pack-UI: Gras in Baggies abwiegen (Paket 4c) ----------------
    Ein Schritt, kein Fehlschlag-Risiko: Menge wählen (begrenzt durch vorhandenes Gras) → PACKEN
@@ -13989,6 +14962,9 @@ function update(dt){
     updateWalkupCooldowns(dt);
     updateSlotSpin(dt);
     updateBlackjack(dt);
+    updateSlot2Spin(dt);
+    updateRoulette(dt);
+    updateDurak(dt);
     JobSystem.update(dt);   // Paket 17: Cashier/Kellner/Drip laufen jetzt drinnen
     if(player.tipsyT>0) player.tipsyT=Math.max(0,player.tipsyT-dt);
     if(player.speedBoostT>0) player.speedBoostT=Math.max(0,player.speedBoostT-dt);
@@ -15228,6 +16204,10 @@ function startGame(fresh){
   player.driving=false;   // Roller (Nutzer-Vorgabe): beim Laden/neuen Spiel immer zurueckgesetzt, wie player.riding
   player.smoking=null; player.drinking=null; player.high=0;
   player.slotSpin=null;
+  // Bugfix (Code-Review, Casino-Erweiterung): Blackjack fehlte hier komplett — bei "Neues Spiel"
+  // waehrend einer laufenden Runde blieb State/Panel bisher stehen. Gleiches Muster jetzt fuer alle
+  // 3 neuen Casino-Spiele mitgezogen.
+  player.blackjack=null; player.slot2Spin=null; player.rouletteSpin=null; player.rouletteBets=null; player.durak=null;
   closeInventory();
   closePhone();
   closeStashUI();
@@ -15235,6 +16215,10 @@ function startGame(fresh){
   closeChemshopUI();
   closeDripshopUI();
   closeCasinoUI();
+  closeBlackjackUI();
+  closeCasino2UI();
+  closeRouletteUI();
+  closeDurakUI();
   // Nur verstecken, wenn KEINE noch laufende Verhaftung übernommen wurde (siehe Resume-Logik oben) —
   // sonst würde diese Zeile das gerade erst wieder eingeblendete Custody-Overlay sofort zunichtemachen.
   if(!player.arrested) el('custody-overlay').classList.add('hidden');
