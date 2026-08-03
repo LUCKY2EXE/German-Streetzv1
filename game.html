@@ -4021,6 +4021,17 @@ function makeInterior(type){
         {k:'lab_flask_deco',x:7.8,y:4.5,w:0.45,h:0.45,c:'#cfe3ea'},
         {k:'lab_canister_deco',x:7.8,y:5.05,w:0.45,h:0.45,c:'#5a5a62'}
       );
+      // Nutzer-Vorgabe (Nachbesserung): die alten Koch-Stationen sollen optisch weiter im Raum stehen,
+      // auch wenn nur noch der Chemiker oben tatsaechlich anklickbar ist — rein dekorativ, kein
+      // interactive-Key, kein eigener State/Explosionsrisiko (das ist bewusst komplett weg).
+      I.furniture.push(
+        {k:'cookstation_deco',x:4.5,y:2.2,w:1.3,h:1.3,c:'#2a2a2e'},
+        {k:'cookstation_deco',x:7.5,y:2.0,w:1.3,h:1.3,c:'#2a2a2e'},
+        {k:'cookstation_deco',x:4.3,y:7.0,w:1.3,h:1.3,c:'#2a2a2e'},
+        {k:'cookstation_deco',x:9.5,y:7.3,w:1.3,h:1.3,c:'#2a2a2e'},
+        {k:'cookstation_deco',x:13.2,y:5.7,w:1.1,h:1.1,c:'#2a2a2e'},
+        {k:'cookstation_deco',x:13.2,y:8.0,w:1.1,h:1.1,c:'#2a2a2e'}
+      );
       // Bewusst kein I.exits — sonst würde die Rückweg-Erkennungszone exitInterior() auslösen und
       // direkt nach draußen springen statt zurück ins Trap-Haus (intTargetBuilding zeigt weiterhin dorthin).
       I.lights.push({x:5,y:1,r:90,c:'rgba(200,255,192,0.12)'},{x:10,y:1,r:90,c:'rgba(200,255,192,0.12)'});
@@ -4242,7 +4253,7 @@ function makeInterior(type){
     'ticketmachine','info','info_counter','display','display_big','weaponwall','vestdisplay',
     'toolwall','bike_wall','bikestand','crate','box','safe','display_case','trashcan','counter_glass','glass',
     'wall_glass','schedule_board','bench_broken','bench_detailed','bike_rack','sign_stand','sofa',
-    'chemist_npc','mixtank','still','clothes_rack','changing_booth','toilet','payphone','bars']);
+    'chemist_npc','cookstation_deco','mixtank','still','clothes_rack','changing_booth','toilet','payphone','bars']);
   for(const f of I.furniture){
     if(SOLID.has(f.k)){
       I.colliders.push({x:f.x*INT_TILE,y:f.y*INT_TILE,w:f.w*INT_TILE,h:f.h*INT_TILE});
@@ -5429,6 +5440,32 @@ function drawInteriorFurniture(ctx, f, time){
       // Nutzer-Vorgabe: sichtbarer Hinweis, sobald fertige Ware zum Abholen bereitliegt
       const r=player.methNpcReady;
       if(r&&(r.meth_dirty>0||r.meth_pure>0||r.meth_blue>0)) ctx.drawImage(IMAGES.meth_ready,tx+tw*0.6,ty-th*0.25,tw*0.5,th*0.4);
+      break;
+    }
+    /* Rein dekorative Koch-Stationen (Nutzer-Vorgabe): die alten manuellen Stationen sollen optisch
+       weiter im Raum stehen, auch wenn der Chemiker (siehe oben) jetzt der einzige Interaktionspunkt
+       ist — kein interactive-Key, also weder anklickbar noch mit eigenem State/Explosionsrisiko. */
+    case 'cookstation_deco':{
+      ctx.fillStyle=f.c;
+      ctx.fillRect(tx,ty+th*0.2,tw,th*0.8);
+      ctx.fillStyle='#3a3a3e';
+      ctx.fillRect(tx,ty+th*0.2,tw,3);
+      const pulse=0.6+0.4*Math.sin(time/260+tx);
+      ctx.fillStyle='rgba(255,150,60,'+(pulse*0.6).toFixed(2)+')';
+      ctx.beginPath(); ctx.ellipse(tx+tw*0.5,ty+th*0.2,tw*0.3,3,0,0,Math.PI*2); ctx.fill();
+      // Aufsteigender Dampf, leicht seitlich wabernd
+      ctx.strokeStyle='rgba(220,255,220,.35)';
+      ctx.lineWidth=1.5;
+      for(let i=0;i<2;i++){
+        const wx=tx+tw*(0.35+i*0.3);
+        const off=(time/400+i*137)%100/100;
+        ctx.beginPath();
+        ctx.moveTo(wx,ty+th*0.15);
+        ctx.quadraticCurveTo(wx+Math.sin(off*Math.PI*2)*4,ty-th*0.15-off*th*0.3,wx,ty-th*0.4-off*th*0.4);
+        ctx.globalAlpha=1-off;
+        ctx.stroke();
+        ctx.globalAlpha=1;
+      }
       break;
     }
     case 'mixtank':{
