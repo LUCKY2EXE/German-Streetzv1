@@ -2457,6 +2457,11 @@ const MANIFEST = {
   // Zusaetzliche Deko an jeder Koch-Station im Labor (Nutzer-Vorgabe), rein optisch.
   lab_flask_deco: {file:'meth_zubehoer_a.png', w:48, h:48, kind:'prop'},
   lab_canister_deco: {file:'meth_zubehoer_b.png', w:48, h:48, kind:'prop'},
+  // Nutzer-Vorgabe: die 16 Koch-Stationen im Labor sollen wieder die echten Stations-Bilder zeigen
+  // (nicht prozedural gezeichnet) — dieselben 3 Bilder wie zu Anfang, zyklisch wiederverwendet.
+  meth_station1: {file:'meth_slot1_icon.png', w:48, h:48, kind:'prop'},
+  meth_station2: {file:'meth_slot2_icon.png', w:48, h:48, kind:'prop'},
+  meth_station3: {file:'meth_slot3_icon.png', w:48, h:48, kind:'prop'},
   // Grillz (Nutzer-Vorgabe): echtes Bild statt Gold-Balken, auf Mundgroesse zugeschnitten/transparent
   // gemacht (Original als *_original_backup.png gesichert) — w/h hier sind nur Platzhalter-Fallback-
   // Groesse, die tatsaechliche Zielgroesse am Charakter wird in drawJewelryAccessories() explizit gesetzt.
@@ -3990,24 +3995,26 @@ function makeInterior(type){
       I.lights.push({x:4,y:1,r:90,c:'rgba(255,46,196,0.15)'},{x:14,y:1,r:90,c:'rgba(245,197,66,0.15)'});
       break;
     }
-    /* ===== METH-LABOR (Paket 11) ===== */
+    /* ===== METH-LABOR (Paket 11, erweitert um 16 dekorative Stationen) ===== */
     case 'meth_lab':{
-      I.w=16; I.h=12; I.floor='concrete_dark'; I.ambientColor='rgba(20,30,20,0.15)';
+      // Nutzer-Vorgabe (Nachbesserung): Raum vergroessert (16x12 -> 18x14), damit 16 Stationen im
+      // 4x4-Raster bequem Platz haben, ohne mit Regal/Misch-Becken/Destille/Chemiker zu kollidieren.
+      I.w=18; I.h=14; I.floor='concrete_dark'; I.ambientColor='rgba(20,30,20,0.15)';
       I.furniture.push(
         // Chemie-Regal — Kauf-Interaktion
-        {k:'shelf',x:2,y:2,w:2,h:3,c:'#4a4a3a',detail:'chem',interactive:'chemshop',
+        {k:'shelf',x:12,y:2,w:2,h:3,c:'#4a4a3a',detail:'chem',interactive:'chemshop',
          label:{de:'Regal',en:'Shelf'},dialog:{de:'Schutzausrüstung kaufen? Zutaten holst du beim Dealer.',en:'Buy protective gear? Ingredients come from the dealer.'}},
         // Misch-Becken
-        {k:'mixtank',x:11,y:2,w:1.6,h:2,c:'#5a5a62'},
+        {k:'mixtank',x:15,y:2,w:1.6,h:2,c:'#5a5a62'},
         // Destille
-        {k:'still',x:11,y:5.5,w:2,h:2.2,c:'#cfe3ea'},
+        {k:'still',x:15,y:5,w:2,h:2.2,c:'#cfe3ea'},
         // Ventilation (Wand, rein dekorativ)
-        {k:'ventfan',x:7.3,y:8,w:1,h:1,c:'#3a3a3e'},
+        {k:'ventfan',x:16,y:8,w:1,h:1,c:'#3a3a3e'},
         // Lichter
         {k:'lamp',x:5,y:1,w:0,h:0,c:'#c8ffc0',detail:'fluorescent',glow:true,glowColor:'rgba(200,255,192,0.2)',glowR:80},
-        {k:'lamp',x:10,y:1,w:0,h:0,c:'#c8ffc0',detail:'fluorescent',glow:true,glowColor:'rgba(200,255,192,0.2)',glowR:80},
+        {k:'lamp',x:13,y:1,w:0,h:0,c:'#c8ffc0',detail:'fluorescent',glow:true,glowColor:'rgba(200,255,192,0.2)',glowR:80},
         // Treppe zurück ins Trap-Haus
-        {k:'stairs',x:2,y:9,w:2,h:1.5,c:'#2a2a2a',detail:'up',interactive:'stairs',goto:'house_trap',
+        {k:'stairs',x:12,y:11,w:2,h:1.5,c:'#2a2a2a',detail:'up',interactive:'stairs',goto:'house_trap',
          label:{de:'Treppe hoch',en:'Stairs up'}}
       );
       // Chemiker (Nutzer-Vorgabe): ersetzt die frueheren 13 manuellen Koch-Stationen — Zutaten in
@@ -4016,25 +4023,36 @@ function makeInterior(type){
       // als bewegliche NPC-Entitaet), gleiches Prinzip wie der Chemie-Regal-Tresen — kein Pathing/
       // Animations-Aufwand noetig, sieht fuer den Spieler trotzdem wie "jemand, den man anspricht" aus.
       I.furniture.push(
-        {k:'chemist_npc',x:6.5,y:4.5,w:1.3,h:1.6,c:'#3a4a3a',interactive:'methnpc',
+        {k:'chemist_npc',x:12.5,y:8,w:1.3,h:1.6,c:'#3a4a3a',interactive:'methnpc',
          label:{de:'Chemiker',en:'Chemist'}},
-        {k:'lab_flask_deco',x:7.8,y:4.5,w:0.45,h:0.45,c:'#cfe3ea'},
-        {k:'lab_canister_deco',x:7.8,y:5.05,w:0.45,h:0.45,c:'#5a5a62'}
+        {k:'lab_flask_deco',x:13.9,y:8,w:0.45,h:0.45,c:'#cfe3ea'},
+        {k:'lab_canister_deco',x:13.9,y:8.55,w:0.45,h:0.45,c:'#5a5a62'}
       );
-      // Nutzer-Vorgabe (Nachbesserung): die alten Koch-Stationen sollen optisch weiter im Raum stehen,
-      // auch wenn nur noch der Chemiker oben tatsaechlich anklickbar ist — rein dekorativ, kein
-      // interactive-Key, kein eigener State/Explosionsrisiko (das ist bewusst komplett weg).
+      // Nutzer-Vorgabe (Nachbesserung): 16 Stationen bleiben optisch im Raum (4x4-Raster), zeigen
+      // wieder die echten Stations-Bilder (meth_station1/2/3, zyklisch) wie zu Anfang — der Chemiker
+      // oben bleibt aber der einzige tatsaechliche Interaktionspunkt: kein interactive-Key hier, kein
+      // eigener State/Explosionsrisiko (das ist bewusst komplett weg).
       I.furniture.push(
-        {k:'cookstation_deco',x:4.5,y:2.2,w:1.3,h:1.3,c:'#2a2a2e'},
-        {k:'cookstation_deco',x:7.5,y:2.0,w:1.3,h:1.3,c:'#2a2a2e'},
-        {k:'cookstation_deco',x:4.3,y:7.0,w:1.3,h:1.3,c:'#2a2a2e'},
-        {k:'cookstation_deco',x:9.5,y:7.3,w:1.3,h:1.3,c:'#2a2a2e'},
-        {k:'cookstation_deco',x:13.2,y:5.7,w:1.1,h:1.1,c:'#2a2a2e'},
-        {k:'cookstation_deco',x:13.2,y:8.0,w:1.1,h:1.1,c:'#2a2a2e'}
+        {k:'cookstation_deco',x:2.5,y:2.0,w:1.3,h:1.3,c:'#2a2a2e',imgIdx:0},
+        {k:'cookstation_deco',x:4.6,y:2.0,w:1.3,h:1.3,c:'#2a2a2e',imgIdx:1},
+        {k:'cookstation_deco',x:6.7,y:2.0,w:1.3,h:1.3,c:'#2a2a2e',imgIdx:2},
+        {k:'cookstation_deco',x:8.8,y:2.0,w:1.3,h:1.3,c:'#2a2a2e',imgIdx:0},
+        {k:'cookstation_deco',x:2.5,y:4.3,w:1.3,h:1.3,c:'#2a2a2e',imgIdx:1},
+        {k:'cookstation_deco',x:4.6,y:4.3,w:1.3,h:1.3,c:'#2a2a2e',imgIdx:2},
+        {k:'cookstation_deco',x:6.7,y:4.3,w:1.3,h:1.3,c:'#2a2a2e',imgIdx:0},
+        {k:'cookstation_deco',x:8.8,y:4.3,w:1.3,h:1.3,c:'#2a2a2e',imgIdx:1},
+        {k:'cookstation_deco',x:2.5,y:6.6,w:1.3,h:1.3,c:'#2a2a2e',imgIdx:2},
+        {k:'cookstation_deco',x:4.6,y:6.6,w:1.3,h:1.3,c:'#2a2a2e',imgIdx:0},
+        {k:'cookstation_deco',x:6.7,y:6.6,w:1.3,h:1.3,c:'#2a2a2e',imgIdx:1},
+        {k:'cookstation_deco',x:8.8,y:6.6,w:1.3,h:1.3,c:'#2a2a2e',imgIdx:2},
+        {k:'cookstation_deco',x:2.5,y:8.9,w:1.3,h:1.3,c:'#2a2a2e',imgIdx:0},
+        {k:'cookstation_deco',x:4.6,y:8.9,w:1.3,h:1.3,c:'#2a2a2e',imgIdx:1},
+        {k:'cookstation_deco',x:6.7,y:8.9,w:1.3,h:1.3,c:'#2a2a2e',imgIdx:2},
+        {k:'cookstation_deco',x:8.8,y:8.9,w:1.3,h:1.3,c:'#2a2a2e',imgIdx:0}
       );
       // Bewusst kein I.exits — sonst würde die Rückweg-Erkennungszone exitInterior() auslösen und
       // direkt nach draußen springen statt zurück ins Trap-Haus (intTargetBuilding zeigt weiterhin dorthin).
-      I.lights.push({x:5,y:1,r:90,c:'rgba(200,255,192,0.12)'},{x:10,y:1,r:90,c:'rgba(200,255,192,0.12)'});
+      I.lights.push({x:5,y:1,r:90,c:'rgba(200,255,192,0.12)'},{x:13,y:1,r:90,c:'rgba(200,255,192,0.12)'});
       break;
     }
     /* ===== BAHNHOF ===== */
@@ -5445,27 +5463,11 @@ function drawInteriorFurniture(ctx, f, time){
     /* Rein dekorative Koch-Stationen (Nutzer-Vorgabe): die alten manuellen Stationen sollen optisch
        weiter im Raum stehen, auch wenn der Chemiker (siehe oben) jetzt der einzige Interaktionspunkt
        ist — kein interactive-Key, also weder anklickbar noch mit eigenem State/Explosionsrisiko. */
+    /* Nutzer-Vorgabe: wieder die echten Stations-Bilder statt prozeduraler Zeichnung — dieselben 3
+       Bilder wie zu Anfang (meth_station1/2/3), zyklisch ueber alle 16 Stationen wiederverwendet. */
     case 'cookstation_deco':{
-      ctx.fillStyle=f.c;
-      ctx.fillRect(tx,ty+th*0.2,tw,th*0.8);
-      ctx.fillStyle='#3a3a3e';
-      ctx.fillRect(tx,ty+th*0.2,tw,3);
-      const pulse=0.6+0.4*Math.sin(time/260+tx);
-      ctx.fillStyle='rgba(255,150,60,'+(pulse*0.6).toFixed(2)+')';
-      ctx.beginPath(); ctx.ellipse(tx+tw*0.5,ty+th*0.2,tw*0.3,3,0,0,Math.PI*2); ctx.fill();
-      // Aufsteigender Dampf, leicht seitlich wabernd
-      ctx.strokeStyle='rgba(220,255,220,.35)';
-      ctx.lineWidth=1.5;
-      for(let i=0;i<2;i++){
-        const wx=tx+tw*(0.35+i*0.3);
-        const off=(time/400+i*137)%100/100;
-        ctx.beginPath();
-        ctx.moveTo(wx,ty+th*0.15);
-        ctx.quadraticCurveTo(wx+Math.sin(off*Math.PI*2)*4,ty-th*0.15-off*th*0.3,wx,ty-th*0.4-off*th*0.4);
-        ctx.globalAlpha=1-off;
-        ctx.stroke();
-        ctx.globalAlpha=1;
-      }
+      const stationImg=['meth_station1','meth_station2','meth_station3'][f.imgIdx||0];
+      ctx.drawImage(IMAGES[stationImg],tx,ty,tw,th);
       break;
     }
     case 'mixtank':{
